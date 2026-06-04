@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, type Document } from 'mongoose';
 
 export interface IFridgeItem extends Document {
   familyId: mongoose.Types.ObjectId;
@@ -9,6 +9,8 @@ export interface IFridgeItem extends Document {
   location: string;
   expirationDate: Date;
   isWasted: boolean;
+  imageUrl: string;
+  imagePublicId: string;
 }
 
 const FridgeItemSchema: Schema = new Schema({
@@ -18,6 +20,7 @@ const FridgeItemSchema: Schema = new Schema({
   unit: { type: String, required: true },
   category: { type: String, default: 'Chưa phân loại' },
   imageUrl: { type: String, default: '' },
+  imagePublicId: { type: String, default: '' },
   location: { type: String, default: 'Ngăn mát' },
   expirationDate: { type: Date, required: true },
   isWasted: { type: Boolean, default: false }

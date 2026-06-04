@@ -13,7 +13,8 @@ router.post('/', uploadCloud.single('image'), (req: Request, res: Response): voi
 
     res.status(200).json({
       message: 'Upload ảnh thành công!',
-      imageUrl: req.file.path 
+      imageUrl: req.file.path,
+      imagePublicId: req.file.filename
     });
   } catch (error) {
     console.error('Lỗi upload ảnh:', error);

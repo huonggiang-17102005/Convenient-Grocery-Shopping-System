@@ -1,10 +1,12 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, type Document } from 'mongoose';
 
 export interface IShoppingItem {
   name: string;
   category: string;
   quantity: number;
   unit: string;
+  imageUrl: string;
+  imagePublicId: string;
   isBought: boolean;
   assigneeId: mongoose.Types.ObjectId | null;
 }
@@ -27,6 +29,7 @@ const ShoppingListSchema: Schema = new Schema({
     quantity: { type: Number, required: true },
     unit: { type: String, required: true },
     imageUrl: { type: String, default: '' },
+    imagePublicId: { type: String, default: '' },
     isBought: { type: Boolean, default: false },
     assigneeId: { type: Schema.Types.ObjectId, ref: 'User', default: null }
   }],
