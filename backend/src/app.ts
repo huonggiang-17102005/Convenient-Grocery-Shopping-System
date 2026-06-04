@@ -1,12 +1,15 @@
 import express, { type Request, type Response } from 'express';
+import dotenv from 'dotenv';
+import connectDB from './config/db.config.js';
+
+dotenv.config();
+connectDB();
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
-// Middleware để đọc dữ liệu JSON từ request body
 app.use(express.json());
 
-// API chạy thử nghiệm
 app.get('/', (req: Request, res: Response) => {
   res.send('Backend đang hoạt động!');
 });
