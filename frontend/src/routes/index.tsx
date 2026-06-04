@@ -1,16 +1,73 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Dashboard from '../pages/Dashboard';
+import { createBrowserRouter } from 'react-router-dom';
 
-const AppRoutes: React.FC = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        {/* Các route khác sẽ được thêm ở đây */}
-      </Routes>
-    </BrowserRouter>
-  );
-};
+// Guest pages
+import Auth from '../pages/guest/Auth';
+import RoleSelection from '../pages/guest/RoleSelection';
+import CreateGroup from '../pages/guest/CreateGroup';
 
-export default AppRoutes;
+// Homemaker pages
+import DashboardHomemaker from '../pages/homemaker/DashboardHomemaker';
+import RefrigeratorHomemaker from '../pages/homemaker/RefrigeratorHomemaker';
+import ShoppingListHomemaker from '../pages/homemaker/ShoppingListHomemaker';
+import RecipeSmartSuggestions from '../pages/homemaker/RecipeSmartSuggestions';
+import MealPlanner from '../pages/homemaker/MealPlanner';
+import ProfileGroupManagement from '../pages/homemaker/ProfileGroupManagement';
+
+export const router = createBrowserRouter([
+  // Guest Routes
+  {
+    path: '/',
+    element: <Auth />,
+  },
+  {
+    path: '/choose-role',
+    element: <RoleSelection />,
+  },
+  {
+    path: '/create-group',
+    element: <CreateGroup />,
+  },
+
+  // Homemaker Routes
+  {
+    path: '/homemaker',
+    children: [
+      {
+        path: 'dashboard',
+        element: <DashboardHomemaker />,
+      },
+      {
+        path: 'refrigerator',
+        element: <RefrigeratorHomemaker />,
+      },
+      {
+        path: 'shopping-list',
+        element: <ShoppingListHomemaker />,
+      },
+      {
+        path: 'recipes',
+        element: <RecipeSmartSuggestions />,
+      },
+      {
+        path: 'meal-planner',
+        element: <MealPlanner />,
+      },
+      {
+        path: 'profile',
+        element: <ProfileGroupManagement />,
+      }
+    ]
+  },
+
+  // Member Routes Placeholder
+  {
+    path: '/member',
+    element: <div>Member Layout...</div>,
+  },
+
+  // Admin Routes Placeholder
+  {
+    path: '/admin',
+    element: <div>Admin Layout...</div>,
+  },
+]);
