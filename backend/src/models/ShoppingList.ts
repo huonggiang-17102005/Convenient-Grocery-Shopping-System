@@ -26,6 +26,7 @@ const ShoppingListSchema: Schema = new Schema({
     category: { type: String, default: 'Chưa phân loại' },
     quantity: { type: Number, required: true },
     unit: { type: String, required: true },
+    imageUrl: { type: String, default: '' },
     isBought: { type: Boolean, default: false },
     assigneeId: { type: Schema.Types.ObjectId, ref: 'User', default: null }
   }],

@@ -32,7 +32,8 @@ const RecipeSchema: Schema = new Schema({
   ingredients: [{
     name: { type: String, required: true },
     quantity: { type: Number, required: true },
-    unit: { type: String, required: true }
+    unit: { type: String, required: true },
+    imageUrl: { type: String, default: '' }
   }],
   instructions: [{ type: String }],
   visibility: { type: String, enum: ['Private', 'Public'], default: 'Private' },

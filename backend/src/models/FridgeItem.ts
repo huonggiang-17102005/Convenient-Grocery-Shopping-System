@@ -17,6 +17,7 @@ const FridgeItemSchema: Schema = new Schema({
   quantity: { type: Number, required: true },
   unit: { type: String, required: true },
   category: { type: String, default: 'Chưa phân loại' },
+  imageUrl: { type: String, default: '' },
   location: { type: String, default: 'Ngăn mát' },
   expirationDate: { type: Date, required: true },
   isWasted: { type: Boolean, default: false }
