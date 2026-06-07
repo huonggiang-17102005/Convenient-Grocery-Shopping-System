@@ -12,9 +12,9 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const testDBConnection = async () => {
+export const testSupabaseConnection = async () => {
   try {
-    // Truy vấn thử bảng users để test kết nối
+    // Truy vấn thử bảng users (chỉ lấy 1 dòng để test)
     const { error } = await supabase.from('users').select('id').limit(1);
     
     if (error) {

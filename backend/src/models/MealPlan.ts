@@ -1,23 +1,13 @@
-import mongoose, { Schema, Document } from 'mongoose';
-
-export interface IMeal {
+export interface Meal {
   mealType: 'Breakfast' | 'Lunch' | 'Dinner';
-  recipeId: mongoose.Types.ObjectId;
+  recipeId: string;
 }
 
-export interface IMealPlan extends Document {
-  familyId: mongoose.Types.ObjectId;
-  date: Date;
-  meals: IMeal[];
+export interface MealPlan {
+  id: string;
+  family_id: string;
+  date: string;
+  meals: Meal[];
+  created_at?: string;
+  updated_at?: string;
 }
-
-const MealPlanSchema: Schema = new Schema({
-  familyId: { type: Schema.Types.ObjectId, ref: 'Family', required: true },
-  date: { type: Date, required: true },
-  meals: [{
-    mealType: { type: String, enum: ['Breakfast', 'Lunch', 'Dinner'], required: true },
-    recipeId: { type: Schema.Types.ObjectId, ref: 'Recipe', required: true }
-  }]
-}, { timestamps: true });
-
-export default mongoose.model<IMealPlan>('MealPlan', MealPlanSchema);

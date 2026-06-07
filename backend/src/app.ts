@@ -1,10 +1,12 @@
 import express, { type Request, type Response } from 'express';
 import dotenv from 'dotenv';
-import connectDB from './config/db.config.js';
 import uploadRoute from './routes/upload.route.js';
+import { testDBConnection } from './config/db.config.js';
 
 dotenv.config();
-connectDB();
+
+// Chạy test kết nối
+testDBConnection();
 
 const app = express();
 app.use('/api/upload', uploadRoute);

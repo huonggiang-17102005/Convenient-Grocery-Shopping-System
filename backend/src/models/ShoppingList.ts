@@ -1,6 +1,4 @@
-import mongoose, { Schema, type Document } from 'mongoose';
-
-export interface IShoppingItem {
+export interface ShoppingItem {
   name: string;
   category: string;
   quantity: number;
@@ -8,32 +6,16 @@ export interface IShoppingItem {
   imageUrl: string;
   imagePublicId: string;
   isBought: boolean;
-  assigneeId: mongoose.Types.ObjectId | null;
+  assigneeId: string | null;
 }
 
-export interface IShoppingList extends Document {
-  familyId: mongoose.Types.ObjectId;
+export interface ShoppingList {
+  id: string;
+  family_id: string;
   title: string;
-  targetDate: Date;
-  items: IShoppingItem[];
+  target_date: string | null;
   status: 'Planning' | 'Shopping' | 'Completed';
+  items: ShoppingItem[];
+  created_at?: string;
+  updated_at?: string;
 }
-
-const ShoppingListSchema: Schema = new Schema({
-  familyId: { type: Schema.Types.ObjectId, ref: 'Family', required: true },
-  title: { type: String, required: true },
-  targetDate: { type: Date },
-  items: [{
-    name: { type: String, required: true },
-    category: { type: String, default: 'Chưa phân loại' },
-    quantity: { type: Number, required: true },
-    unit: { type: String, required: true },
-    imageUrl: { type: String, default: '' },
-    imagePublicId: { type: String, default: '' },
-    isBought: { type: Boolean, default: false },
-    assigneeId: { type: Schema.Types.ObjectId, ref: 'User', default: null }
-  }],
-  status: { type: String, enum: ['Planning', 'Shopping', 'Completed'], default: 'Planning' }
-}, { timestamps: true });
-
-export default mongoose.model<IShoppingList>('ShoppingList', ShoppingListSchema);

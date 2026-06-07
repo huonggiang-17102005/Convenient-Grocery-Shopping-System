@@ -1,15 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose';
-
-export interface IFamily extends Document {
+export interface Family {
+  id: string;
   name: string;
-  homemakerId: mongoose.Types.ObjectId; 
-  members: mongoose.Types.ObjectId[];
+  homemaker_id: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
-
-const FamilySchema: Schema = new Schema({
-  name: { type: String, required: true },
-  homemakerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  members: [{ type: Schema.Types.ObjectId, ref: 'User' }]
-}, { timestamps: true });
-
-export default mongoose.model<IFamily>('Family', FamilySchema);

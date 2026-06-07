@@ -1,19 +1,9 @@
-import mongoose, { Schema, Document } from 'mongoose';
-
-export interface IUser extends Document {
+export interface User {
+  id: string;
   email: string;
-  password: string;
+  password?: string;
   role: 'Admin' | 'User';
-  familyId: mongoose.Types.ObjectId | null;
-  favoriteRecipes: mongoose.Types.ObjectId[];
+  family_id: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
-
-const UserSchema: Schema = new Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['Admin', 'User'], default: 'User' },
-  familyId: { type: Schema.Types.ObjectId, ref: 'Family', default: null },
-  favoriteRecipes: [{ type: Schema.Types.ObjectId, ref: 'Recipe' }]
-}, { timestamps: true });
-
-export default mongoose.model<IUser>('User', UserSchema);

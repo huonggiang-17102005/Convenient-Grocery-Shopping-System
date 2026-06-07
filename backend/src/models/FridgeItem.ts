@@ -1,29 +1,15 @@
-import mongoose, { Schema, type Document } from 'mongoose';
-
-export interface IFridgeItem extends Document {
-  familyId: mongoose.Types.ObjectId;
+export interface FridgeItem {
+  id: string;
+  family_id: string;
   name: string;
   quantity: number;
   unit: string;
   category: string;
+  image_url: string;
+  image_public_id: string;
   location: string;
-  expirationDate: Date;
-  isWasted: boolean;
-  imageUrl: string;
-  imagePublicId: string;
+  expiration_date: string;
+  is_wasted: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
-
-const FridgeItemSchema: Schema = new Schema({
-  familyId: { type: Schema.Types.ObjectId, ref: 'Family', required: true },
-  name: { type: String, required: true },
-  quantity: { type: Number, required: true },
-  unit: { type: String, required: true },
-  category: { type: String, default: 'Chưa phân loại' },
-  imageUrl: { type: String, default: '' },
-  imagePublicId: { type: String, default: '' },
-  location: { type: String, default: 'Ngăn mát' },
-  expirationDate: { type: Date, required: true },
-  isWasted: { type: Boolean, default: false }
-}, { timestamps: true });
-
-export default mongoose.model<IFridgeItem>('FridgeItem', FridgeItemSchema);

@@ -1,47 +1,23 @@
-import mongoose, { Schema, type Document } from 'mongoose';
-export interface IIngredient {
+export interface Ingredient {
   name: string;
   quantity: number;
   unit: string;
 }
-export interface IRecipe extends Document {
-  authorId: mongoose.Types.ObjectId;
+
+export interface Recipe {
+  id: string;
+  author_id: string;
   name: string;
   description: string;
-  imageUrl: string;
-  imagePublicId: string;
-  cookingTime: number;
+  image_url: string;
+  image_public_id: string;
+  cooking_time: number;
   difficulty: 'Dễ' | 'Trung bình' | 'Khó';
   servings: number;
-  ingredients: IIngredient[];
+  ingredients: Ingredient[];
   instructions: string[];
   visibility: 'Private' | 'Public';
-  likesCount: number;
-  likedBy: mongoose.Types.ObjectId[];
+  likes_count: number;
+  created_at?: string;
+  updated_at?: string;
 }
-
-const RecipeSchema: Schema = new Schema({
-  authorId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  name: { type: String, required: true },
-  description: { type: String, default: '' },
-
-  imageUrl: { type: String, default: '' },
-  imagePublicId: { type: String, default: '' },
-  
-  cookingTime: { type: Number, default: 0 },
-  difficulty: { type: String, enum: ['Dễ', 'Trung bình', 'Khó'], default: 'Trung bình' },
-  servings: { type: Number, required: true },
-
-  ingredients: [{
-    name: { type: String, required: true },
-    quantity: { type: Number, required: true },
-    unit: { type: String, required: true }
-  }],
-  
-  instructions: [{ type: String }],
-  visibility: { type: String, enum: ['Private', 'Public'], default: 'Private' },
-  likesCount: { type: Number, default: 0 },
-  likedBy: [{ type: Schema.Types.ObjectId, ref: 'User' }]
-}, { timestamps: true });
-
-export default mongoose.model<IRecipe>('Recipe', RecipeSchema);
