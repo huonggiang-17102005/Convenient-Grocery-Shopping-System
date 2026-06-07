@@ -1,7 +1,10 @@
 import express, { type Request, type Response } from 'express';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import uploadRoute from './routes/upload.route.js';
 import { testDBConnection } from './config/db.config.js';
+
+import authRoute from './routes/auth.route.js';
 
 dotenv.config();
 
@@ -9,10 +12,12 @@ dotenv.config();
 testDBConnection();
 
 const app = express();
-app.use('/api/upload', uploadRoute);
-const PORT = process.env.PORT || 5000;
-
+app.use(cors());
 app.use(express.json());
+
+app.use('/api/upload', uploadRoute);
+app.use('/api/auth', authRoute);
+const PORT = process.env.PORT || 5000;
 
 app.get('/', (req: Request, res: Response) => {
   res.send('Backend đang hoạt động!');

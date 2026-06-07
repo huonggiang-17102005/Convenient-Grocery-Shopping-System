@@ -1,9 +1,9 @@
 import { createBrowserRouter } from 'react-router-dom';
 
 // Guest pages
-import Auth from '../pages/guest/Auth';
+import Login from '../pages/guest/Login';
+import Register from '../pages/guest/Register';
 import RoleSelection from '../pages/guest/RoleSelection';
-import CreateGroup from '../pages/guest/CreateGroup';
 
 // Homemaker pages
 import DashboardHomemaker from '../pages/homemaker/DashboardHomemaker';
@@ -18,15 +18,15 @@ export const router = createBrowserRouter([
   // Guest Routes
   {
     path: '/',
-    element: <Auth />,
+    element: <Login />,
+  },
+  {
+    path: '/register',
+    element: <Register />,
   },
   {
     path: '/choose-role',
     element: <RoleSelection />,
-  },
-  {
-    path: '/create-group',
-    element: <CreateGroup />,
   },
 
   // Homemaker Routes

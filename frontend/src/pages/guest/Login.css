@@ -1,0 +1,176 @@
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  padding: 24px;
+  box-sizing: border-box;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overflow-y: auto;
+}
+
+.auth-header {
+  margin-top: 40px;
+  margin-bottom: 24px;
+}
+
+.auth-logo {
+  width: 64px;
+  height: 64px;
+  background-color: #FF8A00;
+  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.auth-title {
+  color: #1A1A1A;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  line-height: 32px;
+}
+
+.auth-subtitle {
+  color: #757575;
+  font-size: 14px;
+  margin: 0;
+  line-height: 20px;
+}
+
+.auth-toggle {
+  display: flex;
+  background-color: #F5F5F5;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+
+.toggle-btn {
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #757575;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toggle-btn.active {
+  background-color: #ffffff;
+  color: #1A1A1A;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: #1A1A1A;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  align-self: flex-start;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.form-group input {
+  padding: 0 48px 0 16px;
+  height: 52px;
+  border-radius: 12px;
+  border: 1px solid #E0E0E0;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease;
+  background-color: #ffffff;
+  color: #1A1A1A;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.eye-icon {
+  position: absolute;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  height: 100%;
+}
+
+.form-group input:focus {
+  border-color: #FF8A00;
+}
+
+.form-group input::placeholder {
+  color: rgba(26, 26, 26, 0.5);
+}
+
+.forgot-password {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
+.forgot-password span {
+  color: #FF8A00;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.auth-submit-btn {
+  background-color: #FF8A00;
+  color: #ffffff;
+  height: 48px;
+  border-radius: 100px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  font-family: inherit;
+  transition: background-color 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-submit-btn:hover {
+  background-color: #e67a00;
+}
+
+/* Loại bỏ màu nền xanh/vàng mặc định của trình duyệt khi Autofill */
+.form-group input:-webkit-autofill,
+.form-group input:-webkit-autofill:hover, 
+.form-group input:-webkit-autofill:focus, 
+.form-group input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #1A1A1A !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
