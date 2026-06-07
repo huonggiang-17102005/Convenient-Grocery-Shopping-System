@@ -28,8 +28,8 @@ Hệ thống đi chợ tiện lợi được thiết kế nhằm hỗ trợ ngư
 ## 🛠 Tech Stack (Công nghệ sử dụng)
 
 - **Frontend:** React.js, Vite, TypeScript, React Router DOM, Axios, Lucide-React.
-- **Backend:** Node.js, Express.js, TypeScript, JWT, Bcrypt.
-- **Database:** 
+- **Backend:** Node.js, Express.js, TypeScript.
+- **Database & Storage:** Supabase (PostgreSQL).
 
 ## 🚀 Hướng dẫn cài đặt và Chạy dự án (Getting Started)
 
@@ -41,17 +41,20 @@ Mở terminal và di chuyển vào thư mục `backend`:
 cd backend
 npm install
 ```
-Tạo file `.env` (nếu chưa có) và thiết lập môi trường:
+
+Tạo file `.env` ở trong thư mục `backend` và thiết lập các biến môi trường cho **Supabase**:
 ```env
 PORT=5000
-# DB_URL=...
-# JWT_SECRET=...
+SUPABASE_URL=https://[YOUR_PROJECT_ID].supabase.co
+SUPABASE_ANON_KEY=[YOUR_ANON_KEY]
 ```
+*(Ghi chú: Thay thế URL và Key bằng thông tin từ project Supabase của nhóm)*
 
-Khởi động server phát triển:
+Khởi động server Backend:
 ```bash
 npm run dev
 ```
+*(Nếu cài đặt đúng, terminal sẽ hiển thị "✅ Đã kết nối thành công với Database (Supabase)!")*
 
 ### 2. Khởi động Frontend
 Mở một terminal mới và di chuyển vào thư mục `frontend`:
@@ -59,8 +62,9 @@ Mở một terminal mới và di chuyển vào thư mục `frontend`:
 cd frontend
 npm install
 ```
+
 Khởi động ứng dụng React:
 ```bash
 npm run dev
 ```
-Trang web sẽ tự động hiển thị hoặc bạn có thể truy cập thông qua `http://localhost:5173`.
+Trang web sẽ tự động hiển thị trên trình duyệt (thường là tại `http://localhost:5173`).
