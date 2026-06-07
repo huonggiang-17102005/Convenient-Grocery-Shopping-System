@@ -65,6 +65,12 @@ export const router = createBrowserRouter([
   {
     path: '/member',
     element: <div>Member Layout...</div>,
+    children: [
+      {
+        path: 'dashboard',
+        element: <div style={{ padding: '24px' }}><h1>Dashboard Thành viên gia đình (Đang xây dựng...)</h1></div>,
+      }
+    ]
   },
 
   // Admin Routes Placeholder

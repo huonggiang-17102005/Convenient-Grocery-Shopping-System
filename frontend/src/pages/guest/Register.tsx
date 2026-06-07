@@ -52,7 +52,8 @@ export default function Register() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      navigate('/homemaker/dashboard');
+      // Đăng ký thành công thì nhảy sang trang chọn vai trò
+      navigate('/choose-role');
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
