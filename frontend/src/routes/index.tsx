@@ -12,6 +12,7 @@ import ShoppingListHomemaker from '../pages/homemaker/ShoppingListHomemaker';
 import RecipeSmartSuggestions from '../pages/homemaker/RecipeSmartSuggestions';
 import MealPlanner from '../pages/homemaker/MealPlanner';
 import ProfileGroupManagement from '../pages/homemaker/ProfileGroupManagement';
+import HomemakerLayout from '../components/layout/HomemakerLayout';
 
 export const router = createBrowserRouter([
   // Guest Routes
@@ -31,6 +32,7 @@ export const router = createBrowserRouter([
   // Homemaker Routes
   {
     path: '/homemaker',
+    element: <HomemakerLayout />,
     children: [
       {
         path: 'dashboard',
