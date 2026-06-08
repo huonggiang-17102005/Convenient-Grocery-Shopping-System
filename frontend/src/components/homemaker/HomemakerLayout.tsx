@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import HomemakerHeader from './HomemakerHeader';
-import HomemakerBottomNav from './HomemakerBottomNav';
+import HomemakerNavbar from './HomemakerNavbar';
 import './HomemakerLayout.css';
 
 const HomemakerLayout: React.FC = () => {
@@ -11,7 +11,7 @@ const HomemakerLayout: React.FC = () => {
       <main className="homemaker-content">
         <Outlet />
       </main>
-      <HomemakerBottomNav />
+      <HomemakerNavbar />
     </div>
   );
 };
