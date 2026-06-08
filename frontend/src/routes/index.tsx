@@ -13,6 +13,7 @@ import RecipeSmartSuggestions from '../pages/homemaker/RecipeSmartSuggestions';
 import MealPlanner from '../pages/homemaker/MealPlanner';
 import ProfileGroupManagement from '../pages/homemaker/ProfileGroupManagement';
 import HomemakerLayout from '../components/layout/HomemakerLayout';
+import CreateGroup from '../pages/homemaker/CreateGroup';
 
 export const router = createBrowserRouter([
   // Guest Routes
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
   {
     path: '/choose-role',
     element: <RoleSelection />,
+  },
+  {
+    path: '/homemaker/create-group',
+    element: <CreateGroup />,
   },
 
   // Homemaker Routes

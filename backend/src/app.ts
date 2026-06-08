@@ -6,6 +6,7 @@ import { testDBConnection } from './config/db.config.js';
 
 import authRoute from './routes/auth.route.js';
 import userRoute from './routes/user.route.js';
+import familyRoute from './routes/family.route.js';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use('/api/upload', uploadRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/users', userRoute);
+app.use('/api/families', familyRoute);
 const PORT = process.env.PORT || 5000;
 
 app.get('/', (req: Request, res: Response) => {

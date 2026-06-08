@@ -44,7 +44,7 @@ export default function RoleSelection() {
 
       // Điều hướng dựa vào vai trò
       if (role === 'Homemaker') {
-        navigate('/homemaker/dashboard');
+        navigate('/homemaker/create-group');
       } else {
         navigate('/member/dashboard');
       }
