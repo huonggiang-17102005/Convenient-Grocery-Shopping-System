@@ -4,8 +4,8 @@ import './HomemakerLayout.css';
 
 const HomemakerHeader: React.FC = () => {
   // TODO: Thay thế bằng dữ liệu thật từ Context/Redux hoặc API sau khi có tính năng đăng nhập
-  const [userName, setUserName] = useState('Bạn');
-  const [groupName, setGroupName] = useState('Gia đình của bạn');
+  const userName = 'Bạn';
+  const groupName = 'Gia đình của bạn';
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   // Fake data thông báo
