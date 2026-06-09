@@ -11,7 +11,7 @@ const navItems = [
   { path: '/homemaker/profile', icon: User, label: 'Hồ sơ' },
 ];
 
-const HomemakerBottomNav: React.FC = () => {
+const HomemakerNavbar: React.FC = () => {
   return (
     <nav className="homemaker-bottom-nav">
       {navItems.map((item) => (
@@ -28,4 +28,4 @@ const HomemakerBottomNav: React.FC = () => {
   );
 };
 
-export default HomemakerBottomNav;
+export default HomemakerNavbar;
