@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { X } from 'lucide-react';
 import './Dashboard.css';
 
 // Components
@@ -64,6 +65,15 @@ const Dashboard: React.FC = () => {
   const [toastMsg,     setToastMsg]     = useState('');
   const [toastVisible, setToastVisible] = useState(false);
 
+  // Simulated member purchase notification
+  const [purchaseNotification, setPurchaseNotification] = useState<{
+    memberName: string;
+    action: string;
+  } | null>({
+    memberName: 'Shin',
+    action: 'Mua 1kg thịt bò',
+  });
+
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setToastVisible(true);
@@ -96,6 +106,23 @@ const Dashboard: React.FC = () => {
         isVisible={toastVisible}
         onHide={hideToast}
       />
+
+      {/* Member Purchase Notification */}
+      {purchaseNotification && (
+        <div className="member-purchase-notification">
+          <div className="member-purchase-notification__content">
+            <div className="member-purchase-notification__title">✅ {purchaseNotification.memberName} đã hoàn thành</div>
+            <div className="member-purchase-notification__action">{purchaseNotification.action}</div>
+          </div>
+          <button
+            className="member-purchase-notification__close"
+            onClick={() => setPurchaseNotification(null)}
+            title="Đóng thông báo"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* Invite Banner */}
       <div className="invite-banner">
