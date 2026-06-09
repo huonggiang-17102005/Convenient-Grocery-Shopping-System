@@ -52,7 +52,8 @@ export default function Register() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      navigate('/homemaker/dashboard');
+      // Đăng ký thành công thì nhảy sang trang chọn vai trò
+      navigate('/choose-role');
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -66,7 +67,7 @@ export default function Register() {
         <div className="auth-logo">
           <ShoppingCart size={32} color="#1A1A1A" />
         </div>
-        <h1 className="auth-title">Chào mừng đến BridMate</h1>
+        <h1 className="auth-title">Chào mừng đến FridMate</h1>
         <p className="auth-subtitle">Bắt đầu quản lý bếp nhà thông minh</p>
       </div>
 

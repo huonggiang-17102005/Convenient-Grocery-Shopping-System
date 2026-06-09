@@ -15,7 +15,7 @@ import ProfileGroupManagement from '../pages/homemaker/ProfileGroupManagement';
 import HomemakerLayout from '../components/homemaker/HomemakerLayout';
 import MemberLayout from '../components/member/MemberLayout';
 import AdminLayout from '../components/admin/AdminLayout';
-
+import CreateGroup from '../pages/homemaker/CreateGroup';
 
 export const router = createBrowserRouter([
   // Guest Routes
@@ -30,6 +30,10 @@ export const router = createBrowserRouter([
   {
     path: '/choose-role',
     element: <RoleSelection />,
+  },
+  {
+    path: '/homemaker/create-group',
+    element: <CreateGroup />,
   },
 
   // Homemaker Routes

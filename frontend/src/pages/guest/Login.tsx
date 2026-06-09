@@ -49,7 +49,7 @@ export default function Login() {
         <div className="auth-logo">
           <ShoppingCart size={32} color="#1A1A1A" />
         </div>
-        <h1 className="auth-title">Chào mừng đến BridMate</h1>
+        <h1 className="auth-title">Chào mừng đến FridMate</h1>
         <p className="auth-subtitle">Bắt đầu quản lý bếp nhà thông minh</p>
       </div>
 
