@@ -130,7 +130,12 @@
   gap: 12px;
   overflow-x: auto;
   padding-bottom: 8px;
-  scrollbar-width: none;
+}
+
+@supports (scrollbar-width: none) {
+  .expiring-section__list {
+    scrollbar-width: none;
+  }
 }
 
 .expiring-section__list::-webkit-scrollbar { display: none; }
@@ -489,7 +494,12 @@
   padding-bottom: 4px;
   max-height: 280px;
   overflow-y: auto;
-  scrollbar-width: none;
+}
+
+@supports (scrollbar-width: none) {
+  .cook-modal__list {
+    scrollbar-width: none;
+  }
 }
 
 .cook-modal__list::-webkit-scrollbar { display: none; }

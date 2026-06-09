@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './RoleSelection.css';
 
@@ -49,8 +49,8 @@ export default function RoleSelection() {
         navigate('/member/dashboard');
       }
 
-    } catch (err: any) {
-      setErrorMsg(err.message);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Lỗi khi cập nhật vai trò');
     } finally {
       setIsLoading(false);
     }

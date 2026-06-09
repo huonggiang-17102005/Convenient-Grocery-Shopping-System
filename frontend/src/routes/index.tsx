@@ -75,19 +75,19 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'dashboard',
-        element: <div style={{ padding: '20px' }}><h3>Màn hình: Dashboard Member</h3><p>Đây là trang chủ dành cho Thành viên gia đình.</p></div>,
+        element: <div className="placeholder-page"><h3>Màn hình: Dashboard Member</h3><p>Đây là trang chủ dành cho Thành viên gia đình.</p></div>,
       },
       {
         path: 'refrigerator',
-        element: <div style={{ padding: '20px' }}><h3>Màn hình: Tủ lạnh Member</h3><p>Xem danh sách thực phẩm trong tủ lạnh.</p></div>,
+        element: <div className="placeholder-page"><h3>Màn hình: Tủ lạnh Member</h3><p>Xem danh sách thực phẩm trong tủ lạnh.</p></div>,
       },
       {
         path: 'shopping-list',
-        element: <div style={{ padding: '20px' }}><h3>Màn hình: Mua sắm Member</h3><p>Xem danh sách cần mua sắm.</p></div>,
+        element: <div className="placeholder-page"><h3>Màn hình: Mua sắm Member</h3><p>Xem danh sách cần mua sắm.</p></div>,
       },
       {
         path: 'profile',
-        element: <div style={{ padding: '20px' }}><h3>Màn hình: Hồ sơ Member</h3><p>Thông tin cá nhân thành viên.</p></div>,
+        element: <div className="placeholder-page"><h3>Màn hình: Hồ sơ Member</h3><p>Thông tin cá nhân thành viên.</p></div>,
       }
     ]
   },
@@ -99,15 +99,15 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'dashboard',
-        element: <div style={{ padding: '20px' }}><h3>Bảng điều khiển Admin</h3><p>Tổng quan hệ thống, người dùng và hoạt động.</p></div>,
+        element: <div className="placeholder-page"><h3>Bảng điều khiển Admin</h3><p>Tổng quan hệ thống, người dùng và hoạt động.</p></div>,
       },
       {
         path: 'users',
-        element: <div style={{ padding: '20px' }}><h3>Quản lý người dùng</h3><p>Xem và chỉnh sửa danh sách tài khoản.</p></div>,
+        element: <div className="placeholder-page"><h3>Quản lý người dùng</h3><p>Xem và chỉnh sửa danh sách tài khoản.</p></div>,
       },
       {
         path: 'settings',
-        element: <div style={{ padding: '20px' }}><h3>Cài đặt hệ thống</h3><p>Cấu hình các tham số vận hành.</p></div>,
+        element: <div className="placeholder-page"><h3>Cài đặt hệ thống</h3><p>Cấu hình các tham số vận hành.</p></div>,
       }
     ]
   },

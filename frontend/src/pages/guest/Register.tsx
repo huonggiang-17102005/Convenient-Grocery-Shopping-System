@@ -54,8 +54,8 @@ export default function Register() {
 
       // Đăng ký thành công thì nhảy sang trang chọn vai trò
       navigate('/choose-role');
-    } catch (err: any) {
-      setErrorMsg(err.message);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Có lỗi xảy ra');
     } finally {
       setIsLoading(false);
     }
