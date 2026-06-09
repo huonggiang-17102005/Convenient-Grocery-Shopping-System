@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Copy, Smartphone } from 'lucide-react';
+import { ArrowLeft, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import './CreateGroup.css';
@@ -39,8 +39,12 @@ const CreateGroup: React.FC = () => {
 
       setGroupCode(data.family.invite_code);
       setShowPopup(true);
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert('Lỗi không xác định.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +62,13 @@ const CreateGroup: React.FC = () => {
   return (
     <div className="create-group-container">
       <div className="create-group-header">
-        <button className="back-button" onClick={() => navigate(-1)}>
+        <button
+          type="button"
+          className="back-button"
+          onClick={() => navigate(-1)}
+          title="Quay lại"
+          aria-label="Quay lại"
+        >
           <ArrowLeft size={24} />
         </button>
         <h1 className="header-title">Tạo nhóm gia đình</h1>
@@ -76,6 +86,7 @@ const CreateGroup: React.FC = () => {
         </div>
         
         <button 
+          type="button"
           className={`create-btn ${groupName.trim() ? 'active' : ''}`}
           onClick={handleCreateGroup}
           disabled={!groupName.trim() || isLoading}

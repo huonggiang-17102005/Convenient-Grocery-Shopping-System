@@ -174,7 +174,7 @@
 .qr-placeholder {
   width: 200px;
   height: 200px;
-  background: #F5F5F5;
+  background: white;
   border: 1px solid #E0E0E0;
   border-radius: 12px;
   display: flex;

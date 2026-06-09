@@ -146,6 +146,7 @@
 .member-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   background-color: #F8FAFC;
   padding-bottom: 20px;
 }
@@ -163,7 +164,7 @@
   z-index: 10;
 }
 
-.nav-item {
+.member-bottom-nav .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -176,16 +177,20 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.nav-item.active {
+.member-bottom-nav .nav-item.active {
   color: #2563EB;
 }
 
-.nav-item.active svg {
+.member-bottom-nav .nav-item.active svg {
   stroke: #2563EB;
 }
 
-.nav-label {
+.member-bottom-nav .nav-label {
   font-size: 12px;
   font-weight: 500;
   font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.placeholder-page {
+  padding: 20px;
 }

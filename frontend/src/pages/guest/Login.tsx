@@ -36,8 +36,8 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(data.user));
 
       navigate('/homemaker/dashboard');
-    } catch (err: any) {
-      setErrorMsg(err.message);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Có lỗi xảy ra');
     } finally {
       setIsLoading(false);
     }

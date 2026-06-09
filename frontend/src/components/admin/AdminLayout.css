@@ -132,3 +132,7 @@
   overflow-y: auto;
   background-color: #F8FAFC;
 }
+
+.placeholder-page {
+  padding: 20px;
+}
