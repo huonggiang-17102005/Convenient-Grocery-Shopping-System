@@ -5,6 +5,7 @@ export interface Recipe {
   name: string;
   emoji: string;
   duration: string; // e.g. '25 phút'
+  image?: string;   // optional image URL
 }
 
 export type MealKey = 'breakfast' | 'lunch' | 'dinner';

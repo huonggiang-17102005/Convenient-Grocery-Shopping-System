@@ -21,9 +21,13 @@ const RecipeSelectCard: React.FC<RecipeSelectCardProps> = ({
         checked={isSelected}
         onChange={() => onToggle(recipe.id)}
       />
-      {/* Emoji thumbnail */}
+      {/* Image or Emoji thumbnail */}
       <div className="mp-recipe-card__img" aria-hidden="true">
-        {recipe.emoji}
+        {recipe.image ? (
+          <img src={recipe.image} alt="" className="mp-recipe-card__img-el" />
+        ) : (
+          recipe.emoji
+        )}
       </div>
 
       {/* Info */}

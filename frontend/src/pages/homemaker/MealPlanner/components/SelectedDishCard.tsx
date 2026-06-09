@@ -11,7 +11,11 @@ const SelectedDishCard: React.FC<SelectedDishCardProps> = ({ dish, onRemove }) =
     <li className="mp-dish-card">
       <div className="mp-dish-card__left">
         <div className="mp-dish-card__emoji-wrap" aria-hidden="true">
-          {dish.emoji}
+          {dish.image ? (
+            <img src={dish.image} alt="" className="mp-dish-card__img-el" />
+          ) : (
+            dish.emoji
+          )}
         </div>
         <span className="mp-dish-card__name">{dish.name}</span>
       </div>
