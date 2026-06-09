@@ -7,7 +7,7 @@ import RoleSelection from '../pages/guest/RoleSelection';
 
 // Homemaker pages
 import DashboardHomemaker from '../pages/homemaker/Dashboard';
-import RefrigeratorHomemaker from '../pages/homemaker/RefrigeratorHomemaker';
+import FridgeHomemaker from '../pages/homemaker/FridgeHomemaker';
 import ShoppingListHomemaker from '../pages/homemaker/ShoppingListHomemaker';
 import RecipeSmartSuggestions from '../pages/homemaker/RecipeSmartSuggestions';
 import MealPlanner from '../pages/homemaker/MealPlanner';
@@ -42,8 +42,8 @@ export const router = createBrowserRouter([
         element: <DashboardHomemaker />,
       },
       {
-        path: 'refrigerator',
-        element: <RefrigeratorHomemaker />,
+        path: 'fridge',
+        element: <FridgeHomemaker />,
       },
       {
         path: 'shopping-list',
