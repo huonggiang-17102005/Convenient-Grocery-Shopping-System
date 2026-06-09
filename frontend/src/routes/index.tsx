@@ -6,7 +6,7 @@ import Register from '../pages/guest/Register';
 import RoleSelection from '../pages/guest/RoleSelection';
 
 // Homemaker pages
-import DashboardHomemaker from '../pages/homemaker/DashboardHomemaker';
+import DashboardHomemaker from '../pages/homemaker/Dashboard';
 import RefrigeratorHomemaker from '../pages/homemaker/RefrigeratorHomemaker';
 import ShoppingListHomemaker from '../pages/homemaker/ShoppingListHomemaker';
 import RecipeSmartSuggestions from '../pages/homemaker/RecipeSmartSuggestions';
