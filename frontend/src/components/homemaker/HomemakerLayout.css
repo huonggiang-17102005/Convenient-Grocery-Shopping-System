@@ -148,7 +148,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   background-color: #F5F5F5;
-  padding-bottom: 20px;
+  padding-bottom: 0;
 }
 
 /* Bottom Navigation Styles */

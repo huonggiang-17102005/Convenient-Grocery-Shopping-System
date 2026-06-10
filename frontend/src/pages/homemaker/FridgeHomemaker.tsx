@@ -66,7 +66,7 @@ const FridgeHomemaker: React.FC = () => {
         ))}
       </div>
       
-      <button className="fab-button">
+      <button className="fab-button" aria-label="Thêm thực phẩm" title="Thêm thực phẩm">
         <Plus size={24} />
       </button>
     </div>
