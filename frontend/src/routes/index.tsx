@@ -11,7 +11,7 @@ import FridgeHomemaker from '../pages/homemaker/FridgeHomemaker';
 import ShoppingListHomemaker from '../pages/homemaker/ShoppingListHomemaker';
 import RecipeSmartSuggestions from '../pages/homemaker/RecipeSmartSuggestions';
 import MealPlanner from '../pages/homemaker/MealPlanner';
-import ProfileGroupManagement from '../pages/homemaker/ProfileGroupManagement';
+import ProfileScreen from '../pages/homemaker/Profile/ProfileScreen';
 import HomemakerLayout from '../components/homemaker/HomemakerLayout';
 import MemberLayout from '../components/member/MemberLayout';
 import AdminLayout from '../components/admin/AdminLayout';
@@ -63,7 +63,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'profile',
-        element: <ProfileGroupManagement />,
+        element: <ProfileScreen />,
       }
     ]
   },
