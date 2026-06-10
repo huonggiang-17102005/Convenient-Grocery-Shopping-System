@@ -3,7 +3,8 @@ import { X } from 'lucide-react';
 
 export interface CookIngredient {
   name: string;
-  amount: string;
+  amountValue: string;
+  amountUnit: string;
 }
 
 interface CookConfirmModalProps {
@@ -13,11 +14,11 @@ interface CookConfirmModalProps {
 }
 
 const INITIAL_INGREDIENTS: CookIngredient[] = [
-  { name: 'Thịt bò',   amount: '500g' },
-  { name: 'Hành tây',  amount: '1 củ' },
-  { name: 'Gia vị',    amount: '1 gói' },
-  { name: 'Cà chua',   amount: '2 quả' },
-  { name: 'Trứng gà',  amount: '3 quả' },
+  { name: 'Thịt bò',   amountValue: '500', amountUnit: 'g' },
+  { name: 'Hành tây',  amountValue: '1',   amountUnit: 'củ' },
+  { name: 'Gia vị',    amountValue: '1',   amountUnit: 'gói' },
+  { name: 'Cà chua',   amountValue: '2',   amountUnit: 'quả' },
+  { name: 'Trứng gà',  amountValue: '3',   amountUnit: 'quả' },
 ];
 
 const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
@@ -26,8 +27,6 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
   onConfirm,
 }) => {
   const [ingredients, setIngredients] = useState<CookIngredient[]>(INITIAL_INGREDIENTS);
-  const [newName, setNewName]     = useState('');
-  const [newAmount, setNewAmount] = useState('');
 
   if (!isOpen) return null;
 
@@ -42,10 +41,7 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
   };
 
   const addIngredient = () => {
-    if (!newName.trim()) return;
-    setIngredients((prev) => [...prev, { name: newName.trim(), amount: newAmount.trim() }]);
-    setNewName('');
-    setNewAmount('');
+    setIngredients((prev) => [...prev, { name: '', amountValue: '', amountUnit: '' }]);
   };
 
   const handleConfirm = () => {
@@ -71,48 +67,32 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
                 className="cook-modal__input cook-modal__input--name"
                 value={item.name}
                 onChange={(e) => updateField(index, 'name', e.target.value)}
+                placeholder="Thịt bò..."
                 aria-label={`Tên nguyên liệu ${index + 1}`}
               />
               <input
-                className="cook-modal__input cook-modal__input--amount"
-                value={item.amount}
-                onChange={(e) => updateField(index, 'amount', e.target.value)}
-                aria-label={`Số lượng ${item.name}`}
+                className="cook-modal__input cook-modal__input--value"
+                value={item.amountValue}
+                onChange={(e) => updateField(index, 'amountValue', e.target.value)}
+                placeholder="500"
+                aria-label={`Số lượng ${item.name || index + 1}`}
+              />
+              <input
+                className="cook-modal__input cook-modal__input--unit"
+                value={item.amountUnit}
+                onChange={(e) => updateField(index, 'amountUnit', e.target.value)}
+                placeholder="g"
+                aria-label={`Đơn vị ${item.name || index + 1}`}
               />
               <button
                 className="cook-modal__remove-btn"
                 onClick={() => removeRow(index)}
-                aria-label={`Xoá ${item.name}`}
+                aria-label={`Xoá ${item.name || `dòng ${index + 1}`}`}
               >
                 <X size={14} color="#757575" strokeWidth={2.5} />
               </button>
             </div>
           ))}
-
-          {/* New ingredient row (placeholder style) */}
-          <div className="cook-modal__row cook-modal__row--new">
-            <input
-              className="cook-modal__input cook-modal__input--name cook-modal__input--placeholder"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Thịt bò..."
-              aria-label="Tên nguyên liệu mới"
-            />
-            <input
-              className="cook-modal__input cook-modal__input--amount cook-modal__input--placeholder"
-              value={newAmount}
-              onChange={(e) => setNewAmount(e.target.value)}
-              placeholder="500g"
-              aria-label="Số lượng nguyên liệu mới"
-            />
-            <button
-              className="cook-modal__remove-btn"
-              onClick={() => { setNewName(''); setNewAmount(''); }}
-              aria-label="Xoá dòng mới"
-            >
-              <X size={14} color="#757575" strokeWidth={2.5} />
-            </button>
-          </div>
         </div>
 
         {/* Add new link */}
