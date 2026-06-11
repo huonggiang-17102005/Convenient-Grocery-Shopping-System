@@ -112,3 +112,77 @@ button, input, select, textarea {
   line-height: 20px;
 }
 
+/* ============================================
+   SHARED MODAL STYLES (Centered Popups)
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 25px;
+  animation: overlayIn 0.2s ease;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 390px;
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  animation: cardPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes cardPop {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Shared button styles */
+.modal-btn {
+  width: 100%;
+  padding: 14px 0;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  text-align: center;
+}
+
+.modal-btn:active { transform: scale(0.98); }
+
+.modal-btn--primary {
+  background: var(--primary-color);
+  color: white;
+}
+.modal-btn--primary:hover { background: var(--primary-hover); }
+
+.modal-btn--gray {
+  background: #E0E0E0;
+  color: #1A1A1A;
+}
+.modal-btn--gray:hover { background: #d0d0d0; }
+
+.modal-btn--outline {
+  background: white;
+  color: #1A1A1A;
+  border: 1.27px solid #E0E0E0;
+}
+.modal-btn--outline:hover { background: #F5F5F5; }
+
+
