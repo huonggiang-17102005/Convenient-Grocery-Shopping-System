@@ -5,7 +5,6 @@ import type { CommunityPost } from '../types';
 
 interface CommunityPostCardProps {
   post: CommunityPost;
-  primaryColor: string;
   onRecipeClick: (post: CommunityPost) => void;
   onToggleLike: (postId: string) => void;
 }

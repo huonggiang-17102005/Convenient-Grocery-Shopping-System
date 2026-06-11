@@ -5,7 +5,6 @@ import type { Recipe } from '../types';
 
 interface RecipeCardProps {
   recipe: Recipe;
-  _primaryColor?: string;
   onClick: (recipe: Recipe) => void;
   onToggleFavorite: (recipeId: string) => void;
 }

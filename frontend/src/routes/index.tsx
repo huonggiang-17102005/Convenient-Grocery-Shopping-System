@@ -14,7 +14,7 @@ import DashboardAdmin from '../pages/admin/Dashboard';
 import UserManagementAdmin from '../pages/admin/UserManagement';
 
 // Role-specific pages (đặc thù từng role, không dùng chung)
-import FridgeHomemaker from '../pages/homemaker/FridgeHomemaker';
+import FridgeFeature from '@/features/fridge';
 import CreateGroup from '../pages/homemaker/CreateGroup';
 import Jointhegroup from '../pages/member/Jointhegroup';
 
@@ -59,7 +59,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'fridge',
-        element: <FridgeHomemaker />,
+        element: <FridgeFeature role="homemaker" />,
       },
       {
         path: 'shopping-list',
@@ -91,7 +91,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'refrigerator',
-        element: <div className="placeholder-page"><h3>Màn hình: Tủ lạnh Member</h3><p>Xem danh sách thực phẩm trong tủ lạnh.</p></div>,
+        element: <FridgeFeature role="member" />,
       },
       {
         path: 'shopping-list',

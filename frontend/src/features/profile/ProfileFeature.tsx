@@ -1,13 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './profile.css';
-
-// Color theme per role
-const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
-  homemaker: '#FF8A00',
-  member: '#1E88E5',
-};
-
 export interface ProfileFeatureProps {
   role: 'homemaker' | 'member';
 }
@@ -28,7 +21,6 @@ import Toast from '@/components/shared/Toast';
 
 export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
-  const primaryColor = ROLE_COLORS[role];
 
   // User details state
   const [user, setUser] = useState({
@@ -167,7 +159,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
       <div className="profile-page">
         <div className="profile-white-card">
           {/* Page Title */}
-          <h1 className="profile-title" style={{ color: primaryColor }}>Hồ sơ &amp; Quản lý</h1>
+          <h1 className="profile-title">Hồ sơ &amp; Quản lý</h1>
           {/* Header (Avatar + Name) */}
           <ProfileHeader
             avatar={user.avatar}
@@ -192,6 +184,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
 
           {/* Settings options */}
           <SettingsMenu
+            role={role}
             expirationDays={expirationDays}
             onChangeExpirationDays={setExpirationDays}
             onOpenAccount={() => setIsAccountOpen(true)}

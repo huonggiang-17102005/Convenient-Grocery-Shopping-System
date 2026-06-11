@@ -6,8 +6,6 @@ import type { Recipe } from '../types';
 interface RecipeDetailModalProps {
   isOpen: boolean;
   recipe: Recipe | null;
-  role: 'homemaker' | 'member';
-  primaryColor: string;
   showEditDelete?: boolean;
   onClose: () => void;
   onEdit: (recipe: Recipe) => void;
@@ -19,8 +17,6 @@ interface RecipeDetailModalProps {
 const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   isOpen,
   recipe,
-  role,
-  primaryColor,
   showEditDelete = true,
   onClose,
   onEdit,
@@ -76,9 +72,9 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
           <h2 className="recipe-detail-title">{recipe.name}</h2>
 
           {/* Ingredient info box */}
-          <div className="recipe-detail-ingredients-box" style={{ background: role === 'homemaker' ? '#FFF3E0' : '#E3F2FF' }}>
+          <div className="recipe-detail-ingredients-box">
             <h4 className="recipe-detail-section-title">Thông tin nguyên liệu</h4>
-            <div className="recipe-detail-servings-badge" style={{ background: role === 'homemaker' ? '#FFE0B2' : '#BBDEFB', color: primaryColor }}>
+            <div className="recipe-detail-servings-badge">
               Khẩu phần: {recipe.servings} người!
             </div>
 
@@ -101,7 +97,6 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
               id="recipe-detail-shopping-btn"
               type="button"
               className="recipe-detail-primary-btn"
-              style={{ background: primaryColor }}
               onClick={() => onAddToShoppingList(recipe)}
             >
               Gom đồ thiếu vào Shopping List
@@ -113,7 +108,7 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
           <ol className="recipe-detail-steps">
             {recipe.steps.map((step, idx) => (
               <li key={step.id} className="recipe-detail-step">
-                <span className="recipe-step-number" style={{ background: primaryColor }}>
+                <span className="recipe-step-number">
                   {idx + 1}
                 </span>
                 <span className="recipe-step-text">{step.description}</span>
@@ -127,7 +122,6 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
               id="recipe-detail-cook-btn"
               type="button"
               className="recipe-detail-primary-btn"
-              style={{ background: primaryColor }}
               onClick={() => {/* Lưu vào thực đơn - placeholder */}}
             >
               Lưu vào thực đơn hôm nay

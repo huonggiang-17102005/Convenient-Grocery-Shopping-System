@@ -17,15 +17,7 @@ import './recipes.css';
 
 type ActiveTab = 'library' | 'favorites' | 'community';
 
-// Color theme per role
-const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
-  homemaker: '#FF8A00',
-  member: '#1E88E5',
-};
-
 export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
-  const primaryColor = ROLE_COLORS[role];
-
   // ── Data state ──────────────────────────────────────────────
   const [recipes, setRecipes] = useState<Recipe[]>(MOCK_RECIPES);
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(MOCK_COMMUNITY_POSTS);
@@ -212,7 +204,6 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         <RecipeTabs
           activeTab={activeTab}
           onChangeTab={setActiveTab}
-          primaryColor={primaryColor}
         />
       </div>
 
@@ -223,7 +214,6 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
             recipes={recipes}
             selectedIngredients={selectedIngredients}
             onChangeIngredients={setSelectedIngredients}
-            primaryColor={primaryColor}
             onRecipeClick={handleRecipeClick}
             onToggleFavorite={handleToggleFavorite}
           />
@@ -231,7 +221,6 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         {activeTab === 'favorites' && (
           <TabFavorites
             recipes={recipes}
-            primaryColor={primaryColor}
             onRecipeClick={handleRecipeClick}
             onToggleFavorite={handleToggleFavorite}
           />
@@ -239,7 +228,6 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         {activeTab === 'community' && (
           <TabCommunity
             posts={communityPosts}
-            primaryColor={primaryColor}
             pendingPost={pendingPost}
             role={role}
             onPostRecipeClick={handleCommunityPostClick}
@@ -256,7 +244,6 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
           id="recipe-fab-btn"
           type="button"
           className="recipe-fab"
-          style={{ background: primaryColor }}
           onClick={activeTab === 'community' ? () => setIsShareOpen(true) : handleOpenCreate}
           aria-label={activeTab === 'community' ? "Chia sẻ bài viết mới" : "Thêm công thức mới"}
         >
@@ -268,8 +255,6 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       <RecipeDetailModal
         isOpen={isDetailOpen}
         recipe={detailRecipe}
-        role={role}
-        primaryColor={primaryColor}
         showEditDelete={!isViewingCommunity}
         onClose={() => {
           setIsDetailOpen(false);
@@ -286,8 +271,6 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         isOpen={isFormOpen}
         mode={formMode}
         recipe={formRecipe}
-        role={role}
-        primaryColor={primaryColor}
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleFormSubmit}
       />
@@ -295,8 +278,6 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       <ShareCommunityModal
         key={isShareOpen ? 'open' : 'closed'}
         isOpen={isShareOpen}
-        role={role}
-        primaryColor={primaryColor}
         onClose={() => setIsShareOpen(false)}
         onSubmit={handleShareSubmit}
       />

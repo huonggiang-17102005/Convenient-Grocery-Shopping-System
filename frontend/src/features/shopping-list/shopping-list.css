@@ -53,7 +53,7 @@
 }
 
 .time-filter-tab--active {
-  background: #FF8A00;
+  background: var(--primary-color);
   color: white;
 }
 
@@ -124,7 +124,7 @@
 }
 
 .shopping-card__checkbox--checked {
-  background: #FF8A00;
+  background: var(--primary-color);
   color: white;
   font-weight: 700;
   font-size: 12px;
@@ -215,9 +215,9 @@
 
 .shopping-card__tag-assignee {
   padding: 5px 8px;
-  background: #FFE0B2;
+  background: var(--primary-light);
   border-radius: 100px;
-  color: #FF8A00;
+  color: var(--primary-color);
   font-size: 11px;
   font-weight: 500;
   line-height: 18px;
@@ -334,9 +334,9 @@
 .bottom-sheet__assign-btn {
   width: 85px;
   height: 34px;
-  background: #FFE0B2;
+  background: var(--primary-light);
   border-radius: 100px;
-  color: #FF8A00;
+  color: var(--primary-color);
   font-size: 12px;
   font-weight: 500;
   line-height: 18px;
@@ -425,7 +425,7 @@
 }
 
 .form-select:focus, .form-input:focus {
-  border-color: #FF8A00;
+  border-color: var(--primary-color);
 }
 
 /* Form Quantity and Unit Row */
@@ -454,7 +454,7 @@
 }
 
 .form-qty-btn--plus {
-  background: #FF8A00;
+  background: var(--primary-color);
   color: white;
 }
 
@@ -471,7 +471,7 @@
 }
 
 .form-qty-value:focus {
-  border-color: #FF8A00;
+  border-color: var(--primary-color);
 }
 
 .form-unit-select {
@@ -489,7 +489,7 @@
 }
 
 .form-unit-select:focus {
-  border-color: #FF8A00;
+  border-color: var(--primary-color);
 }
 
 /* Delete Confirm Modal styles */

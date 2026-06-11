@@ -6,7 +6,6 @@ import RecipeCard from './RecipeCard';
 
 interface TabFavoritesProps {
   recipes: Recipe[];
-  primaryColor: string;
   onRecipeClick: (recipe: Recipe) => void;
   onToggleFavorite: (recipeId: string) => void;
 }

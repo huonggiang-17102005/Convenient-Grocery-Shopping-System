@@ -10,17 +10,16 @@ interface WeekDayTabsProps {
   days: DayTab[];
   activeDay: string;
   onSelectDay: (key: string) => void;
-  primaryColor?: string;
 }
 
-const WeekDayTabs: React.FC<WeekDayTabsProps> = ({ days, activeDay, onSelectDay, primaryColor }) => {
+const WeekDayTabs: React.FC<WeekDayTabsProps> = ({ days, activeDay, onSelectDay }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll active tab into view
   useEffect(() => {
     if (!containerRef.current) return;
     const activeEl = containerRef.current.querySelector<HTMLLabelElement>(
-      '.mp-day-tab--active'
+      '.mp-weekday-tab--active'
     );
     if (activeEl) {
       activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -28,13 +27,12 @@ const WeekDayTabs: React.FC<WeekDayTabsProps> = ({ days, activeDay, onSelectDay,
   }, [activeDay]);
 
   return (
-    <div className="mp-day-tabs" ref={containerRef} role="radiogroup" aria-label="Chọn ngày trong tuần">
+    <div className="mp-weekday-tabs" ref={containerRef} role="radiogroup" aria-label="Chọn ngày trong tuần">
       {days.map((day) => (
         <label
           key={day.key}
           id={`mp-day-tab-${day.key}`}
-          className={`mp-day-tab${activeDay === day.key ? ' mp-day-tab--active' : ''}`}
-          style={activeDay === day.key && primaryColor ? { background: primaryColor, color: '#fff', borderColor: primaryColor } : undefined}
+          className={`mp-weekday-tab${activeDay === day.key ? ' mp-weekday-tab--active' : ''}`}
         >
           <input
             type="radio"
@@ -43,8 +41,8 @@ const WeekDayTabs: React.FC<WeekDayTabsProps> = ({ days, activeDay, onSelectDay,
             onChange={() => onSelectDay(day.key)}
             className="mp-sr-only"
           />
-          <span className="mp-day-tab__label">{day.label}</span>
-          {day.date && <span className="mp-day-tab__date">{day.date}</span>}
+          <span className="mp-weekday-tab__label">{day.label}</span>
+          {day.date && <span className="mp-weekday-tab__date">{day.date}</span>}
         </label>
       ))}
     </div>

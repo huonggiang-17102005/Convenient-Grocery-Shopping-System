@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import '../../index.css';
-import type { FoodItem, StorageType, FoodCategory } from '../../types/homemaker/refrigerator';
-import RefrigeratorHeader from '../../components/homemaker/refrigerator/RefrigeratorHeader';
-import StorageFilter from '../../components/homemaker/refrigerator/StorageFilter';
-import CategoryFilter from '../../components/homemaker/refrigerator/CategoryFilter';
-import FoodCard from '../../components/homemaker/refrigerator/FoodCard';
+import './fridge.css';
+import type { FoodItem, StorageType, FoodCategory } from './types';
+import RefrigeratorHeader from './components/RefrigeratorHeader';
+import StorageFilter from './components/StorageFilter';
+import CategoryFilter from './components/CategoryFilter';
+import FoodCard from './components/FoodCard';
+
+export interface FridgeFeatureProps {
+  role?: 'homemaker' | 'member';
+}
 
 const MOCK_DATA: FoodItem[] = [
   { id: '1', emoji: '🥕', name: 'Cà rốt', quantity: 3, daysRemaining: 7, category: 'Rau củ', storageType: 'Ngăn mát' },
@@ -14,7 +18,7 @@ const MOCK_DATA: FoodItem[] = [
   { id: '4', emoji: '🧅', name: 'Hành tây', quantity: 4, daysRemaining: 5, category: 'Rau củ', storageType: 'Khô' },
 ];
 
-const FridgeHomemaker: React.FC = () => {
+export const FridgeFeature: React.FC<FridgeFeatureProps> = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStorage, setActiveStorage] = useState<StorageType>('Tất cả');
   const [activeCategory, setActiveCategory] = useState<FoodCategory>('Tất cả');
@@ -82,4 +86,4 @@ const FridgeHomemaker: React.FC = () => {
   );
 };
 
-export default FridgeHomemaker;
+export default FridgeFeature;

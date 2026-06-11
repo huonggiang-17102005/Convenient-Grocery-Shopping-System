@@ -6,6 +6,7 @@ interface SettingsMenuProps {
   onChangeExpirationDays: (days: number) => void;
   onOpenAccount: () => void;
   onLogout: () => void;
+  role?: 'homemaker' | 'member';
 }
 
 const SettingsMenu: React.FC<SettingsMenuProps> = ({
@@ -13,6 +14,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
   onChangeExpirationDays,
   onOpenAccount,
   onLogout,
+  role = 'homemaker',
 }) => {
   const navigate = useNavigate();
 
@@ -33,7 +35,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
         <button
           id="profile-meal-planner-btn"
           className="profile-settings-item"
-          onClick={() => navigate('/homemaker/meal-planner')}
+          onClick={() => navigate(`/${role}/meal-planner`)}
           style={{ background: 'white' }}
         >
           <p className="profile-settings-item--text">📅 Thực đơn tuần</p>

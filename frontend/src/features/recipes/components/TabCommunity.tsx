@@ -7,7 +7,6 @@ import PendingPostCard from './PendingPostCard';
 
 interface TabCommunityProps {
   posts: CommunityPost[];
-  primaryColor: string;
   pendingPost?: PendingPost | null;
   role?: 'homemaker' | 'member';
   onPostRecipeClick: (post: CommunityPost) => void;
@@ -18,7 +17,6 @@ interface TabCommunityProps {
 
 const TabCommunity: React.FC<TabCommunityProps> = ({
   posts,
-  primaryColor,
   pendingPost,
   role,
   onPostRecipeClick,
@@ -50,7 +48,6 @@ const TabCommunity: React.FC<TabCommunityProps> = ({
             <CommunityPostCard
               key={post.id}
               post={post}
-              primaryColor={primaryColor}
               onRecipeClick={onPostRecipeClick}
               onToggleLike={onToggleLike}
             />

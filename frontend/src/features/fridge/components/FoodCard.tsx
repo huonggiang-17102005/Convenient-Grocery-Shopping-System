@@ -1,5 +1,5 @@
 import React from 'react';
-import type { FoodItem } from '../../../types/homemaker/refrigerator';
+import type { FoodItem } from '../types';
 
 interface FoodCardProps {
   item: FoodItem;

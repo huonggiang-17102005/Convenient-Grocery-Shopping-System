@@ -1,5 +1,5 @@
 import React from 'react';
-import type { StorageType } from '../../../types/homemaker/refrigerator';
+import type { StorageType } from '../types';
 
 interface StorageFilterProps {
   activeStorage: StorageType;

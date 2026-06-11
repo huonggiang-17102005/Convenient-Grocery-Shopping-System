@@ -14,34 +14,30 @@ const RecipeSelectCard: React.FC<RecipeSelectCardProps> = ({
   onToggle,
 }) => {
   return (
-    <label className="mp-recipe-card">
+    <label className={`mp-select-card${isSelected ? ' mp-select-card--selected' : ''}`}>
       <input
         type="checkbox"
-        className="mp-recipe-card__input mp-sr-only"
+        className="mp-sr-only"
         checked={isSelected}
         onChange={() => onToggle(recipe.id)}
       />
-      {/* Image or Emoji thumbnail */}
-      <div className="mp-recipe-card__img" aria-hidden="true">
-        {recipe.image ? (
-          <img src={recipe.image} alt="" className="mp-recipe-card__img-el" />
-        ) : (
-          recipe.emoji
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="mp-recipe-card__info">
-        <span className="mp-recipe-card__name">{recipe.name}</span>
-        <span className="mp-recipe-card__duration">{recipe.duration}</span>
-      </div>
-
-      {/* Checkbox */}
-      <div
-        className={`mp-recipe-card__checkbox${isSelected ? ' mp-recipe-card__checkbox--checked' : ''}`}
-        aria-hidden="true"
-      >
-        {isSelected && <Check size={12} color="white" strokeWidth={3.5} />}
+      <div className="mp-select-card__left">
+        <div className="mp-select-card__checkbox" aria-hidden="true">
+          {isSelected && <Check size={12} color="white" strokeWidth={3.5} />}
+        </div>
+        <div className="mp-select-card__emoji" aria-hidden="true">
+          {recipe.image ? (
+            <img src={recipe.image} alt="" className="mp-select-card__img-el" />
+          ) : (
+            recipe.emoji
+          )}
+        </div>
+        <div className="mp-select-card__info">
+          <span className="mp-select-card__name">{recipe.name}</span>
+          <div className="mp-select-card__tags">
+            <span className="mp-select-card__tag">{recipe.duration}</span>
+          </div>
+        </div>
       </div>
     </label>
   );

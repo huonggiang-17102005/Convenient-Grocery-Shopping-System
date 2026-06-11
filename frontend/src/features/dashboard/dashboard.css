@@ -58,7 +58,7 @@
 .invite-banner {
   margin: 16px 16px 0;
   padding: 16px;
-  background: #FFE0B2;
+  background: var(--primary-light);
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -76,7 +76,7 @@
 .invite-banner__btn {
   width: 100%;
   padding: 14px 0;
-  background: #FF8A00;
+  background: var(--primary-color);
   color: white;
   font-size: 13px;
   font-weight: 500;
@@ -87,7 +87,7 @@
   transition: background 0.2s ease, transform 0.1s ease;
 }
 
-.invite-banner__btn:hover  { background: #e67a00; }
+.invite-banner__btn:hover  { background: var(--primary-hover); }
 .invite-banner__btn:active { transform: scale(0.98); }
 
 /* ---------- Expiring Section ---------- */
@@ -254,17 +254,17 @@
 .today-menu__btn:active { transform: scale(0.98); }
 
 .today-menu__btn--primary {
-  background: #FF8A00;
+  background: var(--primary-color);
   color: white;
   box-shadow: 0 1px 3px rgba(0,0,0,0.10);
 }
-.today-menu__btn--primary:hover { background: #e67a00; }
+.today-menu__btn--primary:hover { background: var(--primary-hover); }
 
 .today-menu__btn--secondary {
-  background: rgba(255, 138, 0, 0.10);
-  color: #FF8A00;
+  background: var(--primary-bg-opacity);
+  color: var(--primary-color);
 }
-.today-menu__btn--secondary:hover { background: rgba(255, 138, 0, 0.18); }
+.today-menu__btn--secondary:hover { background: var(--primary-bg-opacity-hover); }
 
 /* ============================================
    MODAL SHARED STYLES
@@ -322,10 +322,10 @@
 .modal-btn:active { transform: scale(0.98); }
 
 .modal-btn--primary {
-  background: #FF8A00;
+  background: var(--primary-color);
   color: white;
 }
-.modal-btn--primary:hover { background: #e67a00; }
+.modal-btn--primary:hover { background: var(--primary-hover); }
 
 .modal-btn--gray {
   background: #E0E0E0;
@@ -381,7 +381,7 @@
   width: 44px;
   height: 44px;
   min-width: 44px;
-  background: #FFE0B2;
+  background: var(--primary-light);
   border: none;
   border-radius: 8px;
   display: flex;
@@ -391,7 +391,7 @@
   transition: background 0.15s;
 }
 
-.invite-modal__copy-btn:hover  { background: #FFCC80; }
+.invite-modal__copy-btn:hover  { background: var(--primary-light-hover); }
 .invite-modal__copy-btn:active { transform: scale(0.95); }
 
 .invite-modal__qr-area {
@@ -524,7 +524,7 @@
   min-width: 0;
 }
 
-.cook-modal__input:focus { border-color: #FF8A00; }
+.cook-modal__input:focus { border-color: var(--primary-color); }
 
 .cook-modal__input--name   { flex: 1; }
 .cook-modal__input--value  { width: 64px; text-align: center; }
@@ -560,7 +560,7 @@
   padding: 0;
   font-size: 14px;
   font-weight: 500;
-  color: #FF8A00;
+  color: var(--primary-color);
   font-family: 'Plus Jakarta Sans', sans-serif;
   cursor: pointer;
   margin-top: 4px;

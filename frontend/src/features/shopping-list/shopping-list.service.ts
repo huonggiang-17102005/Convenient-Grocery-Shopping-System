@@ -1,5 +1,5 @@
 import type { ShoppingItem, FoodCategory } from './types';
-import type { FoodItem, StorageType, FoodCategory as FridgeCategory } from '../../types/homemaker/refrigerator';
+import type { FoodItem, StorageType, FoodCategory as FridgeCategory } from '../fridge';
 
 // Mock initial data for Shopping List
 const INITIAL_SHOPPING_ITEMS: ShoppingItem[] = [

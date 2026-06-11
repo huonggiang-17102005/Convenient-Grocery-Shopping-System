@@ -1,13 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import './meal-planner.css';
 
-// Color theme per role
-const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
-  homemaker: '#FF8A00',
-  member: '#1E88E5',
-};
 
 export interface MealPlannerFeatureProps {
   role: 'homemaker' | 'member';
@@ -39,11 +34,64 @@ function buildWeekDays(): DayTab[] {
   });
 }
 
-// ── Initial empty plan ────────────────────────────────────────────────────────
-function createEmptyPlan(days: DayTab[]): WeekPlan {
+// ── Mock Recipes ──────────────────────────────────────────────────────────────
+const MOCK_RECIPES: Record<string, Recipe> = {
+  caKhoTo: { id: 'r4', name: 'Cá kho tộ', emoji: '🐟', duration: '45 phút' },
+  thitBoXao: { id: 'r1', name: 'Thịt bò xào cà chua', emoji: '🥩', duration: '25 phút' },
+  gaXaoHanhTay: { id: 'r3', name: 'Gà xào hành tây', emoji: '🍗', duration: '30 phút' },
+  trungChien: { id: 'r8', name: 'Trứng chiên cà chua', emoji: '🍳', duration: '12 phút' },
+  canhCaChua: { id: 'r2', name: 'Canh cà chua trứng', emoji: '🍅', duration: '15 phút' },
+  tomRangMe: { id: 'r5', name: 'Tôm rang me', emoji: '🦐', duration: '20 phút' },
+  rauMuong: { id: 'r6', name: 'Rau muống xào tỏi', emoji: '🥬', duration: '10 phút' },
+  canhBiDo: { id: 'r7', name: 'Canh bí đỏ thịt băm', emoji: '🎃', duration: '20 phút' },
+  suonRam: { id: 'r9', name: 'Sườn ram mặn', emoji: '🍖', duration: '35 phút' },
+  bunBoHue: { id: 'r10', name: 'Bún bò Huế', emoji: '🍜', duration: '60 phút' },
+  phoGa: { id: 'r11', name: 'Phở gà', emoji: '🍲', duration: '40 phút' },
+};
+
+// ── Initial default plan with mockup data ──────────────────────────────────────
+function createDefaultPlan(days: DayTab[]): WeekPlan {
   const plan: WeekPlan = {};
   days.forEach(({ key }) => {
-    plan[key] = { breakfast: [], lunch: [], dinner: [] };
+    if (key === 'mon') {
+      plan[key] = {
+        breakfast: [MOCK_RECIPES.caKhoTo, MOCK_RECIPES.thitBoXao, MOCK_RECIPES.gaXaoHanhTay],
+        lunch: [MOCK_RECIPES.caKhoTo, MOCK_RECIPES.thitBoXao, MOCK_RECIPES.gaXaoHanhTay],
+        dinner: [],
+      };
+    } else if (key === 'tue') {
+      plan[key] = {
+        breakfast: [MOCK_RECIPES.trungChien, MOCK_RECIPES.canhCaChua],
+        lunch: [MOCK_RECIPES.tomRangMe, MOCK_RECIPES.rauMuong],
+        dinner: [MOCK_RECIPES.canhBiDo],
+      };
+    } else if (key === 'wed') {
+      plan[key] = {
+        breakfast: [MOCK_RECIPES.suonRam, MOCK_RECIPES.rauMuong],
+        lunch: [MOCK_RECIPES.bunBoHue],
+        dinner: [MOCK_RECIPES.phoGa],
+      };
+    } else if (key === 'thu') {
+      plan[key] = {
+        breakfast: [MOCK_RECIPES.caKhoTo, MOCK_RECIPES.rauMuong],
+        lunch: [MOCK_RECIPES.thitBoXao],
+        dinner: [MOCK_RECIPES.gaXaoHanhTay],
+      };
+    } else if (key === 'fri') {
+      plan[key] = {
+        breakfast: [MOCK_RECIPES.canhBiDo, MOCK_RECIPES.trungChien],
+        lunch: [MOCK_RECIPES.suonRam],
+        dinner: [MOCK_RECIPES.tomRangMe],
+      };
+    } else if (key === 'sat') {
+      plan[key] = {
+        breakfast: [MOCK_RECIPES.bunBoHue],
+        lunch: [MOCK_RECIPES.phoGa],
+        dinner: [],
+      };
+    } else {
+      plan[key] = { breakfast: [], lunch: [], dinner: [] };
+    }
   });
   return plan;
 }
@@ -58,7 +106,6 @@ const MEALS: { key: MealKey; title: string }[] = [
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
-  const primaryColor = ROLE_COLORS[role];
 
   const [weekDays]  = useState<DayTab[]>(buildWeekDays);
   const [activeDay, setActiveDay] = useState<string>(() => {
@@ -70,7 +117,24 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     return ['mon','tue','wed','thu','fri','sat','sun'].includes(key) ? key : 'mon';
   });
 
-  const [plan, setPlan] = useState<WeekPlan>(() => createEmptyPlan(buildWeekDays()));
+  const [plan, setPlan] = useState<WeekPlan>(() => {
+    const saved = localStorage.getItem('meal_planner_week_plan');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved week plan:', e);
+      }
+    }
+    const defaultPlan = createDefaultPlan(buildWeekDays());
+    localStorage.setItem('meal_planner_week_plan', JSON.stringify(defaultPlan));
+    return defaultPlan;
+  });
+
+  // Persist plan changes to localStorage
+  useEffect(() => {
+    localStorage.setItem('meal_planner_week_plan', JSON.stringify(plan));
+  }, [plan]);
 
   // Bottom sheet state
   const [sheetOpen,     setSheetOpen]     = useState(false);
@@ -117,7 +181,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
       {/* Toast */}
       <Toast message={toastMsg} isVisible={toastVisible} onHide={hideToast} />
 
-      <div className="meal-planner-page">
+      <div className={`meal-planner-page ${role}-theme`}>
         {/* ── Sub-header ── */}
         <header className="mp-header">
           <button
@@ -136,7 +200,6 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           days={weekDays}
           activeDay={activeDay}
           onSelectDay={setActiveDay}
-          primaryColor={primaryColor}
         />
 
         {/* ── Scrollable content ── */}
@@ -147,6 +210,8 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
               title={title}
               mealKey={key}
               dishes={currentDay[key]}
+              showAdd={role !== 'member'}
+              showRemove={role !== 'member'}
               onAddDish={() => openSheet(key)}
               onRemoveDish={(dishId) => handleRemoveDish(key, dishId)}
             />

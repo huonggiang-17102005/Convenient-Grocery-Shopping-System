@@ -8,6 +8,7 @@ export interface MealItem {
 
 interface TodayMenuProps {
   meals: MealItem[];
+  role?: 'homemaker' | 'member';
   onMarkCooked?: () => void;
 }
 
@@ -17,7 +18,7 @@ const sessionConfig: Record<MealItem['session'], { emoji: string; label: string 
   evening: { emoji: '🌙', label: 'Tối' },
 };
 
-const TodayMenu: React.FC<TodayMenuProps> = ({ meals, onMarkCooked }) => {
+const TodayMenu: React.FC<TodayMenuProps> = ({ meals, role = 'homemaker', onMarkCooked }) => {
   const navigate = useNavigate();
 
   return (
@@ -42,7 +43,7 @@ const TodayMenu: React.FC<TodayMenuProps> = ({ meals, onMarkCooked }) => {
       <div className="today-menu__actions">
         <button
           className="today-menu__btn today-menu__btn--primary"
-          onClick={() => navigate('/homemaker/meal-planner')}
+          onClick={() => navigate(`/${role}/meal-planner`)}
         >
           Quản lý thực đơn tuần
         </button>

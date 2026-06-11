@@ -1,5 +1,5 @@
 import React from 'react';
-import type { FoodCategory } from '../../../types/homemaker/refrigerator';
+import type { FoodCategory } from '../types';
 
 interface CategoryFilterProps {
   activeCategory: FoodCategory;

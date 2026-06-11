@@ -12,273 +12,42 @@ body {
   box-sizing: border-box;
 }
 
+/* Color theme variables */
+:root {
+  --color-homemaker: #FF8A00;
+  --color-homemaker-light: #FFE0B2;
+  --color-member: #1E88E5;
+  --color-member-light: #E3F2FD;
+
+  --primary-color: #FF8A00;
+  --primary-hover: #e67a00;
+  --primary-light: #FFE0B2;
+  --primary-light-hover: #FFCC80;
+  --primary-bg-opacity: rgba(255, 138, 0, 0.10);
+  --primary-bg-opacity-hover: rgba(255, 138, 0, 0.18);
+}
+
+.homemaker-layout-container, .homemaker-theme {
+  --primary-color: #FF8A00;
+  --primary-hover: #e67a00;
+  --primary-light: #FFE0B2;
+  --primary-light-hover: #FFCC80;
+  --primary-bg-opacity: rgba(255, 138, 0, 0.10);
+  --primary-bg-opacity-hover: rgba(255, 138, 0, 0.18);
+}
+
+.member-layout-container, .member-theme {
+  --primary-color: #1E88E5;
+  --primary-hover: #1565C0;
+  --primary-light: #E3F2FD;
+  --primary-light-hover: #BBDEFB;
+  --primary-bg-opacity: rgba(30, 136, 229, 0.10);
+  --primary-bg-opacity-hover: rgba(30, 136, 229, 0.18);
+}
+
 button, input, select, textarea {
   font-family: inherit;
 }
-
-/* Refrigerator Homemaker Screen Styles */
-.refrigerator-page {
-  background-color: #F5F5F5;
-  min-height: 100vh;
-  padding-bottom: 90px; /* Space for navbar */
-}
-
-/* Header */
-.refrigerator-header {
-  padding: 16px 16px 12px 16px;
-  background: white;
-  display: flex;
-  flex-direction: column;
-}
-
-.refrigerator-title {
-  color: #1A1A1A;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 32px;
-  margin-bottom: 16px;
-}
-
-.refrigerator-search-container {
-  position: relative;
-  width: 100%;
-}
-
-.refrigerator-search-input {
-  width: 100%;
-  height: 52px;
-  padding-left: 48px;
-  padding-right: 16px;
-  border-radius: 12px;
-  border: 1.27px solid #E0E0E0;
-  font-size: 14px;
-  color: #1A1A1A;
-  outline: none;
-}
-
-.refrigerator-search-input::placeholder {
-  color: rgba(26, 26, 26, 0.50);
-}
-
-.refrigerator-search-icon {
-  position: absolute;
-  left: 16px;
-  top: 16px;
-  color: #757575;
-}
-
-/* Filters */
-.refrigerator-filter-group {
-  padding: 0 16px 12px 16px;
-  background: white;
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-}
-@supports (scrollbar-width: none) {
-  .refrigerator-filter-group {
-    scrollbar-width: none;
-  }
-}
-.refrigerator-filter-group::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
-}
-
-.refrigerator-category-group {
-  padding: 0 16px 16px 16px;
-  background: white;
-  border-bottom: 1.27px solid #E0E0E0;
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-}
-@supports (scrollbar-width: none) {
-  .refrigerator-category-group {
-    scrollbar-width: none;
-  }
-}
-.refrigerator-category-group::-webkit-scrollbar {
-  display: none;
-}
-
-.filter-pill {
-  padding: 8px 16px;
-  border-radius: 100px;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 18px;
-  white-space: nowrap;
-  cursor: pointer;
-  background: #F5F5F5;
-  color: #757575;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-}
-
-.filter-pill.active {
-  background: #FF8A00;
-  color: white;
-}
-
-.category-pill {
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 18px;
-  white-space: nowrap;
-  cursor: pointer;
-  background: white;
-  color: #757575;
-  border: 1.27px solid #E0E0E0;
-}
-
-.category-pill.active {
-  background: #FFE0B2;
-  color: #FF8A00;
-  border-color: transparent;
-}
-
-/* Food List */
-.food-list-container {
-  padding: 16px;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-/* Food Card */
-.food-card {
-  padding: 16px;
-  background: white;
-  border-radius: 16px;
-  border: 1.27px solid #E0E0E0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-}
-
-.food-card-checkbox {
-  position: absolute;
-  left: 12px;
-  top: 12px;
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  border: 1.27px solid #757575;
-  appearance: none;
-  background: white;
-  cursor: pointer;
-}
-.food-card-checkbox:checked {
-  background: #FF8A00;
-  border-color: #FF8A00;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'%3E%3C/polyline%3E%3C/svg%3E");
-  background-size: 80%;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.food-card-category {
-  position: absolute;
-  right: 12px;
-  top: 12px;
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 500;
-}
-.category-bg-rau-cu { background: #E8F5E9; color: #388E3C; }
-.category-bg-thit-ca { background: #FFEBEE; color: #D32F2F; }
-.category-bg-do-uong { background: #E3F2FD; color: #1976D2; }
-.category-bg-default { background: #F5F5F5; color: #757575; }
-
-.food-card-emoji {
-  font-size: 40px;
-  line-height: 60px;
-  margin-top: 16px;
-}
-
-.food-card-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1A1A1A;
-  margin-top: 8px;
-  text-align: center;
-}
-
-.food-card-quantity-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.qty-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: none;
-  font-size: 16px;
-  font-weight: 500;
-}
-.qty-btn.minus {
-  background: #F5F5F5;
-  color: #1A1A1A;
-}
-.qty-btn.plus {
-  background: #FF8A00;
-  color: white;
-}
-.qty-value {
-  font-size: 16px;
-  font-weight: 500;
-  color: #1A1A1A;
-  min-width: 12px;
-  text-align: center;
-}
-
-.food-card-days {
-  margin-top: 12px;
-  padding: 4px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  color: white;
-  width: 100%;
-  text-align: center;
-}
-.days-bg-good { background: #388E3C; }
-.days-bg-warning { background: #F57C00; }
-.days-bg-danger { background: #D32F2F; }
-
-/* FAB */
-.fab-button {
-  position: fixed;
-  bottom: 100px; /* Above bottom nav */
-  right: 16px;
-  width: 56px;
-  height: 56px;
-  border-radius: 28px;
-  background-color: #FF8A00;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(255, 138, 0, 0.3);
-  cursor: pointer;
-  border: none;
-  z-index: 100;
-}
-
-
 
 /* ---------- Toast Notification ---------- */
 .toast-notification {

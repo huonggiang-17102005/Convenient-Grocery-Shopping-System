@@ -3,12 +3,13 @@ import type { Recipe } from '../types';
 
 interface SelectedDishCardProps {
   dish: Recipe;
+  showRemove?: boolean;
   onRemove: () => void;
 }
 
-const SelectedDishCard: React.FC<SelectedDishCardProps> = ({ dish, onRemove }) => {
+const SelectedDishCard: React.FC<SelectedDishCardProps> = ({ dish, showRemove = true, onRemove }) => {
   return (
-    <li className="mp-dish-card">
+    <li className={`mp-dish-card${!showRemove ? ' mp-dish-card--readonly' : ''}`}>
       <div className="mp-dish-card__left">
         <div className="mp-dish-card__emoji-wrap" aria-hidden="true">
           {dish.image ? (
@@ -19,14 +20,16 @@ const SelectedDishCard: React.FC<SelectedDishCardProps> = ({ dish, onRemove }) =
         </div>
         <span className="mp-dish-card__name">{dish.name}</span>
       </div>
-      <button
-        className="mp-dish-card__remove"
-        onClick={onRemove}
-        aria-label={`Xóa ${dish.name}`}
-        title={`Xóa ${dish.name}`}
-      >
-        ×
-      </button>
+      {showRemove && (
+        <button
+          className="mp-dish-card__remove"
+          onClick={onRemove}
+          aria-label={`Xóa ${dish.name}`}
+          title={`Xóa ${dish.name}`}
+        >
+          ×
+        </button>
+      )}
     </li>
   );
 };

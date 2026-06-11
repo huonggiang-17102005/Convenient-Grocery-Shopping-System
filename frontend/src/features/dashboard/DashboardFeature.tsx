@@ -109,10 +109,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   const [purchaseNotification, setPurchaseNotification] = useState<{
     memberName: string;
     action: string;
-  } | null>({
-    memberName: 'Shin',
-    action: 'Mua 1kg thịt bò',
-  });
+  } | null>(null);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -188,6 +185,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       {/* Today Menu */}
       <TodayMenu
         meals={TODAY_MEALS}
+        role={role}
         onMarkCooked={() => setIsCookOpen(true)}
       />
 
