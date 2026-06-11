@@ -1,5 +1,5 @@
 import React from 'react';
-import type { FoodCategory } from '../../../types/homemaker/refrigerator';
+import type { FoodCategory } from '../../../../types/homemaker/Fridge';
 
 interface CategoryFilterProps {
   activeCategory: FoodCategory;
@@ -7,12 +7,12 @@ interface CategoryFilterProps {
 }
 
 const CategoryFilter: React.FC<CategoryFilterProps> = ({ activeCategory, onCategoryChange }) => {
-  const categories: FoodCategory[] = ['Tất cả', 'Rau củ', 'Thịt cá', 'Đồ khô', 'Gia vị', 'Đồ uống', 'Khác'];
+  const categories: FoodCategory[] = ['Tất cả', 'Rau củ', 'Thịt cá', 'Đồ khô', 'Gia vị', 'Chất lỏng', 'Khác'];
 
   return (
     <div className="refrigerator-category-group">
       {categories.map(category => (
-        <button 
+        <button
           key={category}
           className={`category-pill ${activeCategory === category ? 'active' : ''}`}
           onClick={() => onCategoryChange(category)}

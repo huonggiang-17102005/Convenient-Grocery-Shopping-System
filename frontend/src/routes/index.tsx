@@ -7,7 +7,7 @@ import RoleSelection from '../pages/guest/RoleSelection';
 
 // Homemaker pages
 import DashboardHomemaker from '../pages/homemaker/Dashboard';
-import FridgeHomemaker from '../pages/homemaker/FridgeHomemaker';
+import FridgeHomemaker from '../pages/homemaker/Fridge/Fridge';
 import ShoppingListHomemaker from '../pages/homemaker/ShoppingListHomemaker';
 import RecipeSmartSuggestions from '../pages/homemaker/RecipeSmartSuggestions';
 import MealPlanner from '../pages/homemaker/MealPlanner';

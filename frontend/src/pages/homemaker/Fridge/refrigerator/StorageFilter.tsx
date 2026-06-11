@@ -1,5 +1,5 @@
 import React from 'react';
-import type { StorageType } from '../../../types/homemaker/refrigerator';
+import type { StorageType } from '../../../../types/homemaker/Fridge';
 
 interface StorageFilterProps {
   activeStorage: StorageType;
@@ -12,7 +12,7 @@ const StorageFilter: React.FC<StorageFilterProps> = ({ activeStorage, onStorageC
   return (
     <div className="refrigerator-filter-group">
       {storages.map(storage => (
-        <button 
+        <button
           key={storage}
           className={`filter-pill ${activeStorage === storage ? 'active' : ''}`}
           onClick={() => onStorageChange(storage)}
