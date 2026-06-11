@@ -1,27 +1,29 @@
 import React from 'react';
 import type { FoodCategory } from '../types';
+import FridgeDropdown from './FridgeDropdown';
 
 interface CategoryFilterProps {
   activeCategory: FoodCategory;
   onCategoryChange: (category: FoodCategory) => void;
 }
 
-const CategoryFilter: React.FC<CategoryFilterProps> = ({ activeCategory, onCategoryChange }) => {
-  const categories: FoodCategory[] = ['Tất cả', 'Rau củ', 'Thịt cá', 'Đồ khô', 'Gia vị', 'Đồ uống', 'Khác'];
+const CATEGORY_OPTIONS = [
+  { value: 'Tất cả',     label: 'Tất cả danh mục' },
+  { value: 'Thịt cá',   label: '🥩  Thịt cá' },
+  { value: 'Rau củ quả',label: '🥕  Rau củ quả' },
+  { value: 'Trứng',     label: '🥚  Trứng' },
+  { value: 'Chất lỏng', label: '🥛  Chất lỏng' },
+  { value: 'Đồ khô',    label: '🌾  Đồ khô' },
+  { value: 'Gia vị',    label: '🧂  Gia vị' },
+  { value: 'Khác',      label: '📦  Khác' },
+];
 
-  return (
-    <div className="refrigerator-category-group">
-      {categories.map(category => (
-        <button 
-          key={category}
-          className={`category-pill ${activeCategory === category ? 'active' : ''}`}
-          onClick={() => onCategoryChange(category)}
-        >
-          {category}
-        </button>
-      ))}
-    </div>
-  );
-};
+const CategoryFilter: React.FC<CategoryFilterProps> = ({ activeCategory, onCategoryChange }) => (
+  <FridgeDropdown
+    value={activeCategory}
+    onChange={(v) => onCategoryChange(v as FoodCategory)}
+    options={CATEGORY_OPTIONS}
+  />
+);
 
 export default CategoryFilter;

@@ -1,27 +1,25 @@
 import React from 'react';
 import type { StorageType } from '../types';
+import FridgeDropdown from './FridgeDropdown';
 
 interface StorageFilterProps {
   activeStorage: StorageType;
   onStorageChange: (storage: StorageType) => void;
 }
 
-const StorageFilter: React.FC<StorageFilterProps> = ({ activeStorage, onStorageChange }) => {
-  const storages: StorageType[] = ['Tất cả', 'Ngăn mát', 'Ngăn đông', 'Khô'];
+const STORAGE_OPTIONS = [
+  { value: 'Tất cả',   label: 'Tất cả vị trí' },
+  { value: 'Ngăn mát', label: '❄️  Ngăn mát' },
+  { value: 'Ngăn đông',label: '🧊  Ngăn đông' },
+  { value: 'Khô',      label: '📦  Khô' },
+];
 
-  return (
-    <div className="refrigerator-filter-group">
-      {storages.map(storage => (
-        <button 
-          key={storage}
-          className={`filter-pill ${activeStorage === storage ? 'active' : ''}`}
-          onClick={() => onStorageChange(storage)}
-        >
-          {storage}
-        </button>
-      ))}
-    </div>
-  );
-};
+const StorageFilter: React.FC<StorageFilterProps> = ({ activeStorage, onStorageChange }) => (
+  <FridgeDropdown
+    value={activeStorage}
+    onChange={(v) => onStorageChange(v as StorageType)}
+    options={STORAGE_OPTIONS}
+  />
+);
 
 export default StorageFilter;

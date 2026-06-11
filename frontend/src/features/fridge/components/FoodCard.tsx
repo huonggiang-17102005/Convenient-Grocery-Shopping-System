@@ -6,32 +6,50 @@ interface FoodCardProps {
   onUpdateQuantity: (id: string, delta: number) => void;
   onSelect: (id: string, selected: boolean) => void;
   selected: boolean;
+  role: 'homemaker' | 'member';
+  onCardClick: (item: FoodItem) => void;
 }
 
 const getCategoryBgClass = (category: string) => {
   switch(category) {
-    case 'Rau củ': return 'category-bg-rau-cu';
+    case 'Rau củ quả': return 'category-bg-rau-cu';
     case 'Thịt cá': return 'category-bg-thit-ca';
-    case 'Đồ uống': return 'category-bg-do-uong';
+    case 'Trứng': return 'category-bg-trung';
+    case 'Chất lỏng': return 'category-bg-chat-long';
+    case 'Đồ khô': return 'category-bg-do-kho';
+    case 'Gia vị': return 'category-bg-gia-vi';
+    case 'Khác': return 'category-bg-khac';
     default: return 'category-bg-default';
   }
 };
 
 const getDaysBgClass = (days: number) => {
-  if (days <= 2) return 'days-bg-danger';
-  if (days <= 5) return 'days-bg-warning';
+  if (days <= 1) return 'days-bg-danger';
+  if (days <= 3) return 'days-bg-warning';
   return 'days-bg-good';
 };
 
-const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, selected }) => {
+const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, selected, role, onCardClick }) => {
+  const isGiaVi = item.category === 'Gia vị';
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Avoid triggering when clicking checkbox or stepper
+    if ((e.target as HTMLElement).closest('.food-card-checkbox') || 
+        (e.target as HTMLElement).closest('.food-card-quantity-controls')) {
+      return;
+    }
+    onCardClick(item);
+  };
+
   return (
-    <div className="food-card">
+    <div className={`food-card ${selected ? 'selected' : ''}`} onClick={handleCardClick}>
       <input 
         type="checkbox" 
         className="food-card-checkbox" 
         checked={selected}
         onChange={(e) => onSelect(item.id, e.target.checked)}
         title={`Chọn ${item.name}`}
+        onClick={(e) => e.stopPropagation()}
       />
       
       <div className={`food-card-category ${getCategoryBgClass(item.category)}`}>
@@ -41,11 +59,25 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
       <div className="food-card-emoji">{item.emoji}</div>
       <div className="food-card-name">{item.name}</div>
       
-      <div className="food-card-quantity-controls">
-        <button className="qty-btn minus" onClick={() => onUpdateQuantity(item.id, -1)}>−</button>
-        <div className="qty-value">{item.quantity}</div>
-        <button className="qty-btn plus" onClick={() => onUpdateQuantity(item.id, 1)}>+</button>
-      </div>
+      {!isGiaVi && (
+        <div className="food-card-quantity-controls" onClick={(e) => e.stopPropagation()}>
+          <button 
+            className="qty-btn minus" 
+            onClick={() => onUpdateQuantity(item.id, -1)}
+            disabled={role === 'member'} // Members may not be able to modify depending on strictness, but we disable for safety or keep enabled if they consume it. Let's let members change qty, but Figma shows stepper. Let's leave it enabled for both, or disabled for members. The instruction says: "role member: chỉ xem chi tiết không chỉnh sửa", so we disable stepper for member.
+            style={{ opacity: role === 'member' ? 0.5 : 1, cursor: role === 'member' ? 'default' : 'pointer' }}
+          >−</button>
+          <div className="qty-value">
+            {item.quantity} {item.unit && <span style={{fontSize: '12px'}}>{item.unit}</span>}
+          </div>
+          <button 
+            className="qty-btn plus" 
+            onClick={() => onUpdateQuantity(item.id, 1)}
+            disabled={role === 'member'}
+            style={{ opacity: role === 'member' ? 0.5 : 1, cursor: role === 'member' ? 'default' : 'pointer' }}
+          >+</button>
+        </div>
+      )}
       
       <div className={`food-card-days ${getDaysBgClass(item.daysRemaining)}`}>
         Còn {item.daysRemaining} ngày
@@ -55,3 +87,4 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
 };
 
 export default FoodCard;
+
