@@ -31,6 +31,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
         className="food-card-checkbox"
         checked={selected}
         onChange={(e) => onSelect(item.id, e.target.checked)}
+        title={`Chọn ${item.name}`}
       />
 
       <div className={`food-card-category ${getCategoryBgClass(item.category)}`}>

@@ -10,9 +10,10 @@ interface WeekDayTabsProps {
   days: DayTab[];
   activeDay: string;
   onSelectDay: (key: string) => void;
+  primaryColor?: string;
 }
 
-const WeekDayTabs: React.FC<WeekDayTabsProps> = ({ days, activeDay, onSelectDay }) => {
+const WeekDayTabs: React.FC<WeekDayTabsProps> = ({ days, activeDay, onSelectDay, primaryColor }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll active tab into view
@@ -33,6 +34,7 @@ const WeekDayTabs: React.FC<WeekDayTabsProps> = ({ days, activeDay, onSelectDay 
           key={day.key}
           id={`mp-day-tab-${day.key}`}
           className={`mp-day-tab${activeDay === day.key ? ' mp-day-tab--active' : ''}`}
+          style={activeDay === day.key && primaryColor ? { background: primaryColor, color: '#fff', borderColor: primaryColor } : undefined}
         >
           <input
             type="radio"

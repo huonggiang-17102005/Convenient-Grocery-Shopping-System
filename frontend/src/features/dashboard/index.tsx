@@ -2,6 +2,16 @@ import React, { useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 import './Dashboard.css';
 
+// Color theme per role
+const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
+  homemaker: '#FF8A00',
+  member: '#1E88E5',
+};
+
+export interface DashboardFeatureProps {
+  role: 'homemaker' | 'member';
+}
+
 // Components
 import ExpiringWarningList from './components/ExpiringWarningList';
 import TodayMenu from './components/TodayMenu';
@@ -52,11 +62,41 @@ const TODAY_MEALS: MealItem[] = [
 
 // ─── Dashboard Page ─────────────────────────────────────────────────────────────
 
-const Dashboard: React.FC = () => {
+export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
+  const primaryColor = ROLE_COLORS[role];
+
   // Modal open states
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isExpireOpen, setIsExpireOpen] = useState(false);
   const [isCookOpen,   setIsCookOpen]   = useState(false);
+
+  // Real Invite Code state
+  const [realInviteCode, setRealInviteCode] = useState('Đang tải...');
+
+  React.useEffect(() => {
+    const fetchFamilyInfo = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch('http://localhost:5000/api/families/info', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (response.ok && data.family) {
+          setRealInviteCode(data.family.invite_code);
+        } else {
+          setRealInviteCode('Chưa có mã');
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy thông tin nhóm:', error);
+        setRealInviteCode('Lỗi lấy mã');
+      }
+    };
+    
+    fetchFamilyInfo();
+  }, []);
 
   // Selected item for ExpireItemModal
   const [selectedItem, setSelectedItem] = useState<IngredientCardProps | null>(null);
@@ -125,13 +165,14 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Invite Banner */}
-      <div className="invite-banner">
+      <div className="invite-banner" style={{ '--primary-color': primaryColor } as React.CSSProperties}>
         <p className="invite-banner__text">
           📢 Mời thêm thành viên gia đình để cùng quản lý tủ lạnh và shopping list!
         </p>
         <button
           id="btn-invite-code"
           className="invite-banner__btn"
+          style={{ background: primaryColor }}
           onClick={() => setIsInviteOpen(true)}
         >
           Lấy mã mời
@@ -154,7 +195,7 @@ const Dashboard: React.FC = () => {
       <InviteCodeModal
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
-        inviteCode="FC-9821-AM"
+        inviteCode={realInviteCode}
         onCopied={handleCopied}
       />
 
@@ -177,4 +218,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default DashboardFeature;

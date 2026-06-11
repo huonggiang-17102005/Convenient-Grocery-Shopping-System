@@ -1,21 +1,29 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
 
 // Guest pages
 import Login from '../pages/guest/Login';
 import Register from '../pages/guest/Register';
 import RoleSelection from '../pages/guest/RoleSelection';
 
-// Homemaker pages
-import DashboardHomemaker from '../pages/homemaker/Dashboard';
-import FridgeHomemaker from '../pages/homemaker/Fridge/Fridge';
-import ShoppingListHomemaker from '../pages/homemaker/ShoppingListHomemaker';
-import RecipeSmartSuggestions from '../pages/homemaker/RecipeSmartSuggestions';
-import MealPlanner from '../pages/homemaker/MealPlanner';
-import ProfileScreen from '../pages/homemaker/Profile/ProfileScreen';
+// Layouts
 import HomemakerLayout from '../components/homemaker/HomemakerLayout';
 import MemberLayout from '../components/member/MemberLayout';
-import AdminLayout from '../components/admin/AdminLayout';
+
+// Admin pages
+import DashboardAdmin from '../pages/admin/Dashboard';
+import UserManagementAdmin from '../pages/admin/UserManagement';
+
+// Role-specific pages (đặc thù từng role, không dùng chung)
+import FridgeHomemaker from '../pages/homemaker/Fridge/Fridge';
 import CreateGroup from '../pages/homemaker/CreateGroup';
+import Jointhegroup from '../pages/member/Jointhegroup';
+
+// Common pages (feature-based, dùng chung cho cả 2 role)
+import { HomemakerDashboard, MemberDashboard } from '../pages/common/dashboard';
+import { HomemakerMealPlanner, MemberMealPlanner } from '../pages/common/meal-planner';
+import { HomemakerShoppingList, MemberShoppingList } from '../pages/common/shopping-list';
+import { HomemakerProfile, MemberProfile } from '../pages/common/profile';
+import { HomemakerRecipes, MemberRecipes } from '../pages/common/recipes';
 
 export const router = createBrowserRouter([
   // Guest Routes
@@ -35,6 +43,10 @@ export const router = createBrowserRouter([
     path: '/homemaker/create-group',
     element: <CreateGroup />,
   },
+  {
+    path: '/member/join-group',
+    element: <Jointhegroup />,
+  },
 
   // Homemaker Routes
   {
@@ -43,7 +55,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'dashboard',
-        element: <DashboardHomemaker />,
+        element: <HomemakerDashboard />,
       },
       {
         path: 'fridge',
@@ -51,21 +63,21 @@ export const router = createBrowserRouter([
       },
       {
         path: 'shopping-list',
-        element: <ShoppingListHomemaker />,
+        element: <HomemakerShoppingList />,
       },
       {
         path: 'recipes',
-        element: <RecipeSmartSuggestions />,
+        element: <HomemakerRecipes />,
       },
       {
         path: 'meal-planner',
-        element: <MealPlanner />,
+        element: <HomemakerMealPlanner />,
       },
       {
         path: 'profile',
-        element: <ProfileScreen />,
-      }
-    ]
+        element: <HomemakerProfile />,
+      },
+    ],
   },
 
   // Member Routes
@@ -75,7 +87,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: 'dashboard',
-        element: <div className="placeholder-page"><h3>Màn hình: Dashboard Member</h3><p>Đây là trang chủ dành cho Thành viên gia đình.</p></div>,
+        element: <MemberDashboard />,
       },
       {
         path: 'refrigerator',
@@ -83,32 +95,40 @@ export const router = createBrowserRouter([
       },
       {
         path: 'shopping-list',
-        element: <div className="placeholder-page"><h3>Màn hình: Mua sắm Member</h3><p>Xem danh sách cần mua sắm.</p></div>,
+        element: <MemberShoppingList />,
+      },
+      {
+        path: 'recipes',
+        element: <MemberRecipes />,
+      },
+      {
+        path: 'meal-planner',
+        element: <MemberMealPlanner />,
       },
       {
         path: 'profile',
-        element: <div className="placeholder-page"><h3>Màn hình: Hồ sơ Member</h3><p>Thông tin cá nhân thành viên.</p></div>,
-      }
-    ]
+        element: <MemberProfile />,
+      },
+    ],
   },
 
   // Admin Routes
   {
     path: '/admin',
-    element: <AdminLayout />,
+    element: <Outlet />,
     children: [
       {
         path: 'dashboard',
-        element: <div className="placeholder-page"><h3>Bảng điều khiển Admin</h3><p>Tổng quan hệ thống, người dùng và hoạt động.</p></div>,
+        element: <DashboardAdmin />,
       },
       {
         path: 'users',
-        element: <div className="placeholder-page"><h3>Quản lý người dùng</h3><p>Xem và chỉnh sửa danh sách tài khoản.</p></div>,
+        element: <UserManagementAdmin />,
       },
       {
         path: 'settings',
         element: <div className="placeholder-page"><h3>Cài đặt hệ thống</h3><p>Cấu hình các tham số vận hành.</p></div>,
-      }
-    ]
+      },
+    ],
   },
 ]);

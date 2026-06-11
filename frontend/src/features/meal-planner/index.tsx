@@ -3,6 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import './MealPlanner.css';
 
+// Color theme per role
+const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
+  homemaker: '#FF8A00',
+  member: '#1E88E5',
+};
+
+export interface MealPlannerFeatureProps {
+  role: 'homemaker' | 'member';
+}
+
 import type { Recipe, MealKey, DayMeals, WeekPlan } from './types';
 import WeekDayTabs from './components/WeekDayTabs';
 import type { DayTab } from './components/WeekDayTabs';
@@ -69,8 +79,9 @@ const MpToast: React.FC<MpToastProps> = ({ message, isVisible, onHide }) => {
 };
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-const MealPlannerPage: React.FC = () => {
+export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
+  const primaryColor = ROLE_COLORS[role];
 
   const [weekDays]  = useState<DayTab[]>(buildWeekDays);
   const [activeDay, setActiveDay] = useState<string>(() => {
@@ -148,6 +159,7 @@ const MealPlannerPage: React.FC = () => {
           days={weekDays}
           activeDay={activeDay}
           onSelectDay={setActiveDay}
+          primaryColor={primaryColor}
         />
 
         {/* ── Scrollable content ── */}
@@ -180,4 +192,4 @@ const MealPlannerPage: React.FC = () => {
   );
 };
 
-export default MealPlannerPage;
+export default MealPlannerFeature;

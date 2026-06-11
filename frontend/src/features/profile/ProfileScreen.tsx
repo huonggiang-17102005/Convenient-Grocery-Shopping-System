@@ -3,6 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
 import './ProfileScreen.css';
 
+// Color theme per role
+const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
+  homemaker: '#FF8A00',
+  member: '#1E88E5',
+};
+
+export interface ProfileFeatureProps {
+  role: 'homemaker' | 'member';
+}
+
 // Components
 import ProfileHeader from './components/ProfileHeader';
 import FamilySection from './components/FamilySection';
@@ -16,15 +26,16 @@ import AccountModal from './modals/AccountModal';
 import ConfirmModal from './modals/ConfirmModal';
 import type { ConfirmVariant } from './modals/ConfirmModal';
 
-const ProfileScreen: React.FC = () => {
+export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
+  const primaryColor = ROLE_COLORS[role];
 
   // User details state
   const [user, setUser] = useState({
     name: 'Mỹ Anh',
     email: 'myanh@gmail.com',
     avatar: '👩',
-    role: 'Homemaker',
+    role: role === 'homemaker' ? 'Homemaker' : 'Thành viên',
   });
 
   // Family members list state
@@ -153,7 +164,7 @@ const ProfileScreen: React.FC = () => {
     <div className="profile-page">
       {/* Toast Notification */}
       <div className={`profile-toast-container ${showToast ? 'profile-toast-show' : ''}`}>
-        <div className="profile-toast">
+        <div className="profile-toast" style={{ background: primaryColor }}>
           <div className="profile-toast-icon">
             <Check size={16} color="white" strokeWidth={3} />
           </div>
@@ -163,7 +174,7 @@ const ProfileScreen: React.FC = () => {
 
       <div className="profile-white-card">
         {/* Page Title */}
-        <h1 className="profile-title">Hồ sơ & Quản lý</h1>
+        <h1 className="profile-title" style={{ color: primaryColor }}>Hồ sơ &amp; Quản lý</h1>
         {/* Header (Avatar + Name) */}
         <ProfileHeader
           avatar={user.avatar}
@@ -223,4 +234,4 @@ const ProfileScreen: React.FC = () => {
   );
 };
 
-export default ProfileScreen;
+export default ProfileFeature;
