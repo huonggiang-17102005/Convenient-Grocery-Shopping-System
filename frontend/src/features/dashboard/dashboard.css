@@ -561,3 +561,91 @@
   background: #F5F5F5;
   color: #1A1A1A;
 }
+
+/* ---------- Shopping Mission ---------- */
+.shopping-mission {
+  margin: 16px 16px 0;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  border: 1.27px solid #E0E0E0;
+}
+
+.shopping-mission__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0 0 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.shopping-mission__empty {
+  font-size: 14px;
+  color: #757575;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.shopping-mission__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shopping-mission__item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shopping-mission__checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1.27px solid #757575;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.shopping-mission__checkbox--checked {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.shopping-mission__check-icon {
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.shopping-mission__badge {
+  padding: 4px 8px;
+  background: #F5F5F5;
+  border-radius: 8px;
+  font-size: 10px;
+  color: #757575;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  line-height: 15px;
+  flex-shrink: 0;
+}
+
+.shopping-mission__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1A1A1A;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.shopping-mission__name--checked {
+  color: #757575;
+  text-decoration: line-through;
+}
+

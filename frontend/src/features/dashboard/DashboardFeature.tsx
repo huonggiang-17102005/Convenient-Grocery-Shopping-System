@@ -18,6 +18,8 @@ import TodayMenu from './components/TodayMenu';
 import type { MealItem } from './components/TodayMenu';
 import Toast from '@/components/shared/Toast';
 import type { IngredientCardProps } from './components/IngredientCard';
+import ShoppingMission from './components/ShoppingMission';
+import { shoppingService } from '../shopping-list/shopping-list.service';
 
 // Modals
 import InviteCodeModal from './modals/InviteCodeModal';
@@ -135,6 +137,25 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
     showToast('Đã trừ kho thành công !');
   };
 
+  // Shopping items state for member
+  const [shoppingItems, setShoppingItems] = useState(() => shoppingService.getShoppingItems());
+
+  const handleToggleShoppingItem = (id: string) => {
+    const updated = shoppingItems.map(item => {
+      if (item.id === id) {
+        const nextBought = !item.isBought;
+        if (nextBought) {
+          shoppingService.syncItemToFridge(item);
+          showToast('Đã mua thành công! Nguyên liệu đã được tự động cộng vào Tủ lạnh chung.');
+        }
+        return { ...item, isBought: nextBought };
+      }
+      return item;
+    });
+    setShoppingItems(updated);
+    shoppingService.saveShoppingItems(updated);
+  };
+
   return (
     <>
       {/* Toast – hiện ở trên cùng */}
@@ -161,26 +182,38 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
         </div>
       )}
 
-      {/* Invite Banner */}
-      <div className="invite-banner" style={{ '--primary-color': primaryColor } as React.CSSProperties}>
-        <p className="invite-banner__text">
-          📢 Mời thêm thành viên gia đình để cùng quản lý tủ lạnh và shopping list!
-        </p>
-        <button
-          id="btn-invite-code"
-          className="invite-banner__btn"
-          style={{ background: primaryColor }}
-          onClick={() => setIsInviteOpen(true)}
-        >
-          Lấy mã mời
-        </button>
-      </div>
+      {/* Invite Banner - Homemaker only */}
+      {role === 'homemaker' && (
+        <div className="invite-banner" style={{ '--primary-color': primaryColor } as React.CSSProperties}>
+          <p className="invite-banner__text">
+            📢 Mời thêm thành viên gia đình để cùng quản lý tủ lạnh và shopping list!
+          </p>
+          <button
+            id="btn-invite-code"
+            className="invite-banner__btn"
+            style={{ background: primaryColor }}
+            onClick={() => setIsInviteOpen(true)}
+          >
+            Lấy mã mời
+          </button>
+        </div>
+      )}
 
-      {/* Expiring Warning */}
-      <ExpiringWarningList
-        items={EXPIRING_ITEMS}
-        onItemClick={handleIngredientClick}
-      />
+      {/* Shopping Mission - Member only */}
+      {role === 'member' && (
+        <ShoppingMission
+          items={shoppingItems}
+          onToggleCheck={handleToggleShoppingItem}
+        />
+      )}
+
+      {/* Expiring Warning - Homemaker only */}
+      {role === 'homemaker' && (
+        <ExpiringWarningList
+          items={EXPIRING_ITEMS}
+          onItemClick={handleIngredientClick}
+        />
+      )}
 
       {/* Today Menu */}
       <TodayMenu
