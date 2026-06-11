@@ -10,11 +10,12 @@ export interface FamilyMember {
 
 interface FamilySectionProps {
   members: FamilyMember[];
+  role?: 'homemaker' | 'member';
   onTransfer: (member: FamilyMember) => void;
   onDelete: (member: FamilyMember) => void;
 }
 
-const FamilySection: React.FC<FamilySectionProps> = ({ members, onTransfer, onDelete }) => {
+const FamilySection: React.FC<FamilySectionProps> = ({ members, role = 'homemaker', onTransfer, onDelete }) => {
   return (
     <div className="profile-section">
       <h2 className="profile-section-title">Thành viên gia đình</h2>
@@ -40,8 +41,8 @@ const FamilySection: React.FC<FamilySectionProps> = ({ members, onTransfer, onDe
               </div>
             </div>
 
-            {/* Right: action buttons (only for other members) */}
-            {!member.isCurrentUser && (
+            {/* Right: action buttons (only for other members, only if user is homemaker) */}
+            {role === 'homemaker' && !member.isCurrentUser && (
               <div className="profile-member-actions">
                 <button
                   className="profile-member-btn profile-member-btn--transfer"

@@ -45,14 +45,16 @@ const TodayMenu: React.FC<TodayMenuProps> = ({ meals, role = 'homemaker', onMark
           className="today-menu__btn today-menu__btn--primary"
           onClick={() => navigate(`/${role}/meal-planner`)}
         >
-          Quản lý thực đơn tuần
+          {role === 'homemaker' ? 'Quản lý thực đơn tuần' : 'Xem thực đơn tuần'}
         </button>
-        <button
-          className="today-menu__btn today-menu__btn--secondary"
-          onClick={onMarkCooked}
-        >
-          Đánh dấu đã nấu
-        </button>
+        {role === 'homemaker' && (
+          <button
+            className="today-menu__btn today-menu__btn--secondary"
+            onClick={onMarkCooked}
+          >
+            Đánh dấu đã nấu
+          </button>
+        )}
       </div>
     </section>
   );

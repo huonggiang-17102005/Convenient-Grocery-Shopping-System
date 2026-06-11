@@ -35,17 +35,16 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
 
   // Toast state
   const [toastMessage, setToastMessage] = useState('');
-  const [toastVisible, setToastVisible] = useState(false);
+  const [toastTrigger, setToastTrigger] = useState(0);
 
   // Show toast utility
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
-    setToastVisible(true);
+    setToastTrigger(prev => prev + 1);
   }, []);
 
-  const hideToast = useCallback(() => {
-    setToastVisible(false);
-  }, []);
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const hideToast = useCallback(() => {}, []);
 
   // Helper to save items
   const updateItemsList = (newItems: ShoppingItem[]) => {
@@ -192,7 +191,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
       {/* Toast Notification */}
       <Toast
         message={toastMessage}
-        isVisible={toastVisible}
+        trigger={toastTrigger}
         onHide={hideToast}
       />
 

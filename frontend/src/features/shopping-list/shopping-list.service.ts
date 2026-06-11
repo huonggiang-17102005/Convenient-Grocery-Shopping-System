@@ -9,8 +9,8 @@ const INITIAL_SHOPPING_ITEMS: ShoppingItem[] = [
     category: 'Thịt cá',
     quantity: 500,
     unit: 'g',
-    isBought: false,
-    assigneeId: null,
+    isBought: true,
+    assigneeId: 'Shin',
     deadlineDate: '2026-06-11', // Today
     deadlineTime: '12:00'
   },
@@ -18,11 +18,11 @@ const INITIAL_SHOPPING_ITEMS: ShoppingItem[] = [
     id: 's2',
     name: 'Cà chua',
     category: 'Rau củ',
-    quantity: 500,
-    unit: 'g',
+    quantity: 3,
+    unit: 'quả',
     isBought: false,
-    assigneeId: null,
-    deadlineDate: '2026-05-06', // Overdue (compared to current date June 2026)
+    assigneeId: 'Shin',
+    deadlineDate: '2026-06-12',
     deadlineTime: '18:00'
   }
 ];
