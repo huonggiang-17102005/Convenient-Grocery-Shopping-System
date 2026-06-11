@@ -11,7 +11,18 @@ import { shoppingService } from './shoppingService';
 import Toast from '../dashboard/components/Toast';
 import './ShoppingListScreen.css';
 
-const ShoppingListScreen: React.FC = () => {
+// Color theme per role
+const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
+  homemaker: '#FF8A00',
+  member: '#1E88E5',
+};
+
+export interface ShoppingListFeatureProps {
+  role: 'homemaker' | 'member';
+}
+
+export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }) => {
+  const primaryColor = ROLE_COLORS[role];
   const [items, setItems] = useState<ShoppingItem[]>(() => shoppingService.getShoppingItems());
   const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
 
@@ -223,6 +234,7 @@ const ShoppingListScreen: React.FC = () => {
       <button
         type="button"
         className="fab-button"
+        style={{ background: primaryColor }}
         onClick={handleOpenCreateForm}
         title="Thêm mặt hàng mới"
         aria-label="Thêm mặt hàng mới"
@@ -258,4 +270,4 @@ const ShoppingListScreen: React.FC = () => {
   );
 };
 
-export default ShoppingListScreen;
+export default ShoppingListFeature;

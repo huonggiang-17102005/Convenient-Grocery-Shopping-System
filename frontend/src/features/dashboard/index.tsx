@@ -2,6 +2,16 @@ import React, { useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 import './Dashboard.css';
 
+// Color theme per role
+const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
+  homemaker: '#FF8A00',
+  member: '#1E88E5',
+};
+
+export interface DashboardFeatureProps {
+  role: 'homemaker' | 'member';
+}
+
 // Components
 import ExpiringWarningList from './components/ExpiringWarningList';
 import TodayMenu from './components/TodayMenu';
@@ -52,7 +62,9 @@ const TODAY_MEALS: MealItem[] = [
 
 // ─── Dashboard Page ─────────────────────────────────────────────────────────────
 
-const Dashboard: React.FC = () => {
+export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
+  const primaryColor = ROLE_COLORS[role];
+
   // Modal open states
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isExpireOpen, setIsExpireOpen] = useState(false);
@@ -153,13 +165,14 @@ const Dashboard: React.FC = () => {
       )}
 
       {/* Invite Banner */}
-      <div className="invite-banner">
+      <div className="invite-banner" style={{ '--primary-color': primaryColor } as React.CSSProperties}>
         <p className="invite-banner__text">
           📢 Mời thêm thành viên gia đình để cùng quản lý tủ lạnh và shopping list!
         </p>
         <button
           id="btn-invite-code"
           className="invite-banner__btn"
+          style={{ background: primaryColor }}
           onClick={() => setIsInviteOpen(true)}
         >
           Lấy mã mời
@@ -205,4 +218,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default DashboardFeature;
