@@ -1,7 +1,7 @@
 import React from 'react';
 import '../profile.css';
 
-export type ConfirmVariant = 'transfer' | 'delete' | 'logout' | 'export';
+export type ConfirmVariant = 'transfer' | 'delete' | 'logout' | 'export' | 'leave';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -152,6 +152,32 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 style={{ width: '100%' }}
               >
                 Hủy
+              </button>
+            </div>
+          </>
+        );
+
+      case 'leave':
+        return (
+          <>
+            <h3 className="profile-modal-title profile-modal-title--danger" style={{ color: '#D32F2F' }}>
+              Rời nhóm
+            </h3>
+            <p className="profile-modal-body profile-modal-body--dark">
+              Bạn có chắc chắn muốn rời nhóm gia đình Mỹ Anh?
+            </p>
+            <div className="profile-modal-actions">
+              <button
+                className="profile-modal-btn profile-modal-btn--cancel"
+                onClick={onCancel}
+              >
+                Hủy
+              </button>
+              <button
+                className="profile-modal-btn profile-modal-btn--confirm-red"
+                onClick={() => onConfirm()}
+              >
+                Rời nhóm
               </button>
             </div>
           </>

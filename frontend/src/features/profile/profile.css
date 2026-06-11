@@ -5,13 +5,16 @@
 /* ── Page container ─────────────────────────────────────────────────── */
 .profile-page {
   background: white;
-  min-height: 100vh;
-  padding-bottom: 40px;
+  min-height: calc(100vh - 80px);
+  margin-bottom: -20px;
+  box-sizing: border-box;
 }
 
 .profile-white-card {
   background: white;
-  padding: 16px 16px 24px 16px;
+  padding: 16px;
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 .profile-title {

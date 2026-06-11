@@ -142,8 +142,9 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
 
   // Toast
   const [toastMsg,     setToastMsg]     = useState('');
-  const [toastVisible, setToastVisible] = useState(false);
-  const hideToast = useCallback(() => setToastVisible(false), []);
+  const [toastTrigger, setToastTrigger] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const hideToast = useCallback(() => {}, []);
 
   const openSheet = (mealKey: MealKey) => {
     setActiveMealKey(mealKey);
@@ -161,10 +162,9 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     const count     = selected.length;
     if (count > 0) {
       setToastMsg(`Đã thêm ${count} món ăn vào ${mealLabel.toLowerCase()}`);
-      setToastVisible(true);
+      setToastTrigger(prev => prev + 1);
     }
   };
-
   const handleRemoveDish = (mealKey: MealKey, dishId: string) => {
     setPlan((prev) => {
       const dayPlan: DayMeals = { ...prev[activeDay] };
@@ -179,7 +179,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
   return (
     <>
       {/* Toast */}
-      <Toast message={toastMsg} isVisible={toastVisible} onHide={hideToast} />
+      <Toast message={toastMsg} trigger={toastTrigger} onHide={hideToast} />
 
       <div className={`meal-planner-page ${role}-theme`}>
         {/* ── Sub-header ── */}

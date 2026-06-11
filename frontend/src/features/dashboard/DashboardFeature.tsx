@@ -105,7 +105,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   // Toast state
   const [toastMsg,     setToastMsg]     = useState('');
-  const [toastVisible, setToastVisible] = useState(false);
+  const [toastTrigger, setToastTrigger] = useState(0);
 
   // Simulated member purchase notification
   const [purchaseNotification, setPurchaseNotification] = useState<{
@@ -115,10 +115,11 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
-    setToastVisible(true);
+    setToastTrigger(prev => prev + 1);
   };
 
-  const hideToast = useCallback(() => setToastVisible(false), []);
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const hideToast = useCallback(() => {}, []);
 
   // Handlers
   const handleIngredientClick = (item: IngredientCardProps) => {
@@ -161,7 +162,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       {/* Toast – hiện ở trên cùng */}
       <Toast
         message={toastMsg}
-        isVisible={toastVisible}
+        trigger={toastTrigger}
         onHide={hideToast}
       />
 
