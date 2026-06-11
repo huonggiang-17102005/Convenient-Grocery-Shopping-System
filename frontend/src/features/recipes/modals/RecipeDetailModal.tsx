@@ -1,7 +1,7 @@
 // src/features/recipes/modals/RecipeDetailModal.tsx
 
 import React from 'react';
-import type { Recipe } from '../recipes.types';
+import type { Recipe } from '../types';
 
 interface RecipeDetailModalProps {
   isOpen: boolean;

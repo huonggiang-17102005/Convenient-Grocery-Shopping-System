@@ -1,5 +1,5 @@
 import React from 'react';
-import '../ProfileScreen.css';
+import '../profile.css';
 
 export type ConfirmVariant = 'transfer' | 'delete' | 'logout' | 'export';
 

@@ -1,3 +1,3 @@
 // src/features/profile/index.tsx
-export { ProfileFeature, type ProfileFeatureProps } from './ProfileScreen';
-export { ProfileFeature as default } from './ProfileScreen';
+export { ProfileFeature, type ProfileFeatureProps } from './ProfileFeature';
+export { ProfileFeature as default } from './ProfileFeature';

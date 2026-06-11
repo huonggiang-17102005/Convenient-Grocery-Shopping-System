@@ -1,7 +1,7 @@
 // src/features/recipes/components/SearchAndFilter.tsx
 
 import React, { useState, useRef, useEffect } from 'react';
-import { FILTER_INGREDIENTS, type FilterIngredient } from '../recipes.types';
+import { FILTER_INGREDIENTS, type FilterIngredient } from '../types';
 
 interface SearchAndFilterProps {
   selectedIngredients: FilterIngredient[];

@@ -2,7 +2,7 @@
 // Full-form community share modal, same as RecipeFormModal but with description + "Gửi bài viết" action
 
 import React, { useState } from 'react';
-import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../recipes.types';
+import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
 
 interface ShareCommunityModalProps {
   isOpen: boolean;

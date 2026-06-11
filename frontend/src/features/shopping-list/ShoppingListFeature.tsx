@@ -7,9 +7,9 @@ import ActionBottomSheet from './modals/ActionBottomSheet';
 import ItemFormModal from './modals/ItemFormModal';
 import DeleteConfirmModal from './modals/DeleteConfirmModal';
 import type { ShoppingItem, FoodCategory } from './types';
-import { shoppingService } from './shoppingService';
-import Toast from '../dashboard/components/Toast';
-import './ShoppingListScreen.css';
+import { shoppingService } from './shopping-list.service';
+import Toast from '@/components/shared/Toast';
+import './shopping-list.css';
 
 // Color theme per role
 const ROLE_COLORS: Record<'homemaker' | 'member', string> = {

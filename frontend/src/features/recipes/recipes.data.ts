@@ -1,7 +1,7 @@
 // src/features/recipes/recipes.data.ts
 // Mock data exactly matching the Figma design with real image URLs
 
-import type { Recipe, CommunityPost } from './recipes.types';
+import type { Recipe, CommunityPost } from './types';
 
 export const MOCK_RECIPES: Recipe[] = [
   {

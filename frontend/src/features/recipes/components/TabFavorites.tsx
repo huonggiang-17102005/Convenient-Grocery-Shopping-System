@@ -1,7 +1,7 @@
 // src/features/recipes/components/TabFavorites.tsx
 
 import React from 'react';
-import type { Recipe } from '../recipes.types';
+import type { Recipe } from '../types';
 import RecipeCard from './RecipeCard';
 
 interface TabFavoritesProps {

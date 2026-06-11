@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check } from 'lucide-react';
-import './ProfileScreen.css';
+import './profile.css';
 
 // Color theme per role
 const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
@@ -25,6 +24,7 @@ import AvatarModal from './modals/AvatarModal';
 import AccountModal from './modals/AccountModal';
 import ConfirmModal from './modals/ConfirmModal';
 import type { ConfirmVariant } from './modals/ConfirmModal';
+import Toast from '@/components/shared/Toast';
 
 export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
@@ -68,9 +68,6 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setShowToast(true);
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
   };
 
   // Avatar Selection Handlers
@@ -95,6 +92,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
     triggerToast('Cập nhật hồ sơ thành công!');
   };
 
+  // Account Password Handlers
   const handleUpdatePassword = () => {
     triggerToast('Đổi mật khẩu thành công!');
   };
@@ -106,18 +104,21 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
     setIsConfirmOpen(true);
   };
 
+  // Open Delete Member Confirmation
   const handleOpenDelete = (member: FamilyMember) => {
     setSelectedMember(member);
     setConfirmVariant('delete');
     setIsConfirmOpen(true);
   };
 
+  // Open Logout Confirmation
   const handleOpenLogout = () => {
     setSelectedMember(null);
     setConfirmVariant('logout');
     setIsConfirmOpen(true);
   };
 
+  // Open Export Confirmation
   const handleOpenExport = () => {
     setSelectedMember(null);
     setConfirmVariant('export');
@@ -161,76 +162,69 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   };
 
   return (
-    <div className="profile-page">
-      {/* Toast Notification */}
-      <div className={`profile-toast-container ${showToast ? 'profile-toast-show' : ''}`}>
-        <div className="profile-toast" style={{ background: primaryColor }}>
-          <div className="profile-toast-icon">
-            <Check size={16} color="white" strokeWidth={3} />
-          </div>
-          <div className="profile-toast-text">{toastMessage}</div>
+    <>
+      <Toast message={toastMessage} isVisible={showToast} onHide={() => setShowToast(false)} />
+      <div className="profile-page">
+        <div className="profile-white-card">
+          {/* Page Title */}
+          <h1 className="profile-title" style={{ color: primaryColor }}>Hồ sơ &amp; Quản lý</h1>
+          {/* Header (Avatar + Name) */}
+          <ProfileHeader
+            avatar={user.avatar}
+            name={user.name}
+            role={user.role}
+            onAvatarClick={() => setIsAvatarOpen(true)}
+          />
+
+          {/* Family Section */}
+          <FamilySection
+            members={familyMembers}
+            onTransfer={handleOpenTransfer}
+            onDelete={handleOpenDelete}
+          />
+
+          {/* Waste Progress and Stats */}
+          <WasteStats
+            consumedPercent={wasteStats.consumedPercent}
+            wastedPercent={wasteStats.wastedPercent}
+            onExportReport={handleOpenExport}
+          />
+
+          {/* Settings options */}
+          <SettingsMenu
+            expirationDays={expirationDays}
+            onChangeExpirationDays={setExpirationDays}
+            onOpenAccount={() => setIsAccountOpen(true)}
+            onLogout={handleOpenLogout}
+          />
         </div>
-      </div>
 
-      <div className="profile-white-card">
-        {/* Page Title */}
-        <h1 className="profile-title" style={{ color: primaryColor }}>Hồ sơ &amp; Quản lý</h1>
-        {/* Header (Avatar + Name) */}
-        <ProfileHeader
-          avatar={user.avatar}
+        {/* MODALS */}
+        <AvatarModal
+          isOpen={isAvatarOpen}
+          currentAvatar={user.avatar}
+          onSelectAvatar={handleSelectAvatar}
+          onClose={() => setIsAvatarOpen(false)}
+        />
+
+        <AccountModal
+          isOpen={isAccountOpen}
           name={user.name}
-          role={user.role}
-          onAvatarClick={() => setIsAvatarOpen(true)}
+          email={user.email}
+          onUpdateProfile={handleUpdateProfile}
+          onUpdatePassword={handleUpdatePassword}
+          onClose={() => setIsAccountOpen(false)}
         />
 
-        {/* Family Section */}
-        <FamilySection
-          members={familyMembers}
-          onTransfer={handleOpenTransfer}
-          onDelete={handleOpenDelete}
-        />
-
-        {/* Waste Progress and Stats */}
-        <WasteStats
-          consumedPercent={wasteStats.consumedPercent}
-          wastedPercent={wasteStats.wastedPercent}
-          onExportReport={handleOpenExport}
-        />
-
-        {/* Settings options */}
-        <SettingsMenu
-          expirationDays={expirationDays}
-          onChangeExpirationDays={setExpirationDays}
-          onOpenAccount={() => setIsAccountOpen(true)}
-          onLogout={handleOpenLogout}
+        <ConfirmModal
+          isOpen={isConfirmOpen}
+          variant={confirmVariant}
+          memberName={selectedMember ? selectedMember.name : user.name}
+          onConfirm={handleConfirmAction}
+          onCancel={() => setIsConfirmOpen(false)}
         />
       </div>
-
-      {/* MODALS */}
-      <AvatarModal
-        isOpen={isAvatarOpen}
-        currentAvatar={user.avatar}
-        onSelectAvatar={handleSelectAvatar}
-        onClose={() => setIsAvatarOpen(false)}
-      />
-
-      <AccountModal
-        isOpen={isAccountOpen}
-        name={user.name}
-        email={user.email}
-        onUpdateProfile={handleUpdateProfile}
-        onUpdatePassword={handleUpdatePassword}
-        onClose={() => setIsAccountOpen(false)}
-      />
-
-      <ConfirmModal
-        isOpen={isConfirmOpen}
-        variant={confirmVariant}
-        memberName={selectedMember ? selectedMember.name : user.name}
-        onConfirm={handleConfirmAction}
-        onCancel={() => setIsConfirmOpen(false)}
-      />
-    </div>
+    </>
   );
 };
 

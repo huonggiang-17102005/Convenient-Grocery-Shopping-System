@@ -1,7 +1,7 @@
 // src/features/recipes/components/RecipeCard.tsx
 
 import React from 'react';
-import type { Recipe } from '../recipes.types';
+import type { Recipe } from '../types';
 
 interface RecipeCardProps {
   recipe: Recipe;

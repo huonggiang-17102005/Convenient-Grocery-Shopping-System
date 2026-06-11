@@ -1,5 +1,5 @@
 import React from 'react';
-import '../ProfileScreen.css';
+import '../profile.css';
 
 interface AvatarModalProps {
   isOpen: boolean;

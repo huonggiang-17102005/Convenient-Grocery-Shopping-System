@@ -1,3 +1,3 @@
 // src/features/shopping-list/index.tsx
-export { ShoppingListFeature, type ShoppingListFeatureProps } from './ShoppingListScreen';
-export { ShoppingListFeature as default } from './ShoppingListScreen';
+export { ShoppingListFeature, type ShoppingListFeatureProps } from './ShoppingListFeature';
+export { ShoppingListFeature as default } from './ShoppingListFeature';

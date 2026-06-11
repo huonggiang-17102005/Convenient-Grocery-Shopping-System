@@ -1,7 +1,7 @@
 // src/features/recipes/components/TabLibrary.tsx
 
 import React from 'react';
-import type { Recipe, FilterIngredient } from '../recipes.types';
+import type { Recipe, FilterIngredient } from '../types';
 import SearchAndFilter from './SearchAndFilter';
 import RecipeCard from './RecipeCard';
 

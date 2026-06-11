@@ -2,7 +2,7 @@
 // Shared form for both Add and Edit personal recipe
 
 import React, { useState } from 'react';
-import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../recipes.types';
+import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
 
 interface RecipeFormModalProps {
   isOpen: boolean;

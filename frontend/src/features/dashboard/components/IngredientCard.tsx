@@ -1,5 +1,5 @@
 import React from 'react';
-import '../Dashboard.css';
+import '../dashboard.css';
 
 export type ExpiryStatus = 'critical' | 'warning' | 'ok';
 

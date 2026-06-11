@@ -1,7 +1,7 @@
 // src/features/recipes/components/TabCommunity.tsx
 
 import React from 'react';
-import type { CommunityPost, PendingPost } from '../recipes.types';
+import type { CommunityPost, PendingPost } from '../types';
 import CommunityPostCard from './CommunityPostCard';
 import PendingPostCard from './PendingPostCard';
 
