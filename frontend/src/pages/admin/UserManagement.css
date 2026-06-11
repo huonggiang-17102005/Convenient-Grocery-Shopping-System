@@ -1,0 +1,271 @@
+/* UserManagement.css */
+
+.um-header-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.um-search-box {
+  width: 400px;
+  height: 40px;
+  position: relative;
+  background-color: #FFFFFF;
+}
+
+.um-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 11px;
+  width: 18px;
+  height: 18px;
+  color: #757575;
+}
+
+.um-search-input {
+  width: 100%;
+  height: 100%;
+  padding-left: 40px;
+  padding-right: 16px;
+  border-radius: 8px;
+  border: 1px solid #E0E0E0;
+  box-sizing: border-box;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  color: #1A1A1A;
+  outline: none;
+}
+
+.um-search-input::placeholder {
+  color: rgba(26, 26, 26, 0.50);
+}
+
+.um-filter-btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid #E0E0E0;
+  background-color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  color: #1A1A1A;
+}
+
+.um-table-container {
+  margin-top: 24px;
+  width: 100%;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #E0E0E0;
+  overflow: hidden;
+}
+
+.um-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.um-table th {
+  background: #F5F5F5;
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.um-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid #E0E0E0;
+  vertical-align: middle;
+}
+
+.um-table tr:last-child td {
+  border-bottom: none;
+}
+
+.um-user-id {
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.um-user-name {
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.um-user-email {
+  color: #757575;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.um-group-name {
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.um-badge-role-homemaker {
+  background: #FFF3E0;
+  color: #E65100;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.um-badge-role-member {
+  background: #E3F2FD;
+  color: #1565C0;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.um-badge-status-active {
+  color: #2E7D32;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid #2E7D32;
+  display: inline-block;
+}
+
+.um-badge-status-locked {
+  color: #D32F2F;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid #D32F2F;
+  display: inline-block;
+}
+
+.um-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.um-action-icon {
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.um-action-icon:hover {
+  background-color: #F5F5F5;
+}
+
+/* Delete Modal */
+.um-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.um-modal {
+  width: 500px;
+  padding: 32px;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px #D32F2F solid;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  display: inline-flex;
+}
+
+.um-modal-title {
+  color: #D32F2F;
+  font-size: 20px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  line-height: 24px;
+  word-wrap: break-word;
+}
+
+.um-modal-desc {
+  width: 432px;
+  color: #1A1A1A;
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  line-height: 22.40px;
+  word-wrap: break-word;
+  margin-top: 16px;
+}
+
+.um-modal-actions {
+  width: 432px;
+  height: 58px;
+  padding-top: 24px;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  display: inline-flex;
+}
+
+.um-modal-cancel-btn {
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #757575;
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.um-modal-cancel-btn:hover {
+  background-color: #F5F5F5;
+}
+
+.um-modal-delete-btn {
+  height: 34px;
+  padding: 0 16px;
+  background: #D32F2F;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.um-modal-delete-btn:hover {
+  background-color: #B71C1C;
+}

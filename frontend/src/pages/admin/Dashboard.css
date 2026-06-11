@@ -1,0 +1,269 @@
+.admin-dashboard-wrapper {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background-color: #F9F9F9;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.admin-db-sidebar {
+  width: 260px;
+  height: 100%;
+  background-color: #FFFFFF;
+  border-right: 1px solid #E0E0E0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.admin-db-logo {
+  height: 80px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.admin-db-logo-text {
+  color: #1A1A1A;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 32px;
+}
+
+.admin-db-nav {
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.admin-db-nav-item {
+  height: 42.8px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-db-nav-item.active {
+  background-color: #F3E5F5;
+}
+
+.admin-db-nav-text {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 18px;
+  color: #757575;
+}
+
+.admin-db-nav-item.active .admin-db-nav-text {
+  color: #7C4DFF;
+  font-weight: 600;
+}
+
+.admin-db-logout-container {
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-db-logout-btn {
+  height: 42.8px;
+  background-color: #FFEBEE;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.admin-db-logout-btn:hover {
+  background-color: #ffcdd2;
+}
+
+.admin-db-logout-text {
+  color: #D32F2F;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 18px;
+}
+
+/* Main Content */
+.admin-db-main {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.admin-db-content {
+  width: 100%;
+  max-width: 1180px;
+  padding: 32px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.admin-db-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.admin-db-title {
+  color: #1A1A1A;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 28px;
+  margin: 0;
+}
+
+.admin-db-profile {
+  padding: 8px 16px;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E0E0E0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-db-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #7C4DFF;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admin-db-profile-name {
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Stats Cards */
+.admin-db-stats-grid {
+  display: flex;
+  gap: 24px;
+  margin-top: 32px;
+  width: 100%;
+}
+
+.admin-db-card {
+  flex: 1;
+  background-color: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E0E0E0;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-db-card-label {
+  color: #757575;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  margin-bottom: 8px;
+}
+
+.admin-db-card-value {
+  color: #1A1A1A;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 42px;
+}
+
+.admin-db-card-value.danger {
+  color: #D32F2F;
+}
+
+.admin-db-badge-success {
+  background-color: #E8F5E9;
+  color: #2E7D32;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.admin-db-badge-danger {
+  background-color: #FFEBEE;
+  color: #C62828;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.admin-db-badge-neutral {
+  background-color: #EEEEEE;
+  color: #616161;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.admin-db-card-bg-line {
+  position: absolute;
+  width: 8px;
+  height: 100%;
+  right: 0;
+  top: 0;
+  background-color: rgba(211, 47, 47, 0.2);
+}
+
+/* Chart Section */
+.admin-db-chart-section {
+  margin-top: 32px;
+  background-color: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #E0E0E0;
+  padding: 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-db-chart-title {
+  color: #1A1A1A;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  margin-bottom: 24px;
+}
+
+/* The chart itself uses absolute positioning based on Figma export */
+.admin-db-chart-container {
+  width: 100%;
+  max-width: 778px;
+  height: 320px;
+  position: relative;
+}
