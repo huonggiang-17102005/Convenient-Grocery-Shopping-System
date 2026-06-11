@@ -9,7 +9,6 @@ import RoleSelection from '../pages/guest/RoleSelection';
 import DashboardHomemaker from '../pages/homemaker/dashboard';
 import FridgeHomemaker from '../pages/homemaker/FridgeHomemaker';
 import ShoppingListScreen from '../pages/homemaker/shopping-list/ShoppingListScreen';
-import RecipeSmartSuggestions from '../pages/homemaker/RecipeSmartSuggestions';
 import MealPlanner from '../pages/homemaker/meal-planner';
 import ProfileScreen from '../pages/homemaker/profile/ProfileScreen';
 import HomemakerLayout from '../components/homemaker/HomemakerLayout';
@@ -18,6 +17,7 @@ import AdminLayout from '../components/admin/AdminLayout';
 import DashboardAdmin from '../pages/admin/Dashboard';
 import UserManagementAdmin from '../pages/admin/UserManagement';
 import CreateGroup from '../pages/homemaker/CreateGroup';
+import Recipes from '../pages/homemaker/Recipes';
 import Jointhegroup from '../pages/member/Jointhegroup';
 
 export const router = createBrowserRouter([
@@ -62,7 +62,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'recipes',
-        element: <RecipeSmartSuggestions />,
+        element: <Recipes />,
       },
       {
         path: 'meal-planner',
