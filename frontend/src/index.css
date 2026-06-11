@@ -74,7 +74,11 @@ button, input, select, textarea {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
+}
+@supports (scrollbar-width: none) {
+  .refrigerator-filter-group {
+    scrollbar-width: none;
+  }
 }
 .refrigerator-filter-group::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
@@ -87,7 +91,11 @@ button, input, select, textarea {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  scrollbar-width: none;
+}
+@supports (scrollbar-width: none) {
+  .refrigerator-category-group {
+    scrollbar-width: none;
+  }
 }
 .refrigerator-category-group::-webkit-scrollbar {
   display: none;
@@ -254,7 +262,7 @@ button, input, select, textarea {
 /* FAB */
 .fab-button {
   position: fixed;
-  bottom: 80px; /* Above bottom nav */
+  bottom: 100px; /* Above bottom nav */
   right: 16px;
   width: 56px;
   height: 56px;
@@ -269,3 +277,69 @@ button, input, select, textarea {
   border: none;
   z-index: 100;
 }
+
+
+
+/* ---------- Toast Notification ---------- */
+.toast-notification {
+  position: fixed;
+  top: 16px;
+  left: 25px;
+  right: 25px;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10);
+  padding: 16px;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.toast-notification--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast-notification--hidden {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}
+
+@media (min-width: 480px) {
+  .toast-notification {
+    left: 50%;
+    right: auto;
+    width: calc(480px - 50px);
+    transform: translateX(-50%);
+  }
+  .toast-notification--visible {
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast-notification--hidden {
+    transform: translateX(-50%) translateY(-8px);
+  }
+}
+
+.toast-notification__icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: #388E3C;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-notification__text {
+  font-size: 14px;
+  color: #1A1A1A;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  line-height: 20px;
+}
+

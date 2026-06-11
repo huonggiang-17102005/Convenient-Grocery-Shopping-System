@@ -18,17 +18,26 @@ const FridgeHomemaker: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStorage, setActiveStorage] = useState<StorageType>('Tất cả');
   const [activeCategory, setActiveCategory] = useState<FoodCategory>('Tất cả');
-  const [items, setItems] = useState<FoodItem[]>(MOCK_DATA);
+  const [items, setItems] = useState<FoodItem[]>(() => {
+    const data = localStorage.getItem('homemaker_fridge_items');
+    if (!data) {
+      localStorage.setItem('homemaker_fridge_items', JSON.stringify(MOCK_DATA));
+      return MOCK_DATA;
+    }
+    return JSON.parse(data);
+  });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const handleUpdateQuantity = (id: string, delta: number) => {
-    setItems(items.map(item => {
+    const updatedItems = items.map(item => {
       if (item.id === id) {
         const newQuantity = Math.max(0, item.quantity + delta);
         return { ...item, quantity: newQuantity };
       }
       return item;
-    }));
+    });
+    setItems(updatedItems);
+    localStorage.setItem('homemaker_fridge_items', JSON.stringify(updatedItems));
   };
 
   const handleSelect = (id: string, selected: boolean) => {
