@@ -58,6 +58,34 @@ const Dashboard: React.FC = () => {
   const [isExpireOpen, setIsExpireOpen] = useState(false);
   const [isCookOpen,   setIsCookOpen]   = useState(false);
 
+  // Real Invite Code state
+  const [realInviteCode, setRealInviteCode] = useState('Đang tải...');
+
+  React.useEffect(() => {
+    const fetchFamilyInfo = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch('http://localhost:5000/api/families/info', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (response.ok && data.family) {
+          setRealInviteCode(data.family.invite_code);
+        } else {
+          setRealInviteCode('Chưa có mã');
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy thông tin nhóm:', error);
+        setRealInviteCode('Lỗi lấy mã');
+      }
+    };
+    
+    fetchFamilyInfo();
+  }, []);
+
   // Selected item for ExpireItemModal
   const [selectedItem, setSelectedItem] = useState<IngredientCardProps | null>(null);
 
@@ -154,7 +182,7 @@ const Dashboard: React.FC = () => {
       <InviteCodeModal
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
-        inviteCode="FC-9821-AM"
+        inviteCode={realInviteCode}
         onCopied={handleCopied}
       />
 

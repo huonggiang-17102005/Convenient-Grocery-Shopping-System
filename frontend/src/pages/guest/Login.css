@@ -174,3 +174,9 @@
     -webkit-text-fill-color: #1A1A1A !important;
     transition: background-color 5000s ease-in-out 0s;
 }
+
+/* Ẩn con mắt mặc định của trình duyệt Edge/IE */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
