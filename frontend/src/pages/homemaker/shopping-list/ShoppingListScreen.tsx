@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import TimeFilterTabs from './components/TimeFilterTabs';
 import CategoryGroup from './components/CategoryGroup';
@@ -9,6 +9,7 @@ import DeleteConfirmModal from './modals/DeleteConfirmModal';
 import type { ShoppingItem, FoodCategory } from './types';
 import { shoppingService } from './shoppingService';
 import Toast from '../dashboard/components/Toast';
+import './ShoppingListScreen.css';
 
 const ShoppingListScreen: React.FC = () => {
   const [items, setItems] = useState<ShoppingItem[]>(() => shoppingService.getShoppingItems());
@@ -26,14 +27,14 @@ const ShoppingListScreen: React.FC = () => {
   const [toastVisible, setToastVisible] = useState(false);
 
   // Show toast utility
-  const showToast = (message: string) => {
+  const showToast = useCallback((message: string) => {
     setToastMessage(message);
     setToastVisible(true);
-  };
+  }, []);
 
-  const hideToast = () => {
+  const hideToast = useCallback(() => {
     setToastVisible(false);
-  };
+  }, []);
 
   // Helper to save items
   const updateItemsList = (newItems: ShoppingItem[]) => {
@@ -72,7 +73,7 @@ const ShoppingListScreen: React.FC = () => {
       };
       const updated = [...items, newItem];
       updateItemsList(updated);
-      showToast('Đã thêm mặt hàng thành công!');
+      showToast('Đã thêm vào danh sách mua sắm');
     } else if (formMode === 'edit' && selectedItem) {
       const updated = items.map(item => {
         if (item.id === selectedItem.id) {
@@ -99,15 +100,14 @@ const ShoppingListScreen: React.FC = () => {
     updateItemsList(updated);
 
     if (assigneeId) {
-      showToast(`Đã giao việc mua cho ${assigneeId} thành công!`);
+      showToast(`Đã giao cho ${assigneeId}`);
     } else {
       showToast('Đã hủy giao việc thành công!');
     }
 
-    // Update bottom sheet's selectedItem if open
-    if (selectedItem && selectedItem.id === itemId) {
-      setSelectedItem({ ...selectedItem, assigneeId });
-    }
+    // Close bottom sheet and clear selection
+    setIsBottomSheetOpen(false);
+    setSelectedItem(null);
   };
 
   // Delete item confirm

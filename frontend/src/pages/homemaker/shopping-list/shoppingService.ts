@@ -9,7 +9,7 @@ const INITIAL_SHOPPING_ITEMS: ShoppingItem[] = [
     category: 'Thịt cá',
     quantity: 500,
     unit: 'g',
-    isBought: true,
+    isBought: false,
     assigneeId: null,
     deadlineDate: '2026-06-11', // Today
     deadlineTime: '12:00'
