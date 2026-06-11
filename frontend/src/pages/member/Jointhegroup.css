@@ -123,3 +123,14 @@
 .qr-scan-icon {
   font-size: 48px;
 }
+
+.error-message {
+  color: #F44336;
+  font-size: 13px;
+  margin-top: 8px;
+  margin-left: 4px;
+}
+
+.group-code-input.error {
+  border-color: #F44336;
+}

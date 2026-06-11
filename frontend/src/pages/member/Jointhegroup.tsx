@@ -7,15 +7,18 @@ const Jointhegroup: React.FC = () => {
   const navigate = useNavigate();
   const [groupCode, setGroupCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleJoin = async () => {
     if (!groupCode.trim()) return;
     
     setIsLoading(true);
+    setErrorMsg('');
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        alert('Vui lòng đăng nhập lại.');
+        setErrorMsg('Vui lòng đăng nhập lại.');
+        setIsLoading(false);
         navigate('/');
         return;
       }
@@ -32,7 +35,7 @@ const Jointhegroup: React.FC = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error(data.message || 'Mã nhóm không hợp lệ hoặc đã xảy ra lỗi');
+        throw new Error('Mã tham gia không tồn tại');
       }
       
       // Update local storage user info
@@ -47,7 +50,7 @@ const Jointhegroup: React.FC = () => {
       navigate('/member/dashboard');
       
     } catch (error: any) {
-      alert(error.message || 'Lỗi khi tham gia nhóm');
+      setErrorMsg(error.message || 'Mã tham gia không tồn tại');
       setIsLoading(false);
     }
   };
@@ -65,11 +68,15 @@ const Jointhegroup: React.FC = () => {
         <div className="group-input-container">
           <input
             type="text"
-            className="group-code-input"
+            className={`group-code-input ${errorMsg ? 'error' : ''}`}
             placeholder="Nhập mã nhóm (Ví dụ: FC-9821-AM)"
             value={groupCode}
-            onChange={(e) => setGroupCode(e.target.value)}
+            onChange={(e) => {
+              setGroupCode(e.target.value);
+              if (errorMsg) setErrorMsg('');
+            }}
           />
+          {errorMsg && <div className="error-message">{errorMsg}</div>}
         </div>
 
         <button 
