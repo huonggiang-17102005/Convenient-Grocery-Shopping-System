@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Outlet } from 'react-router-dom';
 
 // Guest pages
 import Login from '../pages/guest/Login';
@@ -15,6 +15,8 @@ import ProfileScreen from '../pages/homemaker/Profile/ProfileScreen';
 import HomemakerLayout from '../components/homemaker/HomemakerLayout';
 import MemberLayout from '../components/member/MemberLayout';
 import AdminLayout from '../components/admin/AdminLayout';
+import DashboardAdmin from '../pages/admin/Dashboard';
+import UserManagementAdmin from '../pages/admin/UserManagement';
 import CreateGroup from '../pages/homemaker/CreateGroup';
 
 export const router = createBrowserRouter([
@@ -95,15 +97,15 @@ export const router = createBrowserRouter([
   // Admin Routes
   {
     path: '/admin',
-    element: <AdminLayout />,
+    element: <Outlet />,
     children: [
       {
         path: 'dashboard',
-        element: <div className="placeholder-page"><h3>Bảng điều khiển Admin</h3><p>Tổng quan hệ thống, người dùng và hoạt động.</p></div>,
+        element: <DashboardAdmin />,
       },
       {
         path: 'users',
-        element: <div className="placeholder-page"><h3>Quản lý người dùng</h3><p>Xem và chỉnh sửa danh sách tài khoản.</p></div>,
+        element: <UserManagementAdmin />,
       },
       {
         path: 'settings',
