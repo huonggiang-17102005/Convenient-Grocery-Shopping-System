@@ -16,6 +16,7 @@ import HomemakerLayout from '../components/homemaker/HomemakerLayout';
 import MemberLayout from '../components/member/MemberLayout';
 import AdminLayout from '../components/admin/AdminLayout';
 import CreateGroup from '../pages/homemaker/CreateGroup';
+import Jointhegroup from '../pages/member/Jointhegroup';
 
 export const router = createBrowserRouter([
   // Guest Routes
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
   {
     path: '/homemaker/create-group',
     element: <CreateGroup />,
+  },
+  {
+    path: '/member/join-group',
+    element: <Jointhegroup />,
   },
 
   // Homemaker Routes
