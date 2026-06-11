@@ -11,10 +11,10 @@ export interface ShoppingItem {
 
 export interface ShoppingList {
   id: string;
-  family_id: string;
+  family_id: string | null;
   title: string;
   target_date: string | null;
-  status: 'Planning' | 'Shopping' | 'Completed';
+  status: 'Planning' | 'Shopping' | 'Completed' | null;
   items: ShoppingItem[];
   created_at?: string;
   updated_at?: string;
