@@ -7,7 +7,9 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
     let totalUsers = 0;
     const { count: usersCount, error: errUsers } = await supabase
       .from('users')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .neq('role', 'Admin')
+      .neq('role', 'admin');
     if (!errUsers) totalUsers = usersCount || 0;
 
     // 2. Active family groups
@@ -50,7 +52,9 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
     const { data: usersLast7Days, error: errGrowth } = await supabase
       .from('users')
       .select('created_at')
-      .gte('created_at', sevenDaysAgo.toISOString());
+      .gte('created_at', sevenDaysAgo.toISOString())
+      .neq('role', 'Admin')
+      .neq('role', 'admin');
 
     // Initialize an array with 0 for the last 7 days
     const growthData = [0, 0, 0, 0, 0, 0, 0];
@@ -124,6 +128,8 @@ export const getUsersList = async (req: Request, res: Response): Promise<void> =
     const { data: users, error } = await supabase
       .from('users')
       .select('*')
+      .neq('role', 'Admin')
+      .neq('role', 'admin')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -182,6 +188,26 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    // 1. Lấy thông tin user trước khi xóa để biết họ thuộc nhóm gia đình nào
+    const { data: usersData, error: fetchError } = await supabase
+      .from('users')
+      .select('family_id')
+      .eq('id', id);
+
+    if (fetchError) {
+      console.error('Error fetching user before delete:', fetchError);
+      res.status(500).json({ message: 'Lỗi khi kiểm tra dữ liệu người dùng' });
+      return;
+    }
+
+    if (!usersData || usersData.length === 0) {
+      res.status(404).json({ message: 'Không tìm thấy người dùng' });
+      return;
+    }
+
+    const familyId = usersData[0]?.family_id;
+
+    // 2. Tiến hành xóa người dùng
     const { error } = await supabase
       .from('users')
       .delete()
@@ -191,6 +217,47 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
       console.error(error);
       res.status(500).json({ message: 'Lỗi khi xóa người dùng khỏi Database' });
       return;
+    }
+
+    // 3. Nếu người dùng thuộc 1 nhóm, kiểm tra xem nhóm đó còn ai không
+    console.log(`Kiểm tra family_id: ${familyId}`);
+    if (familyId) {
+      const { count, error: countError } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('family_id', familyId);
+
+      console.log(`Số lượng thành viên còn lại trong nhóm ${familyId} là: ${count}, error:`, countError);
+
+      // Nếu đếm số lượng user trong nhóm đó = 0, thì xóa luôn nhóm
+      if (!countError && count === 0) {
+        console.log(`Đang tiến hành dọn dẹp các dữ liệu liên quan của nhóm ${familyId}...`);
+        
+        // Xóa các dữ liệu liên quan trước để tránh lỗi Foreign Key Constraint
+        const { error: err1 } = await supabase.from('fridge_items').delete().eq('family_id', familyId);
+        if (err1) console.error('Lỗi xóa fridge_items:', err1);
+        
+        const { error: err2 } = await supabase.from('recipes').delete().eq('family_id', familyId);
+        if (err2) console.error('Lỗi xóa recipes:', err2);
+        
+        const { error: err3 } = await supabase.from('shopping_lists').delete().eq('family_id', familyId);
+        if (err3) console.error('Lỗi xóa shopping_lists:', err3);
+        
+        const { error: err4 } = await supabase.from('meal_plans').delete().eq('family_id', familyId);
+        if (err4) console.error('Lỗi xóa meal_plans:', err4);
+
+        console.log(`Đang tiến hành xóa nhóm ${familyId}...`);
+        const { error: delFamilyError } = await supabase
+          .from('families')
+          .delete()
+          .eq('id', familyId);
+          
+        if (delFamilyError) {
+          console.error('Lỗi khi xóa nhóm gia đình trống:', delFamilyError);
+        } else {
+          console.log(`Đã xóa thành công nhóm ${familyId}!`);
+        }
+      }
     }
 
     res.status(200).json({ message: 'Đã xóa người dùng thành công' });

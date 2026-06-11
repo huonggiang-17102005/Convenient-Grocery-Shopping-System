@@ -106,3 +106,42 @@ export const joinFamily = async (req: AuthRequest, res: Response): Promise<void>
     res.status(500).json({ message: 'Lỗi server nội bộ', error: error.message });
   }
 };
+
+export const getFamilyInfo = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.user;
+    if (!user || !user.id) {
+      res.status(401).json({ message: 'Không tìm thấy thông tin người dùng' });
+      return;
+    }
+
+    // 1. Lấy thông tin user để biết family_id hiện tại
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('family_id')
+      .eq('id', user.id)
+      .single();
+
+    if (userError || !userData || !userData.family_id) {
+      res.status(404).json({ message: 'Người dùng chưa có nhóm' });
+      return;
+    }
+
+    // 2. Lấy thông tin family
+    const { data: family, error: familyError } = await supabase
+      .from('families')
+      .select('id, name, invite_code')
+      .eq('id', userData.family_id)
+      .single();
+
+    if (familyError || !family) {
+      res.status(404).json({ message: 'Không tìm thấy thông tin nhóm gia đình' });
+      return;
+    }
+
+    res.status(200).json({ family });
+  } catch (error: any) {
+    console.error('Lỗi lấy thông tin gia đình:', error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
