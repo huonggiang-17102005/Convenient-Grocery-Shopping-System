@@ -1,0 +1,125 @@
+.join-group-container {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.join-group-header {
+  height: 64px;
+  padding: 0 16px;
+  border-bottom: 1.27px solid #E0E0E0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.back-button {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.header-title {
+  color: #1A1A1A;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
+}
+
+.join-group-content {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.group-input-container {
+  width: 100%;
+}
+
+.group-code-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #1A1A1A;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.group-code-input::placeholder {
+  color: rgba(26, 26, 26, 0.50);
+}
+
+.group-code-input:focus {
+  border-color: #1E88E5;
+}
+
+.join-btn {
+  width: 100%;
+  height: 48px;
+  background: #1E88E5;
+  border-radius: 100px;
+  border: none;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.2s;
+}
+
+.join-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.join-btn:active {
+  opacity: 0.8;
+}
+
+.qr-scan-container {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.qr-scan-box {
+  width: 180px;
+  height: 180px;
+  border-radius: 24px;
+  border: 1.27px solid #1E88E5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.qr-scan-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #1E88E5;
+}
+
+.qr-scan-icon {
+  font-size: 48px;
+}

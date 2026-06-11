@@ -46,7 +46,7 @@ export default function RoleSelection() {
       if (role === 'Homemaker') {
         navigate('/homemaker/create-group');
       } else {
-        navigate('/member/dashboard');
+        navigate('/member/join-group');
       }
 
     } catch (err) {
