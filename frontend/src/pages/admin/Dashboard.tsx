@@ -196,10 +196,10 @@ const DashboardAdmin: React.FC = () => {
           <div className="admin-db-nav-item">
             <div className="admin-db-nav-text">Kiểm duyệt nội dung</div>
           </div>
-          <div className="admin-db-nav-item">
-            <div className="admin-db-nav-text">Quản lý dữ liệu nền</div>
+          <div className="admin-db-nav-item" onClick={() => navigate('/admin/master-data')}>
+            <div className="admin-db-nav-text">Quản lý dữ liệu gốc</div>
           </div>
-          <div className="admin-db-nav-item">
+          <div className="admin-db-nav-item" onClick={() => navigate('/admin/settings')}>
             <div className="admin-db-nav-text">Báo cáo & Cài đặt</div>
           </div>
         </div>
@@ -218,8 +218,16 @@ const DashboardAdmin: React.FC = () => {
           <div className="admin-db-header">
             <h1 className="admin-db-title">Tổng quan hệ thống</h1>
             <div className="admin-db-profile">
-              <div className="admin-db-avatar">A</div>
-              <div className="admin-db-profile-name">Admin System</div>
+              <div className="admin-db-avatar">{
+                (() => {
+                  return 'A';
+                })()
+              }</div>
+              <div className="admin-db-profile-name">{
+                (() => {
+                  return 'Admin System';
+                })()
+              }</div>
             </div>
           </div>
 

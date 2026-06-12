@@ -294,3 +294,516 @@ export const updateUserStatus = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ message: 'Lỗi server khi cập nhật trạng thái', error: error.message });
   }
 };
+
+export const getWasteReport = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { month, year } = req.query;
+    
+    let query = supabase
+      .from('fridge_items')
+      .select('category, is_wasted, created_at, quantity');
+
+    if (year) {
+      if (month) {
+        // Filter items created within the specified month and year
+        const startDate = new Date(Number(year), Number(month) - 1, 1).toISOString();
+        const endDate = new Date(Number(year), Number(month), 1).toISOString(); // 1st day of next month
+        query = query.gte('created_at', startDate).lt('created_at', endDate);
+      } else {
+        // Filter items for the entire year
+        const startDate = new Date(Number(year), 0, 1).toISOString();
+        const endDate = new Date(Number(year) + 1, 0, 1).toISOString();
+        query = query.gte('created_at', startDate).lt('created_at', endDate);
+      }
+    }
+
+    const { data: items, error: errItems } = await query;
+
+    console.log('Fetched fridge_items:', items, 'Error:', errItems);
+
+    if (errItems || !items) {
+      res.status(500).json({ message: 'Lỗi truy xuất dữ liệu tủ lạnh' });
+      return;
+    }
+
+    // Process data to calculate waste percentage per category based on quantity
+    const categoryStats: Record<string, { total: number, wasted: number }> = {};
+
+    items.forEach((item: any) => {
+      const category = item.category ? String(item.category) : '';
+      // Bỏ qua nếu không có category
+      if (!category) return;
+      
+      if (!categoryStats[category]) {
+        categoryStats[category] = { total: 0, wasted: 0 };
+      }
+      
+      const qty = Number(item.quantity) || 0;
+      categoryStats[category].total += qty;
+      
+      if (item.is_wasted) {
+        categoryStats[category].wasted += qty;
+      }
+    });
+
+    const reportData = Object.entries(categoryStats).map(([category, stats]) => {
+      // Tránh chia cho 0
+      const wasteRate = stats.total > 0 ? Math.round((stats.wasted / stats.total) * 100) : 0;
+      return {
+        category,
+        wasteRate: Math.round((stats.wasted / stats.total) * 100)
+      };
+    });
+
+    // Sắp xếp báo cáo theo tỷ lệ lãng phí giảm dần
+    reportData.sort((a, b) => b.wasteRate - a.wasteRate);
+
+    res.json(reportData);
+  } catch (error) {
+    console.error('Error fetching waste report:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// --- Cài đặt hệ thống (System Settings) ---
+
+export const getSystemSettings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('max_family_members, default_expiry_warning_days')
+      .eq('id', 1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows returned
+        res.status(200).json({ max_family_members: 10, default_expiry_warning_days: 3 });
+        return;
+      }
+      res.status(500).json({ message: 'Lỗi lấy cài đặt hệ thống', error: error.message });
+      return;
+    }
+
+    res.status(200).json(data);
+  } catch (error: any) {
+    console.error('Error fetching system settings:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy cài đặt', error: error.message });
+  }
+};
+
+export const updateSystemSettings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { max_family_members, default_expiry_warning_days } = req.body;
+
+    const { data, error } = await supabase
+      .from('system_settings')
+      .upsert({ 
+        id: 1, 
+        max_family_members, 
+        default_expiry_warning_days,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      res.status(500).json({ message: 'Lỗi cập nhật cài đặt hệ thống', error: error.message });
+      return;
+    }
+
+    res.status(200).json({ message: 'Đã cập nhật cài đặt thành công', settings: data });
+  } catch (error: any) {
+    console.error('Error updating system settings:', error);
+    res.status(500).json({ message: 'Lỗi server khi cập nhật cài đặt', error: error.message });
+  }
+};
+
+// --- Quản lý dữ liệu gốc (Master Data) ---
+
+export const getMasterDataCategories = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { data, error } = await supabase
+      .from('category_units')
+      .select('category, unit, default_storage_tip, is_visible');
+
+    if (error) {
+      throw error;
+    }
+
+    const categoryMap = new Map<string, any>();
+    
+    data?.forEach(row => {
+      if (row.category === '__UNIT__') return; // Bỏ qua dummy category cho units
+      if (!categoryMap.has(row.category)) {
+        categoryMap.set(row.category, {
+          category: row.category,
+          unit: row.unit || '-',
+          default_storage_tip: row.default_storage_tip || '',
+          is_visible: row.is_visible !== false
+        });
+      } else {
+        const existing = categoryMap.get(row.category);
+        if (row.unit && row.unit !== '-' && existing.unit !== '-') {
+          if (existing.unit === '-') {
+            existing.unit = row.unit;
+          } else if (!existing.unit.split(', ').includes(row.unit)) {
+            existing.unit += `, ${row.unit}`;
+          }
+        }
+      }
+    });
+
+    const uniqueCategories = Array.from(categoryMap.values()).sort((a, b) => a.category.localeCompare(b.category));
+    res.status(200).json(uniqueCategories);
+  } catch (error: any) {
+    console.error('Error fetching master data categories:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy dữ liệu gốc', error: error.message });
+  }
+};
+
+export const getMasterDataUnits = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { data, error } = await supabase
+      .from('category_units')
+      .select('unit, is_visible')
+      .neq('unit', '-')
+      .not('unit', 'is', null);
+
+    if (error) {
+      throw error;
+    }
+
+    const unitMap = new Map<string, any>();
+    
+    data?.forEach(row => {
+      if (!unitMap.has(row.unit)) {
+        unitMap.set(row.unit, {
+          unit: row.unit,
+          is_visible: row.is_visible !== false
+        });
+      }
+    });
+
+    const uniqueUnits = Array.from(unitMap.values()).sort((a, b) => a.unit.localeCompare(b.unit));
+    res.status(200).json(uniqueUnits);
+  } catch (error: any) {
+    console.error('Error fetching master data units:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy đơn vị đo lường', error: error.message });
+  }
+};
+
+export const updateMasterDataCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { categoryName } = req.params;
+    const { default_storage_tip, is_visible } = req.body;
+
+    if (!categoryName) {
+      res.status(400).json({ message: 'Thiếu tên danh mục' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('category_units')
+      .update({ default_storage_tip, is_visible })
+      .eq('category', categoryName);
+
+    if (error) {
+      console.error('Update error:', error);
+      res.status(500).json({ message: 'Lỗi khi cập nhật danh mục' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Cập nhật danh mục thành công' });
+  } catch (error: any) {
+    console.error('Error updating master data category:', error);
+    res.status(500).json({ message: 'Lỗi server khi cập nhật dữ liệu gốc', error: error.message });
+  }
+};
+
+export const updateMasterDataUnit = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { oldUnitName } = req.params;
+    const { unit, is_visible } = req.body;
+
+    if (!oldUnitName) {
+      res.status(400).json({ message: 'Thiếu tên đơn vị cũ' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('category_units')
+      .update({ unit: unit || '-', is_visible })
+      .eq('unit', oldUnitName);
+
+    if (error) {
+      console.error('Update unit error:', error);
+      if (error.code === '23503') {
+        res.status(400).json({ message: 'Không thể sửa đơn vị vì đang có thực phẩm trong tủ lạnh sử dụng đơn vị cũ.' });
+        return;
+      }
+      if (error.code === '23505') {
+        res.status(400).json({ message: 'Lỗi trùng lặp dữ liệu đơn vị.' });
+        return;
+      }
+      res.status(500).json({ message: 'Lỗi khi cập nhật đơn vị đo lường' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Cập nhật đơn vị thành công' });
+  } catch (error: any) {
+    console.error('Error updating master data unit:', error);
+    res.status(500).json({ message: 'Lỗi server khi cập nhật đơn vị', error: error.message });
+  }
+};
+
+export const createMasterDataCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { category, unit, default_storage_tip, is_visible } = req.body;
+
+    if (!category) {
+      res.status(400).json({ message: 'Thiếu tên danh mục / đơn vị' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('category_units')
+      .insert([
+        { 
+          category, 
+          unit: unit || '-', 
+          default_storage_tip: default_storage_tip || '',
+          is_visible: is_visible !== false
+        }
+      ]);
+
+    if (error) {
+      console.error('Insert error:', error);
+      if (error.code === '23505') {
+        res.status(400).json({ message: 'Danh mục này đã tồn tại!' });
+        return;
+      }
+      res.status(500).json({ message: 'Lỗi khi tạo danh mục' });
+      return;
+    }
+
+    res.status(201).json({ message: 'Tạo danh mục thành công' });
+  } catch (error: any) {
+    console.error('Error creating master data category:', error);
+    res.status(500).json({ message: 'Lỗi server khi tạo dữ liệu gốc', error: error.message });
+  }
+};
+
+export const createMasterDataUnit = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { unit, is_visible } = req.body;
+
+    if (!unit) {
+      res.status(400).json({ message: 'Thiếu tên đơn vị' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('category_units')
+      .insert([
+        { 
+          category: '__UNIT__', 
+          unit: unit.trim(), 
+          default_storage_tip: '',
+          is_visible: is_visible !== false
+        }
+      ]);
+
+    if (error) {
+      console.error('Insert unit error:', error);
+      if (error.code === '23505') {
+        res.status(400).json({ message: 'Đơn vị này đã tồn tại!' });
+        return;
+      }
+      res.status(500).json({ message: 'Lỗi khi thêm mới đơn vị' });
+      return;
+    }
+
+    res.status(201).json({ message: 'Thêm mới đơn vị thành công' });
+  } catch (error: any) {
+    console.error('Error creating master data unit:', error);
+    res.status(500).json({ message: 'Lỗi server khi thêm mới đơn vị', error: error.message });
+  }
+};
+
+export const deleteMasterDataUnit = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { unitName } = req.params;
+
+    if (!unitName) {
+      res.status(400).json({ message: 'Thiếu tên đơn vị' });
+      return;
+    }
+
+    // Kiểm tra xem đơn vị có đang được gán cho danh mục thực sự nào không
+    const { data } = await supabase
+      .from('category_units')
+      .select('category')
+      .eq('unit', unitName)
+      .neq('category', '__UNIT__');
+
+    if (data && data.length > 0) {
+      res.status(400).json({ message: 'Đơn vị đang được sử dụng bởi các danh mục, không thể xóa.' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('category_units')
+      .delete()
+      .eq('category', '__UNIT__')
+      .eq('unit', unitName);
+
+    if (error) {
+      console.error('Delete unit error:', error);
+      res.status(500).json({ message: 'Lỗi khi xóa đơn vị đo lường' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Xóa đơn vị thành công' });
+  } catch (error: any) {
+    console.error('Error deleting master data unit:', error);
+    res.status(500).json({ message: 'Lỗi server khi xóa đơn vị', error: error.message });
+  }
+};
+
+export const getMasterDataRecipes = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Fetch system recipes (author_id is null)
+    const { data, error } = await supabase
+      .from('recipes')
+      .select('*')
+      .is('author_id', null)
+      .order('created_at', { ascending: false });
+
+    console.log('Recipes fetched:', data, 'Error:', error);
+
+    if (error) {
+      console.error('Lỗi khi lấy danh sách công thức chuẩn:', error);
+      res.status(500).json({ message: 'Lỗi server khi lấy công thức chuẩn' });
+      return;
+    }
+
+    res.status(200).json(data || []);
+  } catch (error: any) {
+    console.error('Error fetching standard recipes:', error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+export const deleteMasterDataRecipe = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      res.status(400).json({ message: 'Thiếu ID công thức' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('recipes')
+      .delete()
+      .eq('id', id)
+      .is('author_id', null);
+
+    if (error) {
+      console.error('Lỗi khi xóa công thức chuẩn:', error);
+      res.status(500).json({ message: 'Lỗi server khi xóa công thức chuẩn' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Xóa công thức chuẩn thành công' });
+  } catch (error: any) {
+    console.error('Error deleting standard recipe:', error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+export const createMasterDataRecipe = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const recipeData = req.body;
+    
+    const newRecipe = {
+      ...recipeData,
+      author_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      likes_count: recipeData.likes_count || 0
+    };
+
+    const { data, error } = await supabase
+      .from('recipes')
+      .insert(newRecipe)
+      .select();
+
+    if (error) {
+      console.error('Lỗi tạo công thức:', error);
+      res.status(500).json({ message: 'Lỗi tạo công thức', error: error.message });
+      return;
+    }
+    
+    res.status(201).json(data[0]);
+  } catch (error: any) {
+    console.error('Error creating recipe:', error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+export const updateMasterDataRecipe = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const recipeData = req.body;
+
+    const { data, error } = await supabase
+      .from('recipes')
+      .update({ ...recipeData, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .is('author_id', null)
+      .select();
+
+    if (error) {
+      console.error('Lỗi cập nhật công thức:', error);
+      res.status(500).json({ message: 'Lỗi cập nhật công thức', error: error.message });
+      return;
+    }
+
+    res.status(200).json(data[0]);
+  } catch (error: any) {
+    console.error('Error updating recipe:', error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+export const deleteMasterDataCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { categoryName } = req.params;
+
+    if (!categoryName) {
+      res.status(400).json({ message: 'Thiếu tên danh mục' });
+      return;
+    }
+
+    const { error } = await supabase
+      .from('category_units')
+      .delete()
+      .eq('category', categoryName);
+
+    if (error) {
+      console.error('Delete error:', error);
+      // Lỗi ràng buộc khóa ngoại (foreign key constraint)
+      if (error.code === '23503') {
+        res.status(400).json({ message: 'Không thể xóa danh mục này vì đang có thực phẩm trong tủ lạnh hoặc công thức sử dụng nó.' });
+        return;
+      }
+      res.status(500).json({ message: 'Lỗi khi xóa danh mục' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Đã xóa danh mục thành công' });
+  } catch (error: any) {
+    console.error('Error deleting master data category:', error);
+    res.status(500).json({ message: 'Lỗi server khi xóa dữ liệu gốc', error: error.message });
+  }
+};
