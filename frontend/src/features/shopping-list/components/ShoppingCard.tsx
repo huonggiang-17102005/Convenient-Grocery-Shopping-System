@@ -3,6 +3,7 @@ import type { ShoppingItem } from '../types';
 
 interface ShoppingCardProps {
   item: ShoppingItem;
+  memberMap: Record<string, string>; // userId -> full_name
   onToggleCheck: (id: string, e: React.MouseEvent) => void;
   onClickCard: (item: ShoppingItem) => void;
 }
@@ -19,20 +20,20 @@ const getCategoryClass = (category: string): string => {
 };
 
 const isItemOverdue = (item: ShoppingItem): boolean => {
-  if (item.isBought) return false;
+  if (item.is_bought) return false;
+  if (!item.deadline_date) return false;
+
   const now = new Date();
-  // Get date in YYYY-MM-DD in local time
   const offset = now.getTimezoneOffset();
   const localDate = new Date(now.getTime() - (offset * 60 * 1000));
   const todayStr = localDate.toISOString().split('T')[0];
 
-  if (item.deadlineDate < todayStr) {
-    return true;
-  }
-  if (item.deadlineDate === todayStr) {
+  if (item.deadline_date < todayStr) return true;
+
+  if (item.deadline_date === todayStr && item.deadline_time) {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    const [dlHour, dlMin] = item.deadlineTime.split(':').map(Number);
+    const [dlHour, dlMin] = item.deadline_time.split(':').map(Number);
     if (currentHour > dlHour || (currentHour === dlHour && currentMinute >= dlMin)) {
       return true;
     }
@@ -40,9 +41,14 @@ const isItemOverdue = (item: ShoppingItem): boolean => {
   return false;
 };
 
-const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClickCard }) => {
+const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, memberMap, onToggleCheck, onClickCard }) => {
   const overdue = isItemOverdue(item);
-  const checked = item.isBought;
+  const checked = item.is_bought;
+
+  // Lấy tên thật của assignee từ memberMap
+  const assigneeName = item.assignee_id
+    ? (memberMap[item.assignee_id] ?? 'Thành viên')
+    : null;
 
   return (
     <div
@@ -68,8 +74,13 @@ const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClic
       {/* Item Info */}
       <div className="shopping-card__info">
         <span className={`shopping-card__name ${checked ? 'shopping-card__name--checked' : ''}`}>
-          {item.name} - {item.quantity} {item.unit}
+          {item.name} — {item.quantity} {item.unit}
         </span>
+        {item.deadline_date && (
+          <span className="shopping-card__deadline">
+            Hạn: {item.deadline_date}{item.deadline_time ? ` ${item.deadline_time}` : ''}
+          </span>
+        )}
       </div>
 
       {/* Tags */}
@@ -77,8 +88,8 @@ const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClic
         {overdue && (
           <div className="shopping-card__tag-overdue">Trễ hạn</div>
         )}
-        {item.assigneeId && (
-          <div className="shopping-card__tag-assignee">Chờ {item.assigneeId} mua</div>
+        {assigneeName && (
+          <div className="shopping-card__tag-assignee">Chờ {assigneeName} mua</div>
         )}
       </div>
     </div>

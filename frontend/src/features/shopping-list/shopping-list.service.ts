@@ -1,99 +1,97 @@
-import type { ShoppingItem, FoodCategory } from './types';
-import type { FoodItem, StorageType, FoodCategory as FridgeCategory } from '../fridge';
+import api from '@/services/api';
+import type { ShoppingList, ShoppingItem, CreateItemPayload, UpdateItemPayload } from './types';
 
-// Mock initial data for Shopping List
-const INITIAL_SHOPPING_ITEMS: ShoppingItem[] = [
-  {
-    id: 's1',
-    name: 'Thịt bò',
-    category: 'Thịt cá',
-    quantity: 500,
-    unit: 'g',
-    isBought: true,
-    assigneeId: 'Shin',
-    deadlineDate: '2026-06-11', // Today
-    deadlineTime: '12:00'
-  },
-  {
-    id: 's2',
-    name: 'Cà chua',
-    category: 'Rau củ',
-    quantity: 3,
-    unit: 'quả',
-    isBought: false,
-    assigneeId: 'Shin',
-    deadlineDate: '2026-06-12',
-    deadlineTime: '18:00'
-  }
-];
+// --- Family Members ---
 
-// Mock initial data for Refrigerator (for sync)
-const INITIAL_FRIDGE_ITEMS = [
-  { id: '1', emoji: '🥕', name: 'Cà rốt', quantity: 3, daysRemaining: 7, category: 'Rau củ', storageType: 'Ngăn mát' },
-  { id: '2', emoji: '🥩', name: 'Thịt bò', quantity: 1, daysRemaining: 1, category: 'Thịt cá', storageType: 'Ngăn đông' },
-  { id: '3', emoji: '🥛', name: 'Sữa tươi', quantity: 2, daysRemaining: 3, category: 'Đồ uống', storageType: 'Ngăn mát' },
-  { id: '4', emoji: '🧅', name: 'Hành tây', quantity: 4, daysRemaining: 5, category: 'Rau củ', storageType: 'Khô' },
-];
+export interface FamilyMemberDTO {
+  id: string;
+  full_name: string | null;
+  email: string;
+  role: string;
+  status: string | null;
+}
 
-const LOCAL_STORAGE_KEY = 'homemaker_shopping_items';
-const FRIDGE_LOCAL_STORAGE_KEY = 'homemaker_fridge_items';
-
-const getCategoryEmoji = (category: FoodCategory): string => {
-  switch (category) {
-    case 'Thịt cá': return '🥩';
-    case 'Rau củ': return '🍅';
-    case 'Đồ uống': return '🥛';
-    case 'Đồ khô': return '🍞';
-    case 'Gia vị': return '🌶️';
-    default: return '📦';
-  }
+// Get family members
+export const getFamilyMembers = async (): Promise<FamilyMemberDTO[]> => {
+  const response = await api.get('/api/families/members');
+  return response.data.data as FamilyMemberDTO[];
 };
 
-export const shoppingService = {
-  getShoppingItems(): ShoppingItem[] {
-    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!data) {
-      this.saveShoppingItems(INITIAL_SHOPPING_ITEMS);
-      return INITIAL_SHOPPING_ITEMS;
-    }
-    return JSON.parse(data);
-  },
-
-  saveShoppingItems(items: ShoppingItem[]) {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
-  },
-
-  syncItemToFridge(item: ShoppingItem) {
-    let fridgeItems: FoodItem[];
-    const data = localStorage.getItem(FRIDGE_LOCAL_STORAGE_KEY);
-    if (!data) {
-      // Use existing mock fridge items as base
-      fridgeItems = [...INITIAL_FRIDGE_ITEMS] as unknown as FoodItem[];
-    } else {
-      fridgeItems = JSON.parse(data);
-    }
-
-    // Try to find if item exists in fridge by name (case-insensitive)
-    const existingIndex = fridgeItems.findIndex(
-      (f: FoodItem) => f.name.toLowerCase() === item.name.toLowerCase()
-    );
-
-    if (existingIndex !== -1) {
-      // Add quantity
-      fridgeItems[existingIndex].quantity += item.quantity;
-    } else {
-      const newFridgeItem: FoodItem = {
-        id: 'fridge_' + Date.now() + Math.random().toString(36).substr(2, 4),
-        emoji: getCategoryEmoji(item.category),
-        name: item.name,
-        quantity: item.quantity,
-        daysRemaining: 7, // default 7 days shelf life
-        category: item.category as FridgeCategory,
-        storageType: (item.category === 'Thịt cá' ? 'Ngăn đông' : 'Ngăn mát') as StorageType
-      };
-      fridgeItems.push(newFridgeItem);
-    }
-
-    localStorage.setItem(FRIDGE_LOCAL_STORAGE_KEY, JSON.stringify(fridgeItems));
-  }
+// --- Shopping Lists ---
+export const getListsByFamilyId = async (familyId: string): Promise<ShoppingList[]> => {
+  const response = await api.get(`/api/shopping-lists/family/${familyId}`);
+  return response.data.data as ShoppingList[];
 };
+
+// Get list by ID
+export const getListById = async (listId: string): Promise<ShoppingList> => {
+  const response = await api.get(`/api/shopping-lists/${listId}`);
+  return response.data.data as ShoppingList;
+};
+
+// Create list
+export const createList = async (payload: {
+  family_id: string;
+  title: string;
+  target_date?: string | null;
+  status?: ShoppingList['status'];
+}): Promise<ShoppingList> => {
+  const response = await api.post('/api/shopping-lists', payload);
+  return response.data.data as ShoppingList;
+};
+
+// Update list
+export const updateList = async (
+  listId: string,
+  payload: { title?: string; status?: ShoppingList['status']; target_date?: string | null }
+): Promise<ShoppingList> => {
+  const response = await api.put(`/api/shopping-lists/${listId}`, payload);
+  return response.data.data as ShoppingList;
+};
+
+// Delete list
+export const deleteList = async (listId: string): Promise<void> => {
+  await api.delete(`/api/shopping-lists/${listId}`);
+};
+
+// --- Shopping List Items ---
+export const createItem = async (listId: string, payload: CreateItemPayload): Promise<ShoppingItem> => {
+  const response = await api.post(`/api/shopping-lists/${listId}/items`, payload);
+  return response.data.data as ShoppingItem;
+};
+
+// Update item
+export const updateItem = async (
+  listId: string,
+  itemId: string,
+  payload: UpdateItemPayload
+): Promise<ShoppingItem> => {
+  const response = await api.put(`/api/shopping-lists/${listId}/items/${itemId}`, payload);
+  return response.data.data as ShoppingItem;
+};
+
+// Toggle item bought
+export const toggleItemBought = async (listId: string, itemId: string): Promise<ShoppingItem> => {
+  const response = await api.patch(`/api/shopping-lists/${listId}/items/${itemId}/toggle`);
+  return response.data.data as ShoppingItem;
+};
+
+// Delete item
+export const deleteItem = async (listId: string, itemId: string): Promise<void> => {
+  await api.delete(`/api/shopping-lists/${listId}/items/${itemId}`);
+};
+
+// --- Fridge Sync ---
+export const addItemToFridge = async (
+  listId: string,
+  itemId: string,
+  familyId: string,
+  expirationDate: string,
+): Promise<void> => {
+  await api.post(`/api/shopping-lists/${listId}/items/${itemId}/add-to-fridge`, {
+    family_id: familyId,
+    expiration_date: expirationDate,
+  });
+};
+
+

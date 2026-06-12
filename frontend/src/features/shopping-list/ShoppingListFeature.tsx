@@ -1,13 +1,16 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import TimeFilterTabs from './components/TimeFilterTabs';
 import CategoryGroup from './components/CategoryGroup';
 import ShoppingCard from './components/ShoppingCard';
 import ActionBottomSheet from './modals/ActionBottomSheet';
+import type { FamilyMember } from './modals/ActionBottomSheet';
 import ItemFormModal from './modals/ItemFormModal';
 import DeleteConfirmModal from './modals/DeleteConfirmModal';
-import type { ShoppingItem, FoodCategory } from './types';
-import { shoppingService } from './shopping-list.service';
+import ExpiryDateModal from './modals/ExpiryDateModal';
+import type { ShoppingItem, ShoppingList, FoodCategory, CreateItemPayload } from './types';
+import * as shoppingService from './shopping-list.service';
+import type { FamilyMemberDTO } from './shopping-list.service';
 import Toast from '@/components/shared/Toast';
 import './shopping-list.css';
 
@@ -23,8 +26,13 @@ export interface ShoppingListFeatureProps {
 
 export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }) => {
   const primaryColor = ROLE_COLORS[role];
-  const [items, setItems] = useState<ShoppingItem[]>(() => shoppingService.getShoppingItems());
+
+  // State
+  const [lists, setLists] = useState<ShoppingList[]>([]);
+  const [activeListId, setActiveListId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Modal states
   const [selectedItem, setSelectedItem] = useState<ShoppingItem | null>(null);
@@ -33,11 +41,99 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
+  // Expiry modal state
+  const [isExpiryModalOpen, setIsExpiryModalOpen] = useState(false);
+  const [pendingFridgeItem, setPendingFridgeItem] = useState<ShoppingItem | null>(null);
+
   // Toast state
   const [toastMessage, setToastMessage] = useState('');
   const [toastTrigger, setToastTrigger] = useState(0);
 
-  // Show toast utility
+  // Family & members
+  const [familyId, setFamilyId] = useState<string | null>(null);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  // Map: userId -> name
+  const [memberMap, setMemberMap] = useState<Record<string, string>>({});
+
+  // Get family ID from local storage
+  useEffect(() => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (user?.family_id) {
+          setFamilyId(user.family_id);
+        }
+      }
+    } catch {
+      console.error('Không thể đọc user từ localStorage');
+    }
+  }, []);
+
+  // Load data when familyId is set
+  useEffect(() => {
+    if (!familyId) {
+      setIsLoading(false);
+      return;
+    }
+
+    const loadAll = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Load song song: lists + members
+        const [rawLists, rawMembers] = await Promise.all([
+          shoppingService.getListsByFamilyId(familyId),
+          shoppingService.getFamilyMembers().catch(() => [] as FamilyMemberDTO[]),
+        ]);
+
+        // Map members -> FamilyMember shape cho ActionBottomSheet
+        const mappedMembers: FamilyMember[] = rawMembers.map((m) => ({
+          id: m.id,
+          full_name: m.full_name ?? m.email,
+          avatar_initial: (m.full_name ?? m.email).charAt(0).toUpperCase(),
+          avatar_color: '#FFE0B2',
+          text_color: '#FF8A00',
+        }));
+
+        // Map userId -> name để dùng trong ShoppingCard
+        const map: Record<string, string> = {};
+        rawMembers.forEach((m) => {
+          map[m.id] = m.full_name ?? m.email;
+        });
+
+        setMembers(mappedMembers);
+        setMemberMap(map);
+
+        // Auto-tạo list mặc định nếu chưa có
+        let data = rawLists;
+        if (data.length === 0) {
+          const today = new Date().toISOString().split('T')[0];
+          const defaultList = await shoppingService.createList({
+            family_id: familyId,
+            title: 'Danh sách mua sắm',
+            target_date: today,
+            status: 'Planning',
+          });
+          data = [{ ...defaultList, items: [] }];
+        }
+
+        setLists(data);
+        if (data.length > 0 && !activeListId) {
+          setActiveListId(data[0].id);
+        }
+      } catch (err: any) {
+        console.error(err);
+        setError('Không thể tải danh sách mua sắm. Vui lòng thử lại.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAll();
+  }, [familyId]);
+
+  // Toast helpers
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
     setToastTrigger(prev => prev + 1);
@@ -46,137 +142,160 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   const hideToast = useCallback(() => {}, []);
 
-  // Helper to save items
-  const updateItemsList = (newItems: ShoppingItem[]) => {
-    setItems(newItems);
-    shoppingService.saveShoppingItems(newItems);
+  const activeList = lists.find(l => l.id === activeListId) ?? null;
+
+  const updateLocalItems = (listId: string, newItems: ShoppingItem[]) => {
+    setLists(prev => prev.map(l => l.id === listId ? { ...l, items: newItems } : l));
   };
 
   // Toggle item status
-  const handleToggleCheck = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening bottom sheet
+  const handleToggleCheck = async (itemId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!activeList) return;
 
-    const updated = items.map(item => {
-      if (item.id === id) {
-        const nextBought = !item.isBought;
-        if (nextBought) {
-          // If bought, sync to fridge and show toast
-          shoppingService.syncItemToFridge(item);
-          showToast(`Đã mua xong! Số lượng đã tự động cộng vào kho Tủ lạnh`);
-        }
-        return { ...item, isBought: nextBought };
+    try {
+      const updated = await shoppingService.toggleItemBought(activeList.id, itemId);
+      const newItems = activeList.items.map(i => i.id === itemId ? updated : i);
+      updateLocalItems(activeList.id, newItems);
+
+      if (updated.is_bought) {
+        // Mở modal nhập hạn sử dụng trước khi thêm vào tủ lạnh
+        setPendingFridgeItem(updated);
+        setIsExpiryModalOpen(true);
+        showToast('Đã đánh dấu đã mua!');
+      } else {
+        showToast('Đã bỏ đánh dấu đã mua.');
       }
-      return item;
-    });
-
-    updateItemsList(updated);
-  };
-
-  // Add or edit item submit
-  const handleFormSubmit = (itemData: Omit<ShoppingItem, 'id' | 'isBought' | 'assigneeId'>) => {
-    if (formMode === 'create') {
-      const newItem: ShoppingItem = {
-        ...itemData,
-        id: 'shop_' + Date.now() + Math.random().toString(36).substr(2, 4),
-        isBought: false,
-        assigneeId: null,
-      };
-      const updated = [...items, newItem];
-      updateItemsList(updated);
-      showToast('Đã thêm vào danh sách mua sắm');
-    } else if (formMode === 'edit' && selectedItem) {
-      const updated = items.map(item => {
-        if (item.id === selectedItem.id) {
-          return {
-            ...item,
-            ...itemData,
-          };
-        }
-        return item;
-      });
-      updateItemsList(updated);
-      showToast('Đã cập nhật mặt hàng thành công!');
+    } catch {
+      showToast('Có lỗi xảy ra, vui lòng thử lại.');
     }
   };
 
-  // Assign member
-  const handleAssignMember = (itemId: string, assigneeId: 'Kat' | 'Shin' | null) => {
-    const updated = items.map(item => {
-      if (item.id === itemId) {
-        return { ...item, assigneeId };
-      }
-      return item;
-    });
-    updateItemsList(updated);
+  // Add item to fridge with expiry date
+  const handleExpiryConfirm = async (expirationDate: string) => {
+    setIsExpiryModalOpen(false);
+    if (!pendingFridgeItem || !activeList || !familyId) return;
 
-    if (assigneeId) {
-      showToast(`Đã giao cho ${assigneeId}`);
-    } else {
-      showToast('Đã hủy giao việc thành công!');
+    try {
+      await shoppingService.addItemToFridge(
+        activeList.id,
+        pendingFridgeItem.id,
+        familyId,
+        expirationDate,
+      );
+      showToast('Đã thêm vào tủ lạnh với hạn sử dụng!');
+    } catch {
+      showToast('Không thể thêm vào tủ lạnh. Kiểm tra lại sau.');
+    } finally {
+      setPendingFridgeItem(null);
+    }
+  };
+
+  const handleExpiryCancel = () => {
+    setIsExpiryModalOpen(false);
+    setPendingFridgeItem(null);
+    showToast('Đã đánh dấu đã mua. Không thêm vào tủ lạnh.');
+  };
+
+  // Create or edit item
+  const handleFormSubmit = async (payload: CreateItemPayload) => {
+    if (!activeList) return;
+
+    try {
+      if (formMode === 'create') {
+        const newItem = await shoppingService.createItem(activeList.id, payload);
+        updateLocalItems(activeList.id, [...activeList.items, newItem]);
+        showToast('Đã thêm vào danh sách mua sắm');
+      } else if (formMode === 'edit' && selectedItem) {
+        const updatedItem = await shoppingService.updateItem(activeList.id, selectedItem.id, payload);
+        const newItems = activeList.items.map(i => i.id === selectedItem.id ? updatedItem : i);
+        updateLocalItems(activeList.id, newItems);
+        showToast('Đã cập nhật mặt hàng thành công!');
+      }
+    } catch {
+      showToast('Có lỗi xảy ra, vui lòng thử lại.');
+    }
+  };
+
+  // Assign task to family member
+  const handleAssignMember = async (itemId: string, assigneeId: string | null) => {
+    if (!activeList) return;
+
+    try {
+      const updatedItem = await shoppingService.updateItem(activeList.id, itemId, { assignee_id: assigneeId });
+      const newItems = activeList.items.map(i => i.id === itemId ? updatedItem : i);
+      updateLocalItems(activeList.id, newItems);
+
+      showToast(assigneeId ? 'Đã giao việc thành công!' : 'Đã hủy giao việc thành công!');
+    } catch {
+      showToast('Có lỗi xảy ra, vui lòng thử lại.');
     }
 
-    // Close bottom sheet and clear selection
     setIsBottomSheetOpen(false);
     setSelectedItem(null);
   };
 
-  // Delete item confirm
-  const handleDeleteConfirm = () => {
-    if (selectedItem) {
-      const updated = items.filter(item => item.id !== selectedItem.id);
-      updateItemsList(updated);
+  // Delete item
+  const handleDeleteConfirm = async () => {
+    if (!selectedItem || !activeList) return;
+
+    try {
+      await shoppingService.deleteItem(activeList.id, selectedItem.id);
+      const newItems = activeList.items.filter(i => i.id !== selectedItem.id);
+      updateLocalItems(activeList.id, newItems);
       showToast('Đã xóa mặt hàng thành công!');
-      setSelectedItem(null);
+    } catch {
+      showToast('Có lỗi xảy ra, vui lòng thử lại.');
     }
+
+    setSelectedItem(null);
   };
 
-  // Card click -> open bottom sheet
+  // Open action bottom sheet
   const handleCardClick = (item: ShoppingItem) => {
     setSelectedItem(item);
     setIsBottomSheetOpen(true);
   };
 
-  // Open create form
+  // Open create form modal
   const handleOpenCreateForm = () => {
     setFormMode('create');
     setSelectedItem(null);
     setIsFormModalOpen(true);
   };
 
-  // Open edit form
+  // Open edit form modal
   const handleOpenEditForm = (item: ShoppingItem) => {
     setFormMode('edit');
     setSelectedItem(item);
     setIsFormModalOpen(true);
   };
 
-  // Open delete confirm
+  // Open delete confirm modal
   const handleOpenDeleteConfirm = (item: ShoppingItem) => {
     setSelectedItem(item);
     setIsDeleteModalOpen(true);
   };
 
-  // Filter items
+  // Filter items by deadline
   const now = new Date();
   const offset = now.getTimezoneOffset();
   const localDate = new Date(now.getTime() - (offset * 60 * 1000));
   const todayStr = localDate.toISOString().split('T')[0];
 
-  const filteredItems = items.filter(item => {
+  const allItems = activeList?.items ?? [];
+
+  const filteredItems = allItems.filter(item => {
     if (activeTab === 'today') {
-      // Show if due today OR overdue
-      const isToday = item.deadlineDate === todayStr;
-      const isOverdue = !item.isBought && item.deadlineDate < todayStr;
-      
-      // If due today, verify if it was overdue due to hour as well
-      if (!isToday && !isOverdue) return false;
-      return true;
+      if (!item.deadline_date) return true; // Không có deadline → hiện hết
+      const isToday = item.deadline_date === todayStr;
+      const isOverdue = !item.is_bought && item.deadline_date < todayStr;
+      return isToday || isOverdue;
     }
-    // "Trong tuần" - show all items
-    return true;
+    return true; // "Trong tuần" → hiện tất cả
   });
 
-  // Group items by category
+  // Group by category
   const categoriesList: FoodCategory[] = ['Thịt cá', 'Rau củ', 'Đồ khô', 'Gia vị', 'Đồ uống', 'Khác'];
   const groupedItems = categoriesList.reduce((acc, cat) => {
     const catItems = filteredItems.filter(item => item.category === cat);
@@ -185,6 +304,37 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
     }
     return acc;
   }, {} as Record<FoodCategory, ShoppingItem[]>);
+
+  if (!familyId) {
+    return (
+      <div className="shopping-page">
+        <div style={{ textAlign: 'center', padding: '64px 16px', color: '#757575' }}>
+          <p>Bạn chưa thuộc nhóm gia đình nào.</p>
+          <p style={{ fontSize: '13px', marginTop: '8px' }}>Tạo hoặc tham gia một nhóm để bắt đầu.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="shopping-page">
+        <div style={{ textAlign: 'center', padding: '64px 16px', color: '#757575' }}>
+          Đang tải danh sách mua sắm...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="shopping-page">
+        <div style={{ textAlign: 'center', padding: '64px 16px', color: '#e53935' }}>
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="shopping-page">
@@ -200,12 +350,48 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
         <div className="shopping-title-row">
           <h1 className="shopping-title">Danh sách mua sắm</h1>
         </div>
+
+        {lists.length > 1 && (
+          <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', padding: '4px 0' }}>
+            {lists.map(list => (
+              <button
+                key={list.id}
+                type="button"
+                onClick={() => setActiveListId(list.id)}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: '16px',
+                  border: `1.5px solid ${activeListId === list.id ? primaryColor : '#e0e0e0'}`,
+                  background: activeListId === list.id ? primaryColor : 'transparent',
+                  color: activeListId === list.id ? '#fff' : '#757575',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  fontWeight: activeListId === list.id ? 600 : 400,
+                }}
+              >
+                {list.title}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {lists.length === 0 && (
+          <p style={{ fontSize: '13px', color: '#9e9e9e', margin: '4px 0 0' }}>
+            Chưa có danh sách nào — nhấn + để tạo mới
+          </p>
+        )}
+
         <TimeFilterTabs activeTab={activeTab} onChangeTab={setActiveTab} />
       </div>
 
       {/* Shopping List Container */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        {Object.keys(groupedItems).length === 0 ? (
+        {!activeList ? (
+          <div style={{ textAlign: 'center', padding: '48px 16px', color: '#757575' }}>
+            Chưa có danh sách mua sắm nào. Nhấn + để tạo mới.
+          </div>
+        ) : Object.keys(groupedItems).length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 16px', color: '#757575' }}>
             Không có mặt hàng nào cần mua.
           </div>
@@ -219,6 +405,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
                   <ShoppingCard
                     key={item.id}
                     item={item}
+                    memberMap={memberMap}
                     onToggleCheck={handleToggleCheck}
                     onClickCard={handleCardClick}
                   />
@@ -229,7 +416,6 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
         )}
       </div>
 
-      {/* FAB to add new item */}
       <button
         type="button"
         className="fab-button"
@@ -241,11 +427,11 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
         <Plus size={24} />
       </button>
 
-      {/* Modals */}
       <ActionBottomSheet
         isOpen={isBottomSheetOpen}
         onClose={() => setIsBottomSheetOpen(false)}
         item={selectedItem}
+        members={members}
         onAssign={handleAssignMember}
         onEdit={handleOpenEditForm}
         onDelete={handleOpenDeleteConfirm}
@@ -265,8 +451,16 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
       />
+
+      <ExpiryDateModal
+        isOpen={isExpiryModalOpen}
+        itemName={pendingFridgeItem?.name ?? ''}
+        onConfirm={handleExpiryConfirm}
+        onCancel={handleExpiryCancel}
+      />
     </div>
   );
 };
 
 export default ShoppingListFeature;
+

@@ -9,6 +9,7 @@ import userRoute from './routes/user.route.js';
 import familyRoute from './routes/family.route.js';
 import adminRoute from './routes/admin.route.js';
 import fridgeRoute from './routes/fridge.routes.js';
+import shoppingListRoute from './routes/shopping-list.route.js';
 import errorMiddleware from './middlewares/error.middleware.js';
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/users', userRoute);
 app.use('/api/families', familyRoute);
 app.use('/api/fridge', fridgeRoute);
+app.use('/api/shopping-lists', shoppingListRoute);
 app.use('/api/admin', adminRoute);
 const PORT = process.env.PORT || 5000;
 

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import type { ShoppingItem, FoodCategory } from '../types';
+import type { ShoppingItem, FoodCategory, CreateItemPayload } from '../types';
 
 interface ItemFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (itemData: Omit<ShoppingItem, 'id' | 'isBought' | 'assigneeId'>) => void;
+  onSubmit: (payload: CreateItemPayload) => void;
   item: ShoppingItem | null;
   mode: 'create' | 'edit';
 }
 
 const CATEGORIES: FoodCategory[] = ['Rau củ', 'Thịt cá', 'Đồ khô', 'Gia vị', 'Đồ uống', 'Khác'];
-const UNITS = ['g', 'kg', 'cái', 'hộp', 'bó', 'túi', 'lít', 'ml'];
+const UNITS = ['g', 'kg', 'cái', 'hộp', 'bó', 'túi', 'lít', 'ml', 'quả', 'con'];
 
 const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit, item, mode }) => {
   const [category, setCategory] = useState<FoodCategory>(() => {
@@ -34,7 +34,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
   });
 
   const [deadlineDate, setDeadlineDate] = useState(() => {
-    if (mode === 'edit' && item) return item.deadlineDate;
+    if (mode === 'edit' && item) return item.deadline_date ?? '';
     const today = new Date();
     const offset = today.getTimezoneOffset();
     const localDate = new Date(today.getTime() - (offset * 60 * 1000));
@@ -42,18 +42,18 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
   });
 
   const [deadlineTime, setDeadlineTime] = useState(() => {
-    if (mode === 'edit' && item) return item.deadlineTime;
+    if (mode === 'edit' && item) return item.deadline_time ?? '18:00';
     return '18:00';
   });
 
   if (!isOpen) return null;
 
   const handleDecrease = () => {
-    setQuantity(prev => Math.max(1, prev - 100));
+    setQuantity(prev => Math.max(1, prev - (prev > 100 ? 100 : 1)));
   };
 
   const handleIncrease = () => {
-    setQuantity(prev => prev + 100);
+    setQuantity(prev => prev + (prev >= 100 ? 100 : 1));
   };
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,8 +74,8 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
       category,
       quantity,
       unit,
-      deadlineDate,
-      deadlineTime,
+      deadline_date: deadlineDate || null,
+      deadline_time: deadlineTime || null,
     });
     onClose();
   };
@@ -160,7 +160,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
           {/* Deadline Date */}
           <div className="form-group">
-            <label htmlFor="deadline-date-input" className="form-label">Hạn chót mua</label>
+            <label htmlFor="deadline-date-input" className="form-label">Hạn chót mua (ngày)</label>
             <input
               id="deadline-date-input"
               type="date"
@@ -172,7 +172,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
           {/* Deadline Time */}
           <div className="form-group">
-            <label htmlFor="deadline-time-input" className="form-label">Giờ chót mua</label>
+            <label htmlFor="deadline-time-input" className="form-label">Hạn chót mua (giờ)</label>
             <input
               id="deadline-time-input"
               type="time"
