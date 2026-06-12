@@ -161,7 +161,7 @@ const SettingAdmin: React.FC = () => {
           <div className="admin-db-nav-item">
             <div className="admin-db-nav-text">Kiểm duyệt công thức</div>
           </div>
-          <div className="admin-db-nav-item">
+          <div className="admin-db-nav-item" onClick={() => navigate('/admin/master-data')}>
             <div className="admin-db-nav-text">Quản lý dữ liệu gốc</div>
           </div>
           <div className="admin-db-nav-item active">

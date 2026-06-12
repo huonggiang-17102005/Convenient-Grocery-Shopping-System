@@ -16,6 +16,7 @@ import UserManagementAdmin from '../pages/admin/UserManagement';
 // Role-specific pages (đặc thù từng role, không dùng chung)
 import FridgeFeature from '@/features/fridge';
 import SettingAdmin from '../pages/admin/Setting';
+import MasterDataAdmin from '../pages/admin/MasterData';
 import CreateGroup from '../pages/homemaker/CreateGroup';
 import Jointhegroup from '../pages/member/Jointhegroup';
 
@@ -129,6 +130,10 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: <SettingAdmin />,
+      },
+      {
+        path: 'master-data',
+        element: <MasterDataAdmin />,
       },
     ],
   },

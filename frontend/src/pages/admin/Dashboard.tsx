@@ -196,8 +196,8 @@ const DashboardAdmin: React.FC = () => {
           <div className="admin-db-nav-item">
             <div className="admin-db-nav-text">Kiểm duyệt nội dung</div>
           </div>
-          <div className="admin-db-nav-item">
-            <div className="admin-db-nav-text">Quản lý dữ liệu nền</div>
+          <div className="admin-db-nav-item" onClick={() => navigate('/admin/master-data')}>
+            <div className="admin-db-nav-text">Quản lý dữ liệu gốc</div>
           </div>
           <div className="admin-db-nav-item" onClick={() => navigate('/admin/settings')}>
             <div className="admin-db-nav-text">Báo cáo & Cài đặt</div>
@@ -220,25 +220,12 @@ const DashboardAdmin: React.FC = () => {
             <div className="admin-db-profile">
               <div className="admin-db-avatar">{
                 (() => {
-                  try {
-                    const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    if (user.role === 'Admin' || user.role === 'admin') return 'A';
-                    const name = user.name || user.full_name || user.email || 'Admin';
-                    return name.charAt(0).toUpperCase();
-                  } catch {
-                    return 'A';
-                  }
+                  return 'A';
                 })()
               }</div>
               <div className="admin-db-profile-name">{
                 (() => {
-                  try {
-                    const user = JSON.parse(localStorage.getItem('user') || '{}');
-                    if (user.role === 'Admin' || user.role === 'admin') return 'Admin System';
-                    return user.name || user.full_name || user.email?.split('@')[0] || 'Admin System';
-                  } catch {
-                    return 'Admin System';
-                  }
+                  return 'Admin System';
                 })()
               }</div>
             </div>
