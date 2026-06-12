@@ -8,12 +8,22 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setEmailError('');
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Email không hợp lệ!');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -35,9 +45,22 @@ export default function Login() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      navigate('/homemaker/dashboard');
+      // Kiểm tra role để điều hướng cho đúng
+      const userRole = data.user.role;
+      if (userRole === 'Admin' || userRole === 'admin') {
+        navigate('/admin/dashboard');
+      } else if (userRole === 'Member' || userRole === 'member') {
+        navigate('/member/dashboard');
+      } else {
+        navigate('/homemaker/dashboard');
+      }
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Có lỗi xảy ra');
+      const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra';
+      if (msg.includes('Email') || msg.includes('không tồn tại')) {
+        setEmailError(msg);
+      } else {
+        setErrorMsg(msg);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -65,7 +88,7 @@ export default function Login() {
         </div>
       </div>
 
-      <form className="auth-form" onSubmit={handleAuth}>
+      <form className="auth-form" onSubmit={handleAuth} noValidate>
         <div className="form-group">
           <label htmlFor="email">Email</label>
           <input 
@@ -74,8 +97,13 @@ export default function Login() {
             placeholder="your@email.com" 
             required 
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (emailError) setEmailError('');
+            }}
+            style={{ borderColor: emailError ? '#F44336' : '' }}
           />
+          {emailError && <div style={{ color: '#F44336', fontSize: '13px', marginTop: '8px' }}>{emailError}</div>}
         </div>
         
         <div className="form-group">

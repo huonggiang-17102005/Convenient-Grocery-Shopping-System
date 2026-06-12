@@ -1,0 +1,651 @@
+/* ============================================
+   Dashboard.css — Homemaker Dashboard Styles
+   Font: Plus Jakarta Sans
+   Primary: #FF8A00  |  Danger: #D32F2F  |  Warn: #F57C00
+   ============================================ */
+
+/* ---------- Toast Notification ---------- */
+.toast-notification {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10);
+  padding: 16px;
+  min-width: 280px;
+  max-width: 342px;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.toast-notification--visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast-notification--hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
+  pointer-events: none;
+}
+
+.toast-notification__icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  background: #388E3C;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-notification__text {
+  font-size: 14px;
+  color: #1A1A1A;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+/* ---------- Invite Banner ---------- */
+.invite-banner {
+  margin: 16px 16px 0;
+  padding: 16px;
+  background: var(--primary-light);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.invite-banner__text {
+  font-size: 14px;
+  line-height: 20px;
+  color: #1A1A1A;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.invite-banner__btn {
+  width: 100%;
+  padding: 14px 0;
+  background: var(--primary-color);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.invite-banner__btn:hover  { background: var(--primary-hover); }
+.invite-banner__btn:active { transform: scale(0.98); }
+
+/* ---------- Expiring Section ---------- */
+.expiring-section {
+  padding: 16px 16px 0;
+}
+
+.expiring-section__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.expiring-section__title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  color: #1A1A1A;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.expiring-section__badge {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 24px;
+  height: 24px;
+  background: #D32F2F;
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.expiring-section__list {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+@supports (scrollbar-width: none) {
+  .expiring-section__list {
+    scrollbar-width: none;
+  }
+}
+
+.expiring-section__list::-webkit-scrollbar { display: none; }
+
+/* ---------- Ingredient Card ---------- */
+.ingredient-card {
+  flex-shrink: 0;
+  width: 140px;
+  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px -1px rgba(0,0,0,0.10);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ingredient-card:hover  { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
+.ingredient-card:active { transform: scale(0.97); }
+
+.ingredient-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ingredient-card__category-badge {
+  font-size: 10px;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  padding: 4px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.ingredient-card__emoji { font-size: 22px; line-height: 1; }
+
+.ingredient-card__name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.ingredient-card__expiry {
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  text-align: center;
+  padding: 4px 0;
+  border-radius: 6px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.ingredient-card__expiry--critical { background: #D32F2F; }
+.ingredient-card__expiry--warning  { background: #F57C00; }
+.ingredient-card__expiry--ok       { background: #388E3C; }
+
+/* ---------- Today Menu ---------- */
+.today-menu {
+  margin: 16px 16px 0;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  border: 1.27px solid #E0E0E0;
+}
+
+.today-menu__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0 0 16px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.today-menu__meals { display: flex; flex-direction: column; }
+
+.today-menu__meal-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.today-menu__meal-row + .today-menu__meal-row { padding-top: 12px; }
+.today-menu__meal-icon { font-size: 24px; width: 36px; text-align: center; flex-shrink: 0; }
+
+.today-menu__meal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: left;
+}
+.today-menu__meal-session { font-size: 12px; color: #757575; font-family: 'Plus Jakarta Sans', sans-serif; }
+.today-menu__meal-dish    { font-size: 14px; color: #1A1A1A; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+.today-menu__actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+.today-menu__btn {
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+.today-menu__btn:active { transform: scale(0.98); }
+
+.today-menu__btn--primary {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+}
+.today-menu__btn--primary:hover { background: var(--primary-hover); }
+
+.today-menu__btn--secondary {
+  background: var(--primary-bg-opacity);
+  color: var(--primary-color);
+}
+.today-menu__btn--secondary:hover { background: var(--primary-bg-opacity-hover); }
+
+/* ============================================
+   MODAL SHARED STYLES (Inherited from index.css)
+   ============================================ */
+
+/* ============================================
+   INVITE CODE MODAL
+   ============================================ */
+.invite-modal__code-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 0;
+}
+
+.invite-modal__label {
+  font-size: 14px;
+  color: #757575;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  margin: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.invite-modal__code-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 12px;
+  width: 100%;
+}
+
+.invite-modal__code {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1A1A1A;
+  letter-spacing: 1px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.invite-modal__copy-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  background: var(--primary-light);
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.invite-modal__copy-btn:hover  { background: var(--primary-light-hover); }
+.invite-modal__copy-btn:active { transform: scale(0.95); }
+
+.invite-modal__qr-area {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.invite-modal__qr-box {
+  width: 200px;
+  height: 200px;
+  background: #F5F5F5;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.invite-modal__qr-emoji { font-size: 48px; line-height: 1; }
+
+.invite-modal__qr-text {
+  font-size: 12px;
+  color: #757575;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ============================================
+   EXPIRE ITEM MODAL
+   ============================================ */
+.expire-modal__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1A1A1A;
+  text-align: center;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  width: 100%;
+}
+
+.expire-modal__tip-section {
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.expire-modal__tip-heading {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.expire-modal__tip-body {
+  font-size: 14px;
+  color: #757575;
+  line-height: 20px;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.expire-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 24px;
+}
+
+/* ============================================
+   COOK CONFIRM MODAL
+   ============================================ */
+.cook-modal__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: center;
+  line-height: 28px;
+}
+
+.cook-modal__subtitle {
+  font-size: 14px;
+  color: #757575;
+  margin: 4px 0 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: center;
+  width: 100%;
+}
+
+.cook-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 16px;
+  padding-bottom: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+@supports (scrollbar-width: none) {
+  .cook-modal__list {
+    scrollbar-width: none;
+  }
+}
+
+.cook-modal__list::-webkit-scrollbar { display: none; }
+
+.cook-modal__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cook-modal__input {
+  height: 44px;
+  padding: 0 13px;
+  background: white;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  font-size: 13px;
+  color: #1A1A1A;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+
+.cook-modal__input:focus { border-color: var(--primary-color); }
+
+.cook-modal__input--name   { flex: 1; }
+.cook-modal__input--value  { width: 64px; text-align: center; }
+.cook-modal__input--unit   { width: 56px; text-align: center; }
+
+.cook-modal__input--placeholder {
+  color: rgba(26, 26, 26, 0.50);
+}
+
+.cook-modal__input--placeholder::placeholder {
+  color: rgba(26, 26, 26, 0.50);
+}
+
+.cook-modal__remove-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  background: #F5F5F5;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cook-modal__remove-btn:hover { background: #E0E0E0; }
+
+.cook-modal__add-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary-color);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: opacity 0.15s;
+}
+
+.cook-modal__add-link:hover { opacity: 0.75; }
+
+.cook-modal__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* ============================================
+   MEMBER PURCHASE NOTIFICATION
+   ============================================ */
+.member-purchase-notification {
+  align-self: stretch;
+  padding: 12px 16px;
+  border-bottom: 1.27px solid #E0E0E0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #FFFFFF;
+}
+
+.member-purchase-notification__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.member-purchase-notification__title {
+  color: #1A1A1A;
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  line-height: 20px;
+  margin: 0;
+}
+
+.member-purchase-notification__action {
+  color: #757575;
+  font-size: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  line-height: 16px;
+  margin: 0;
+}
+
+.member-purchase-notification__close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #757575;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s, color 0.2s;
+}
+
+.member-purchase-notification__close:hover {
+  background: #F5F5F5;
+  color: #1A1A1A;
+}
+
+/* ---------- Shopping Mission ---------- */
+.shopping-mission {
+  margin: 16px 16px 0;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  border: 1.27px solid #E0E0E0;
+}
+
+.shopping-mission__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0 0 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.shopping-mission__empty {
+  font-size: 14px;
+  color: #757575;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.shopping-mission__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.shopping-mission__item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.shopping-mission__checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1.27px solid #757575;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.shopping-mission__checkbox--checked {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.shopping-mission__check-icon {
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.shopping-mission__badge {
+  padding: 4px 8px;
+  background: #F5F5F5;
+  border-radius: 8px;
+  font-size: 10px;
+  color: #757575;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  line-height: 15px;
+  flex-shrink: 0;
+}
+
+.shopping-mission__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1A1A1A;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.shopping-mission__name--checked {
+  color: #757575;
+  text-decoration: line-through;
+}
+

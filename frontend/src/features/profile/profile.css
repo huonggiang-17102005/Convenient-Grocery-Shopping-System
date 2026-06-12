@@ -1,0 +1,761 @@
+/* =====================================================================
+   ProfileScreen.css — Homemaker Profile Tab Styles
+   ===================================================================== */
+
+/* ── Page container ─────────────────────────────────────────────────── */
+.profile-page {
+  background: white;
+  min-height: calc(100vh - 80px);
+  margin-bottom: -20px;
+  box-sizing: border-box;
+}
+
+.profile-white-card {
+  background: white;
+  padding: 16px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.profile-title {
+  color: #1A1A1A;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  margin: 4px 0 24px 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+
+/* =====================================================================
+   PROFILE HEADER
+   ===================================================================== */
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 24px;
+  border-bottom: 1.27px solid #E0E0E0;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+  width: 72px;
+  height: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.profile-avatar-circle {
+  width: 72px;
+  height: 72px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  line-height: 1;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.profile-avatar-circle:hover {
+  opacity: 0.9;
+}
+
+.profile-camera-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border-radius: 50%;
+  border: 1.27px solid var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.profile-camera-btn:hover {
+  background: var(--primary-light);
+}
+
+.profile-user-name {
+  color: #1A1A1A;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  margin: 0;
+}
+
+.profile-user-role {
+  color: #757575;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  margin: 0;
+}
+
+/* =====================================================================
+   SECTION TITLE (shared)
+   ===================================================================== */
+.profile-section {
+  padding-top: 24px;
+}
+
+.profile-section-title {
+  color: #1A1A1A;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+  margin: 0 0 12px 0;
+}
+
+/* =====================================================================
+   FAMILY SECTION
+   ===================================================================== */
+.profile-family-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-member-card {
+  background: #F5F5F5;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-member-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-member-avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.profile-member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-member-name {
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  margin: 0;
+}
+
+.profile-member-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 16.5px;
+}
+
+.profile-member-badge--homemaker {
+  background: var(--color-homemaker-light);
+  color: var(--color-homemaker);
+}
+
+.profile-member-badge--member {
+  background: var(--color-member-light);
+  color: var(--color-member);
+}
+
+.profile-member-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-member-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  transition: opacity 0.15s;
+}
+
+.profile-member-btn:hover {
+  opacity: 0.7;
+}
+
+.profile-member-btn--transfer {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.profile-member-btn--delete {
+  color: #D32F2F;
+  font-weight: 600;
+}
+
+/* =====================================================================
+   WASTE STATS
+   ===================================================================== */
+.profile-waste-card {
+  background: white;
+  border-radius: 16px;
+  border: 1.27px solid #E0E0E0;
+  padding: 16px;
+}
+
+.profile-progress-bar {
+  height: 16px;
+  background: #E0E0E0;
+  border-radius: 100px;
+  overflow: hidden;
+  display: flex;
+}
+
+.profile-progress-consumed {
+  background: #2E7D32;
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.profile-progress-wasted {
+  background: #D32F2F;
+  height: 100%;
+  transition: width 0.5s ease;
+}
+
+.profile-waste-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.profile-waste-label--consumed {
+  color: #2E7D32;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  margin: 0;
+}
+
+.profile-waste-label--wasted {
+  color: #D32F2F;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 18px;
+  margin: 0;
+}
+
+.profile-export-btn {
+  margin-top: 16px;
+  width: 100%;
+  height: 44px;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.profile-export-btn:hover {
+  background: var(--primary-hover);
+}
+
+.profile-export-btn span {
+  color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+/* =====================================================================
+   SETTINGS MENU
+   ===================================================================== */
+.profile-settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-settings-item {
+  background: white;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  padding: 16px 17px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+  border: 1.27px solid #E0E0E0;
+  text-align: left;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.profile-settings-item:hover {
+  background: #FAFAFA;
+}
+
+.profile-settings-item--text {
+  color: #1A1A1A;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  margin: 0;
+}
+
+.profile-settings-item--logout {
+  color: #D32F2F;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  margin: 0;
+}
+
+.profile-settings-chevron {
+  color: #D32F2F;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+/* Stepper control */
+.profile-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #F5F5F5;
+  border-radius: 100px;
+  border: 1.27px solid #E0E0E0;
+  padding: 4px;
+}
+
+.profile-stepper-btn {
+  width: 28px;
+  height: 28px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0px 1px 3px rgba(0,0,0,0.10), 0px 1px 2px -1px rgba(0,0,0,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1;
+  transition: background 0.15s;
+}
+
+.profile-stepper-btn:hover {
+  background: #F5F5F5;
+}
+
+.profile-stepper-btn--minus {
+  color: #757575;
+}
+
+.profile-stepper-btn--plus {
+  color: var(--primary-color);
+}
+
+.profile-stepper-value {
+  min-width: 52px;
+  text-align: center;
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 21px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.profile-settings-label {
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 21px;
+  margin: 0;
+}
+
+/* =====================================================================
+   MODAL OVERLAY & BASE
+   ===================================================================== */
+.profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: profile-overlay-in 0.18s ease;
+}
+
+@keyframes profile-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.profile-modal-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: calc(100% - 48px);
+  max-width: 340px;
+  animation: profile-modal-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+@keyframes profile-modal-in {
+  from { opacity: 0; transform: scale(0.92) translateY(12px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+
+.profile-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  margin: 0 0 0 0;
+}
+
+.profile-modal-title--default { color: #1A1A1A; }
+.profile-modal-title--danger  { color: #D32F2F; }
+
+.profile-modal-body {
+  color: #757575;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  margin: 16px 0 0 0;
+}
+
+.profile-modal-body--dark {
+  color: #1A1A1A;
+  line-height: 21px;
+}
+
+.profile-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.profile-modal-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  transition: opacity 0.15s;
+}
+
+.profile-modal-btn:hover {
+  opacity: 0.85;
+}
+
+.profile-modal-btn--cancel {
+  background: white;
+  color: #1A1A1A;
+  border: 1.27px solid #E0E0E0;
+}
+
+.profile-modal-btn--confirm-orange {
+  background: var(--primary-color);
+  color: white;
+}
+
+.profile-modal-btn--confirm-red {
+  background: #D32F2F;
+  color: white;
+}
+
+.profile-modal-btn--close {
+  background: #E0E0E0;
+  color: #1A1A1A;
+  width: 100%;
+}
+
+/* =====================================================================
+   AVATAR MODAL
+   ===================================================================== */
+.profile-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  padding: 16px 0;
+}
+
+.profile-avatar-option {
+  aspect-ratio: 1;
+  background: #F5F5F5;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  line-height: 1;
+}
+
+.profile-avatar-option:hover {
+  background: var(--primary-light);
+  transform: scale(1.05);
+}
+
+.profile-avatar-option--selected {
+  background: var(--primary-light);
+  border-color: var(--primary-color);
+}
+
+/* =====================================================================
+   ACCOUNT MODAL
+   ===================================================================== */
+.profile-tab-switcher {
+  display: flex;
+  background: #F5F5F5;
+  border-radius: 100px;
+  padding: 4px;
+  margin-top: 16px;
+}
+
+.profile-tab-btn {
+  flex: 1;
+  height: 36px;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
+  background: transparent;
+  color: #757575;
+  transition: background 0.2s, color 0.2s;
+}
+
+.profile-tab-btn--active {
+  background: white;
+  color: #1A1A1A;
+}
+
+.profile-form-group {
+  margin-top: 16px;
+}
+
+.profile-form-label {
+  display: block;
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  margin-bottom: 8px;
+}
+
+.profile-form-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: #1A1A1A;
+  background: white;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.profile-form-input:focus {
+  border-color: var(--primary-color);
+}
+
+.profile-form-input::placeholder {
+  color: rgba(26, 26, 26, 0.50);
+}
+
+.profile-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-input-wrapper .profile-form-input {
+  padding-right: 44px;
+}
+
+.profile-eye-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  color: #757575;
+}
+
+.profile-form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.profile-form-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  transition: opacity 0.15s;
+}
+
+.profile-form-btn:hover {
+  opacity: 0.85;
+}
+
+.profile-form-btn--primary {
+  background: var(--primary-color);
+  color: white;
+}
+
+.profile-form-btn--secondary {
+  background: white;
+  color: #1A1A1A;
+  border: 1.27px solid #E0E0E0;
+}
+
+/* =====================================================================
+   EXPORT MODAL options
+   ===================================================================== */
+.profile-export-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0;
+}
+
+.profile-export-option-btn {
+  width: 100%;
+  height: 48px;
+  background: #F5F5F5;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1A1A1A;
+  transition: background 0.15s;
+}
+
+.profile-export-option-btn:hover {
+  background: #EEEEEE;
+}
+
+/* =====================================================================
+   TOAST NOTIFICATION
+   ===================================================================== */
+.profile-toast-container {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-40px);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.profile-toast-show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.profile-toast {
+  background: white;
+  width: 342px;
+  padding: 16px;
+  box-shadow: 0px 4px 6px -4px rgba(0, 0, 0, 0.10), 0px 10px 15px -3px rgba(0, 0, 0, 0.10);
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-sizing: border-box;
+}
+
+.profile-toast-icon {
+  width: 32px;
+  height: 32px;
+  background: #388E3C;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.profile-toast-text {
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: left;
+}
+
+
