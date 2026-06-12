@@ -114,7 +114,7 @@ const UserManagement: React.FC = () => {
           <div className="admin-db-nav-item">
             <div className="admin-db-nav-text">Quản lý dữ liệu gốc</div>
           </div>
-          <div className="admin-db-nav-item">
+          <div className="admin-db-nav-item" onClick={() => navigate('/admin/settings')}>
             <div className="admin-db-nav-text">Báo cáo & Cài đặt</div>
           </div>
         </div>

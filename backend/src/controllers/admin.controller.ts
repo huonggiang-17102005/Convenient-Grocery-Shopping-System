@@ -294,3 +294,125 @@ export const updateUserStatus = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ message: 'Lỗi server khi cập nhật trạng thái', error: error.message });
   }
 };
+
+export const getWasteReport = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { month, year } = req.query;
+    
+    let query = supabase
+      .from('fridge_items')
+      .select('category, is_wasted, created_at, quantity');
+
+    if (year) {
+      if (month) {
+        // Filter items created within the specified month and year
+        const startDate = new Date(Number(year), Number(month) - 1, 1).toISOString();
+        const endDate = new Date(Number(year), Number(month), 1).toISOString(); // 1st day of next month
+        query = query.gte('created_at', startDate).lt('created_at', endDate);
+      } else {
+        // Filter items for the entire year
+        const startDate = new Date(Number(year), 0, 1).toISOString();
+        const endDate = new Date(Number(year) + 1, 0, 1).toISOString();
+        query = query.gte('created_at', startDate).lt('created_at', endDate);
+      }
+    }
+
+    const { data: items, error: errItems } = await query;
+
+    console.log('Fetched fridge_items:', items, 'Error:', errItems);
+
+    if (errItems || !items) {
+      res.status(500).json({ message: 'Lỗi truy xuất dữ liệu tủ lạnh' });
+      return;
+    }
+
+    // Process data to calculate waste percentage per category based on quantity
+    const categoryStats: Record<string, { total: number, wasted: number }> = {};
+
+    items.forEach((item: any) => {
+      const category = item.category ? String(item.category) : '';
+      // Bỏ qua nếu không có category
+      if (!category) return;
+      
+      if (!categoryStats[category]) {
+        categoryStats[category] = { total: 0, wasted: 0 };
+      }
+      
+      const qty = Number(item.quantity) || 0;
+      categoryStats[category].total += qty;
+      
+      if (item.is_wasted) {
+        categoryStats[category].wasted += qty;
+      }
+    });
+
+    const reportData = Object.entries(categoryStats).map(([category, stats]) => {
+      // Tránh chia cho 0
+      const wasteRate = stats.total > 0 ? Math.round((stats.wasted / stats.total) * 100) : 0;
+      return {
+        category,
+        wasteRate: Math.round((stats.wasted / stats.total) * 100)
+      };
+    });
+
+    // Sắp xếp báo cáo theo tỷ lệ lãng phí giảm dần
+    reportData.sort((a, b) => b.wasteRate - a.wasteRate);
+
+    res.json(reportData);
+  } catch (error) {
+    console.error('Error fetching waste report:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+// --- Cài đặt hệ thống (System Settings) ---
+
+export const getSystemSettings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { data, error } = await supabase
+      .from('system_settings')
+      .select('max_family_members, default_expiry_warning_days')
+      .eq('id', 1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows returned
+        res.status(200).json({ max_family_members: 10, default_expiry_warning_days: 3 });
+        return;
+      }
+      res.status(500).json({ message: 'Lỗi lấy cài đặt hệ thống', error: error.message });
+      return;
+    }
+
+    res.status(200).json(data);
+  } catch (error: any) {
+    console.error('Error fetching system settings:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy cài đặt', error: error.message });
+  }
+};
+
+export const updateSystemSettings = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { max_family_members, default_expiry_warning_days } = req.body;
+
+    const { data, error } = await supabase
+      .from('system_settings')
+      .upsert({ 
+        id: 1, 
+        max_family_members, 
+        default_expiry_warning_days,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      res.status(500).json({ message: 'Lỗi cập nhật cài đặt hệ thống', error: error.message });
+      return;
+    }
+
+    res.status(200).json({ message: 'Đã cập nhật cài đặt thành công', settings: data });
+  } catch (error: any) {
+    console.error('Error updating system settings:', error);
+    res.status(500).json({ message: 'Lỗi server khi cập nhật cài đặt', error: error.message });
+  }
+};
