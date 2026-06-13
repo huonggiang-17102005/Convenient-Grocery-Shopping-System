@@ -193,7 +193,7 @@ const DashboardAdmin: React.FC = () => {
           <div className="admin-db-nav-item" onClick={() => navigate('/admin/users')}>
             <div className="admin-db-nav-text">Quản lý người dùng</div>
           </div>
-          <div className="admin-db-nav-item">
+          <div className="admin-db-nav-item" onClick={() => navigate('/admin/recipe-approval')}>
             <div className="admin-db-nav-text">Kiểm duyệt nội dung</div>
           </div>
           <div className="admin-db-nav-item" onClick={() => navigate('/admin/master-data')}>

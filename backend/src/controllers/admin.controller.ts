@@ -26,20 +26,30 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
       .select('*', { count: 'exact', head: true });
     if (!errRecipes) pendingRecipes = recipesCount || 0;
 
-    // 4. System waste rate (Calculated based on fridge_items is_wasted flag)
+    // 4. System waste rate (Calculated based on inventory_logs amounts)
     let wasteRate = 0;
-    const { count: totalItems, error: errItems } = await supabase
-      .from('fridge_items')
-      .select('*', { count: 'exact', head: true });
-      
-    if (!errItems && totalItems && totalItems > 0) {
-      const { count: wastedItems, error: errWasted } = await supabase
-        .from('fridge_items')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_wasted', true);
+    const { data: logs, error: errLogs } = await supabase
+      .from('inventory_logs')
+      .select('action_type, amount');
+
+    if (!errLogs && logs && logs.length > 0) {
+      let totalAdded = 0;
+      let totalWasted = 0;
+
+      logs.forEach(log => {
+        const amount = Number(log.amount) || 0;
+        const action = String(log.action_type || '').toLowerCase();
         
-      if (!errWasted && wastedItems) {
-        wasteRate = Number(((wastedItems / totalItems) * 100).toFixed(1));
+        if (action.includes('add')) {
+          totalAdded += amount;
+        } else if (action.includes('expire') || action.includes('waste')) {
+          totalWasted += amount;
+        }
+      });
+
+      if (totalAdded > 0) {
+        wasteRate = Number(((totalWasted / totalAdded) * 100).toFixed(1));
+        if (wasteRate > 100) wasteRate = 100;
       }
     }
 
@@ -300,8 +310,8 @@ export const getWasteReport = async (req: Request, res: Response): Promise<void>
     const { month, year } = req.query;
     
     let query = supabase
-      .from('fridge_items')
-      .select('category, is_wasted, created_at, quantity');
+      .from('inventory_logs')
+      .select('category, action_type, amount, created_at');
 
     if (year) {
       if (month) {
@@ -317,49 +327,50 @@ export const getWasteReport = async (req: Request, res: Response): Promise<void>
       }
     }
 
-    const { data: items, error: errItems } = await query;
+    const { data: logs, error: errLogs } = await query;
 
-    console.log('Fetched fridge_items:', items, 'Error:', errItems);
+    console.log('Fetched inventory_logs:', logs?.length, 'Error:', errLogs);
 
-    if (errItems || !items) {
-      res.status(500).json({ message: 'Lỗi truy xuất dữ liệu tủ lạnh' });
+    if (errLogs || !logs) {
+      res.status(500).json({ message: 'Lỗi truy xuất dữ liệu nhật ký kho' });
       return;
     }
 
-    // Process data to calculate waste percentage per category based on quantity
+    // Process data to calculate waste percentage per category based on inventory_logs
     const categoryStats: Record<string, { total: number, wasted: number }> = {};
 
-    items.forEach((item: any) => {
-      const category = item.category ? String(item.category) : '';
-      // Bỏ qua nếu không có category
+    logs.forEach((log: any) => {
+      const category = log.category ? String(log.category) : '';
       if (!category) return;
       
       if (!categoryStats[category]) {
         categoryStats[category] = { total: 0, wasted: 0 };
       }
       
-      const qty = Number(item.quantity) || 0;
-      categoryStats[category].total += qty;
+      const amount = Number(log.amount) || 0;
+      const action = String(log.action_type || '').toLowerCase();
       
-      if (item.is_wasted) {
-        categoryStats[category].wasted += qty;
+      if (action.includes('add')) {
+        categoryStats[category].total += amount;
+      } else if (action.includes('expire') || action.includes('waste')) {
+        categoryStats[category].wasted += amount;
       }
     });
 
     const reportData = Object.entries(categoryStats).map(([category, stats]) => {
-      // Tránh chia cho 0
-      const wasteRate = stats.total > 0 ? Math.round((stats.wasted / stats.total) * 100) : 0;
+      // Tính tỷ lệ hao phí (Tránh chia cho 0)
+      const rate = stats.total > 0 ? Math.round((stats.wasted / stats.total) * 100) : 0;
       return {
         category,
-        wasteRate: Math.round((stats.wasted / stats.total) * 100)
+        wasteRate: rate > 100 ? 100 : rate // Đảm bảo không quá 100% nếu logic nhập liệu có sai lệch
       };
     });
 
     // Sắp xếp báo cáo theo tỷ lệ lãng phí giảm dần
     reportData.sort((a, b) => b.wasteRate - a.wasteRate);
 
-    res.json(reportData);
-  } catch (error) {
+    res.status(200).json(reportData);
+  } catch (error: any) {
     console.error('Error fetching waste report:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
@@ -770,9 +781,96 @@ export const updateMasterDataRecipe = async (req: Request, res: Response): Promi
     }
 
     res.status(200).json(data[0]);
-  } catch (error: any) {
+} catch (error: any) {
     console.error('Error updating recipe:', error);
     res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+// --- Kiểm duyệt nội dung (Content Approval) ---
+
+export const getPendingRecipes = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { data: recipes, error } = await supabase
+      .from('recipes')
+      .select('*')
+      .eq('visibility', 'Pending')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    // Lấy thông tin user thủ công để tránh lỗi Join nếu thiếu Foreign Key hoặc sai tên cột
+    if (recipes && recipes.length > 0) {
+      const authorIds = recipes.map(r => r.author_id).filter(id => id);
+      
+      let usersMap = new Map();
+      if (authorIds.length > 0) {
+        // Thử lấy email, full_name hoặc name (để xử lý linh hoạt cho các trường hợp tên cột khác nhau)
+        const { data: usersData } = await supabase
+          .from('users')
+          .select('*')
+          .in('id', authorIds);
+          
+        if (usersData) {
+          usersData.forEach(u => {
+            // Ưu tiên full_name, name, hoặc lấy phần đầu của email
+            const displayName = u.full_name || u.name || (u.email ? u.email.split('@')[0] : 'Không rõ');
+            usersMap.set(u.id, { full_name: displayName });
+          });
+        }
+      }
+
+      const enrichedRecipes = recipes.map(r => ({
+        ...r,
+        author: r.author_id ? (usersMap.get(r.author_id) || { full_name: 'Không rõ' }) : null
+      }));
+
+      res.status(200).json(enrichedRecipes);
+      return;
+    }
+
+    res.status(200).json([]);
+  } catch (error: any) {
+    console.error('Error fetching pending recipes:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy công thức chờ duyệt', error: error.message });
+  }
+};
+
+export const approveRecipe = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase
+      .from('recipes')
+      .update({ visibility: 'Public', updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      throw error;
+    }
+    res.status(200).json({ message: 'Duyệt công thức thành công' });
+  } catch (error: any) {
+    console.error('Error approving recipe:', error);
+    res.status(500).json({ message: 'Lỗi server khi duyệt công thức', error: error.message });
+  }
+};
+
+export const rejectRecipe = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase
+      .from('recipes')
+      .update({ visibility: 'Private', updated_at: new Date().toISOString() })
+      .eq('id', id);
+
+    if (error) {
+      throw error;
+    }
+    res.status(200).json({ message: 'Từ chối công thức thành công' });
+  } catch (error: any) {
+    console.error('Error rejecting recipe:', error);
+    res.status(500).json({ message: 'Lỗi server khi từ chối công thức', error: error.message });
   }
 };
 

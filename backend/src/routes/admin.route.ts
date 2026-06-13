@@ -1,5 +1,5 @@
 import express from 'express';
-import { getDashboardStats, getUsersList, deleteUser, updateUserStatus, getWasteReport, getSystemSettings, updateSystemSettings, getMasterDataCategories, getMasterDataUnits, updateMasterDataCategory, updateMasterDataUnit, createMasterDataUnit, deleteMasterDataUnit, deleteMasterDataCategory, createMasterDataCategory, getMasterDataRecipes, deleteMasterDataRecipe, createMasterDataRecipe, updateMasterDataRecipe } from '../controllers/admin.controller.js';
+import { getDashboardStats, getUsersList, deleteUser, updateUserStatus, getWasteReport, getSystemSettings, updateSystemSettings, getMasterDataCategories, getMasterDataUnits, updateMasterDataCategory, updateMasterDataUnit, createMasterDataUnit, deleteMasterDataUnit, deleteMasterDataCategory, createMasterDataCategory, getMasterDataRecipes, deleteMasterDataRecipe, createMasterDataRecipe, updateMasterDataRecipe, getPendingRecipes, approveRecipe, rejectRecipe } from '../controllers/admin.controller.js';
 
 const router = express.Router();
 
@@ -10,6 +10,11 @@ router.delete('/users/:id', deleteUser);
 router.patch('/users/:id/status', updateUserStatus);
 router.get('/settings', getSystemSettings);
 router.put('/settings', updateSystemSettings);
+
+// Content Approval Routes
+router.get('/recipes/pending', getPendingRecipes);
+router.put('/recipes/:id/approve', approveRecipe);
+router.put('/recipes/:id/reject', rejectRecipe);
 
 // Master Data Routes
 router.get('/master-data/categories', getMasterDataCategories);

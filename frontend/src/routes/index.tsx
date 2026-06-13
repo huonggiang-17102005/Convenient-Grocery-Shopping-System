@@ -17,6 +17,7 @@ import UserManagementAdmin from '../pages/admin/UserManagement';
 import FridgeFeature from '@/features/fridge';
 import SettingAdmin from '../pages/admin/Setting';
 import MasterDataAdmin from '../pages/admin/MasterData';
+import RecipeApprovalAdmin from '../pages/admin/RecipeApproval';
 import CreateGroup from '../pages/homemaker/CreateGroup';
 import Jointhegroup from '../pages/member/Jointhegroup';
 
@@ -134,6 +135,10 @@ export const router = createBrowserRouter([
       {
         path: 'master-data',
         element: <MasterDataAdmin />,
+      },
+      {
+        path: 'recipe-approval',
+        element: <RecipeApprovalAdmin />,
       },
     ],
   },
