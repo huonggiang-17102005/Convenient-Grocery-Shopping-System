@@ -35,15 +35,15 @@ const Jointhegroup: React.FC = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error('Mã tham gia không tồn tại');
+        throw new Error(data.message || 'Mã tham gia không tồn tại');
       }
       
-      // Update local storage user info
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const userObj = JSON.parse(userStr);
-        userObj.family_id = data.family.id;
-        localStorage.setItem('user', JSON.stringify(userObj));
+      const meRes = await fetch(`http://localhost:5000/api/users/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const meData = await meRes.json();
+      if (meData.success) {
+        localStorage.setItem('user', JSON.stringify(meData.data));
       }
 
       setIsLoading(false);
