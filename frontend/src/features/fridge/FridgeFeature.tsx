@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import './fridge.css';
 import type { FoodItem, StorageType, FoodCategory } from './types';
@@ -14,29 +14,79 @@ export interface FridgeFeatureProps {
   role?: 'homemaker' | 'member';
 }
 
-const MOCK_DATA: FoodItem[] = [
-  { id: '1', emoji: '🥕', name: 'Cà rốt', quantity: 3, unit: 'Kg', daysRemaining: 7, category: 'Rau củ quả', storageType: 'Ngăn mát' },
-  { id: '2', emoji: '🥩', name: 'Thịt bò', quantity: 1, unit: 'Kg', daysRemaining: 1, category: 'Thịt cá', storageType: 'Ngăn đông' },
-  { id: '3', emoji: '🥚', name: 'Trứng gà', quantity: 10, unit: 'Quả', daysRemaining: 14, category: 'Trứng', storageType: 'Ngăn mát' },
-  { id: '4', emoji: '🥛', name: 'Sữa tươi', quantity: 2, unit: 'Lít', daysRemaining: 3, category: 'Chất lỏng', storageType: 'Ngăn mát' },
-  { id: '5', emoji: '🌾', name: 'Gạo tẻ', quantity: 5, unit: 'Kg', daysRemaining: 60, category: 'Đồ khô', storageType: 'Khô' },
-  { id: '6', emoji: '🧂', name: 'Muối hột', quantity: 0, daysRemaining: 365, category: 'Gia vị', storageType: 'Khô' },
-  { id: '7', emoji: '📦', name: 'Mứt Tết', quantity: 1, unit: 'Kg', daysRemaining: 30, category: 'Khác', storageType: 'Ngăn mát' },
-];
+const mapCategoryToEmoji = (category: string) => {
+  const map: Record<string, string> = {
+    'Thịt cá': '🥩',
+    'Rau củ quả': '🥕',
+    'Trứng': '🥚',
+    'Chất lỏng': '🥛',
+    'Đồ khô': '🌾',
+    'Gia vị': '🧂',
+  };
+  return map[category] || '🍽️';
+};
+
+const mapBackendToFrontend = (item: any): FoodItem => {
+  const expDate = new Date(item.expiration_date || new Date());
+  const diffDays = Math.ceil((expDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+
+  return {
+    id: item.id,
+    name: item.name,
+    quantity: item.quantity,
+    unit: item.unit || '',
+    category: (item.category || 'Khác') as FoodCategory,
+    storageType: (item.location || 'Ngăn mát') as StorageType,
+    daysRemaining: diffDays > 0 ? diffDays : 0,
+    emoji: mapCategoryToEmoji(item.category || ''),
+    expiryDate: item.expiration_date,
+    image: item.image_url || undefined,
+  };
+};
 
 export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker' }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStorage, setActiveStorage] = useState<StorageType>('Tất cả');
   const [activeCategory, setActiveCategory] = useState<FoodCategory>('Tất cả');
+  
   const [items, setItems] = useState<FoodItem[]>(() => {
-    // We clear localStorage mock to force load the new mock data with all categories for testing
-    const data = localStorage.getItem('homemaker_fridge_items_v2');
-    if (!data) {
-      localStorage.setItem('homemaker_fridge_items_v2', JSON.stringify(MOCK_DATA));
-      return MOCK_DATA;
-    }
-    return JSON.parse(data);
+    // Lấy dữ liệu từ Cache để hiển thị ngay lập tức
+    const cached = localStorage.getItem('cached_fridge_items');
+    return cached ? JSON.parse(cached) : [];
   });
+  const [isLoadingData, setIsLoadingData] = useState(false);
+
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return;
+        const user = JSON.parse(userStr);
+        const familyId = user.family_id;
+        
+        if (!familyId) return;
+
+        // Nếu cache trống thì hiện chữ Loading
+        if (items.length === 0) setIsLoadingData(true);
+
+        const res = await fetch(`http://localhost:5000/api/fridge/family/${familyId}`);
+        const result = await res.json();
+
+        if (result.success) {
+          const formattedItems = result.data.map(mapBackendToFrontend);
+          setItems(formattedItems);
+          // Lưu lại vào cache cho lần tải sau
+          localStorage.setItem('cached_fridge_items', JSON.stringify(formattedItems));
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải dữ liệu tủ lạnh:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchItems();
+  }, []);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Modal states
@@ -62,7 +112,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
       return item;
     });
     setItems(updatedItems);
-    localStorage.setItem('homemaker_fridge_items_v2', JSON.stringify(updatedItems));
+    localStorage.setItem('cached_fridge_items', JSON.stringify(updatedItems));
   };
 
   const handleSelect = (id: string, selected: boolean) => {
@@ -95,12 +145,12 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
       };
       const updated = [...items, newItem];
       setItems(updated);
-      localStorage.setItem('homemaker_fridge_items_v2', JSON.stringify(updated));
+      localStorage.setItem('cached_fridge_items', JSON.stringify(updated));
       showToast('Đã thêm thực phẩm vào tủ lạnh!');
     } else if (modalMode === 'edit' && selectedItem) {
       const updated = items.map(i => i.id === selectedItem.id ? { ...itemData, id: selectedItem.id } : i);
       setItems(updated);
-      localStorage.setItem('homemaker_fridge_items_v2', JSON.stringify(updated));
+      localStorage.setItem('cached_fridge_items', JSON.stringify(updated));
       showToast('Đã cập nhật thực phẩm!');
     }
     setIsModalOpen(false);
@@ -109,7 +159,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
   const handleDeleteModal = (id: string) => {
     const updated = items.filter(i => i.id !== id);
     setItems(updated);
-    localStorage.setItem('homemaker_fridge_items_v2', JSON.stringify(updated));
+    localStorage.setItem('cached_fridge_items', JSON.stringify(updated));
     showToast('Đã xóa thực phẩm!');
     setIsModalOpen(false);
     
@@ -149,17 +199,27 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
       />
 
       <div className="food-list-container">
-        {filteredItems.map(item => (
-          <FoodCard 
-            key={item.id} 
-            item={item} 
-            onUpdateQuantity={handleUpdateQuantity}
-            onSelect={handleSelect}
-            selected={selectedIds.has(item.id)}
-            role={role}
-            onCardClick={handleCardClick}
-          />
-        ))}
+        {isLoadingData ? (
+          <div style={{ textAlign: 'center', padding: '20px', color: '#888', gridColumn: '1 / -1', fontSize: '15px', minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            ⏳ Đang tải dữ liệu tủ lạnh...
+          </div>
+        ) : filteredItems.length > 0 ? (
+          filteredItems.map(item => (
+            <FoodCard 
+              key={item.id} 
+              item={item} 
+              onUpdateQuantity={handleUpdateQuantity}
+              onSelect={handleSelect}
+              selected={selectedIds.has(item.id)}
+              role={role}
+              onCardClick={handleCardClick}
+            />
+          ))
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px', color: '#888', gridColumn: '1 / -1', fontSize: '15px', minHeight: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            🛒 Không có thực phẩm nào trong tủ lạnh.
+          </div>
+        )}
       </div>
       
       {role === 'homemaker' && (

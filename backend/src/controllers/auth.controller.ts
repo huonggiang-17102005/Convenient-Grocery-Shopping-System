@@ -7,10 +7,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password, full_name } = req.body;
 
-    if (!email || !password) {
-      res.status(400).json({ message: 'Vui lòng cung cấp email và mật khẩu' });
+    if (!email || !password || !full_name) {
+      res.status(400).json({ message: 'Vui lòng cung cấp đủ họ tên, email và mật khẩu' });
       return;
     }
 
@@ -20,7 +20,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     }
 
     // Kiểm tra xem email đã tồn tại chưa
-    const { data: existingUser, error: checkError } = await supabase
+    const { data: existingUser, error: findError } = await supabase
       .from('users')
       .select('id')
       .eq('email', email)
@@ -35,14 +35,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Default role and family_id
+    // Default role and family_id, default avatar is 😊
     const role = 'User';
+    const avatar = '😊';
     
     // Thêm user vào db
     const { data: newUser, error: insertError } = await supabase
       .from('users')
       .insert([
-        { email, password: passwordHash, role, family_id: null }
+        { email, password: passwordHash, full_name, avatar, role, family_id: null }
       ])
       .select()
       .single();
