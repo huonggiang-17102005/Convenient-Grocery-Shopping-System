@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import type { Recipe, CommunityPost, FilterIngredient, RecipesFeatureProps, PendingPost } from './types';
-import { MOCK_RECIPES, MOCK_COMMUNITY_POSTS } from './recipes.data';
 import { matchFoodImageUrl } from './recipes.utils';
+import { recipesService } from './recipes.service';
 
 import RecipeTabs from './components/RecipeTabs';
 import TabLibrary from './components/TabLibrary';
@@ -19,9 +19,40 @@ type ActiveTab = 'library' | 'favorites' | 'community';
 
 export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   // ── Data state ──────────────────────────────────────────────
-  const [recipes, setRecipes] = useState<Recipe[]>(MOCK_RECIPES);
-  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(MOCK_COMMUNITY_POSTS);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
   const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [familyRecipes, favRecipes, posts] = await Promise.all([
+        recipesService.getFamilyRecipes(),
+        recipesService.getFavoriteRecipes(),
+        recipesService.getCommunityRecipes(),
+      ]);
+      
+      // Merge family and favorite recipes to ensure isFavorited is true
+      const favMap = new Map(favRecipes.map(r => [r.id, true]));
+      const allRecipes = familyRecipes.map(r => ({
+        ...r,
+        isFavorited: r.isFavorited || favMap.has(r.id),
+      }));
+      
+      setRecipes(allRecipes);
+      setCommunityPosts(posts);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // ── UI state ─────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<ActiveTab>('library');
@@ -55,10 +86,16 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
   // ── Handlers ─────────────────────────────────────────────────
 
-  const handleToggleFavorite = useCallback((recipeId: string) => {
-    setRecipes((prev) =>
-      prev.map((r) => (r.id === recipeId ? { ...r, isFavorited: !r.isFavorited } : r))
-    );
+  const handleToggleFavorite = useCallback(async (recipeId: string) => {
+    try {
+      const { isFavorited } = await recipesService.toggleFavorite(recipeId);
+      setRecipes((prev) =>
+        prev.map((r) => (r.id === recipeId ? { ...r, isFavorited } : r))
+      );
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      alert('Không thể cập nhật yêu thích');
+    }
   }, []);
 
   const handleRecipeClick = useCallback((recipe: Recipe) => {
@@ -87,47 +124,65 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   }, []);
 
   const handleFormSubmit = useCallback(
-    (data: Omit<Recipe, 'id' | 'isFavorited'>) => {
-      if (formMode === 'create') {
-        const newRecipe: Recipe = {
-          ...data,
-          id: 'rec_' + Date.now(),
-          isFavorited: false,
-          imageUrl: matchFoodImageUrl(data.name),
-        };
-        setRecipes((prev) => [newRecipe, ...prev]);
-      } else if (formMode === 'edit' && formRecipe) {
-        setRecipes((prev) =>
-          prev.map((r) =>
-            r.id === formRecipe.id ? { ...r, ...data } : r
-          )
-        );
+    async (data: Omit<Recipe, 'id' | 'isFavorited'>) => {
+      try {
+        if (formMode === 'create') {
+          const newRecipe = await recipesService.createRecipe(data);
+          setRecipes((prev) => [newRecipe, ...prev]);
+        } else if (formMode === 'edit' && formRecipe) {
+          const updatedRecipe = await recipesService.updateRecipe(formRecipe.id, data);
+          setRecipes((prev) =>
+            prev.map((r) =>
+              r.id === formRecipe.id ? { ...r, ...updatedRecipe } : r
+            )
+          );
+        }
+      } catch (error) {
+        console.error('Error saving recipe:', error);
+        alert('Lỗi khi lưu công thức');
       }
     },
     [formMode, formRecipe]
   );
 
-  const handleDeleteConfirm = useCallback(() => {
+  const handleDeleteConfirm = useCallback(async () => {
     if (deleteRecipe) {
-      setRecipes((prev) => prev.filter((r) => r.id !== deleteRecipe.id));
-      setDeleteRecipe(null);
-      setIsDeleteOpen(false);
+      try {
+        await recipesService.deleteRecipe(deleteRecipe.id);
+        setRecipes((prev) => prev.filter((r) => r.id !== deleteRecipe.id));
+        setDeleteRecipe(null);
+        setIsDeleteOpen(false);
+      } catch (error) {
+        console.error('Error deleting recipe:', error);
+        alert('Lỗi khi xóa công thức');
+      }
     }
   }, [deleteRecipe]);
 
-  const handleToggleCommunityLike = useCallback((postId: string) => {
-    setCommunityPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
-          ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 }
-          : p
-      )
-    );
+  const handleToggleCommunityLike = useCallback(async (postId: string) => {
+    try {
+      // Pass recipe id to like (since post ID here is mapped to recipe id)
+      const result = await recipesService.toggleLike(postId);
+      setCommunityPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? { ...p, isLiked: result.isLiked, likes: result.likes }
+            : p
+        )
+      );
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
   }, []);
 
-  const handleAddToShoppingList = useCallback((_recipe: Recipe) => {
-    // TODO: integrate with shopping list feature
-    alert('Đã gom nguyên liệu thiếu vào Shopping List!');
+  const handleAddToShoppingList = useCallback(async (recipe: Recipe) => {
+    try {
+      const result = await recipesService.addToShoppingList(recipe.id);
+      alert(result.message);
+    } catch (error) {
+      console.error('Error adding to shopping list:', error);
+      alert('Lỗi khi kiểm tra nguyên liệu hoặc thêm vào giỏ hàng.');
+    }
   }, []);
 
   const handleCommunityPostClick = useCallback((post: CommunityPost) => {
@@ -145,54 +200,21 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   }, []);
 
   const handleShareSubmit = useCallback(
-    (description: string, recipeData: Omit<Recipe, 'id' | 'isFavorited'>) => {
-      if (pendingTimeoutRef.current) {
-        clearTimeout(pendingTimeoutRef.current);
+    async (description: string, recipeData: Omit<Recipe, 'id' | 'isFavorited'>) => {
+      try {
+        // Create recipe first, then share
+        const createdRecipe = await recipesService.createRecipe(recipeData);
+        await recipesService.shareToCommunity(createdRecipe.id, description);
+        
+        setIsShareOpen(false);
+        // Refresh data to show in community or just show success alert
+        alert('Đã gửi công thức lên cộng đồng, vui lòng chờ duyệt!');
+      } catch (error) {
+        console.error('Error sharing recipe:', error);
+        alert('Lỗi khi chia sẻ công thức');
       }
-
-      const pendingRecipe: Recipe = {
-        ...recipeData,
-        id: 'rec_' + Date.now(),
-        isFavorited: false,
-        imageUrl: matchFoodImageUrl(recipeData.name),
-      };
-
-      const newPending: PendingPost = {
-        id: 'pending_' + Date.now(),
-        recipe: pendingRecipe,
-        submittedAt: new Date().toISOString(),
-        status: 'pending',
-        description,
-      };
-
-      setPendingPost(newPending);
-      setIsShareOpen(false);
-
-      // Simulate admin approval after 6 seconds
-      pendingTimeoutRef.current = setTimeout(() => {
-        setPendingPost((currentPending) => {
-          if (currentPending && currentPending.id === newPending.id) {
-            const newPost: CommunityPost = {
-              id: 'post_' + Date.now(),
-              author: {
-                id: 'user_current',
-                name: role === 'homemaker' ? 'Anh Tuấn' : 'Lan Hương',
-                avatarEmoji: role === 'homemaker' ? '👨' : '👩',
-              },
-              description: currentPending.description || '',
-              recipe: currentPending.recipe,
-              postedAt: new Date().toISOString(),
-              likes: 0,
-              isLiked: false,
-            };
-            setCommunityPosts((prev) => [newPost, ...prev]);
-            return null; // clears pending status
-          }
-          return currentPending;
-        });
-      }, 6000);
     },
-    [role]
+    []
   );
 
   // ── Render ────────────────────────────────────────────────────
