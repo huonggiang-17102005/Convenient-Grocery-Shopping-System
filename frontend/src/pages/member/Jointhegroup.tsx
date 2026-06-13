@@ -38,12 +38,12 @@ const Jointhegroup: React.FC = () => {
         throw new Error('Mã tham gia không tồn tại');
       }
       
-      // Update local storage user info
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const userObj = JSON.parse(userStr);
-        userObj.family_id = data.family.id;
-        localStorage.setItem('user', JSON.stringify(userObj));
+      const meRes = await fetch(`http://localhost:5000/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const meData = await meRes.json();
+      if (meData.success) {
+        localStorage.setItem('user', JSON.stringify(meData.data));
       }
 
       setIsLoading(false);

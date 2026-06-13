@@ -37,6 +37,14 @@ const CreateGroup: React.FC = () => {
         throw new Error((data.message || 'Lỗi khi tạo nhóm') + (data.error ? ': ' + data.error : ''));
       }
 
+      const meRes = await fetch(`http://localhost:5000/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const meData = await meRes.json();
+      if (meData.success) {
+        localStorage.setItem('user', JSON.stringify(meData.data));
+      }
+
       setGroupCode(data.family.invite_code);
       setShowPopup(true);
     } catch (err: unknown) {

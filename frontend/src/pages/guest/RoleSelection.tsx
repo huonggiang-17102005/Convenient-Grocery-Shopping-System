@@ -19,7 +19,7 @@ export default function RoleSelection() {
         throw new Error('Vui lòng đăng nhập lại để chọn vai trò.');
       }
 
-      const response = await fetch(`http://localhost:5000/api/users/role`, {
+      const response = await fetch(`http://localhost:5000/api/auth/role`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
