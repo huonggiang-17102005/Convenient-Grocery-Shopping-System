@@ -1,7 +1,7 @@
 import type { Response } from 'express';
 import supabase from '../config/db.config.js';
 import type { AuthRequest } from '../middlewares/auth.middleware.js';
-
+import * as familyService from '../services/family.service.js';
 export const createFamily = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name } = req.body;
@@ -144,4 +144,35 @@ export const getFamilyInfo = async (req: AuthRequest, res: Response): Promise<vo
     console.error('Lỗi lấy thông tin gia đình:', error);
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
+};
+
+export const getMembers = async (req: AuthRequest, res: Response) => {
+  const familyId = req.user?.family_id as string;
+  const members = await familyService.getMembers(familyId);
+  return res.status(200).json({ success: true, data: members });
+};
+
+export const leaveFamily = async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id as string;
+  const familyId = req.user?.family_id as string;
+  await familyService.leaveFamily(userId, familyId);
+  return res.status(200).json({ success: true, message: 'Đã rời khỏi gia đình thành công' });
+};
+
+export const removeMember = async (req: AuthRequest, res: Response) => {
+  const currentUserId = req.user?.id as string;
+  const familyId = req.user?.family_id as string;
+  const targetUserId = req.params.userId;
+  
+  await familyService.removeMember(currentUserId, targetUserId, familyId);
+  return res.status(200).json({ success: true, message: 'Đã xóa thành viên khỏi gia đình' });
+};
+
+export const transferHomemaker = async (req: AuthRequest, res: Response) => {
+  const currentUserId = req.user?.id as string;
+  const familyId = req.user?.family_id as string;
+  const { newHomemakerId } = req.body;
+
+  await familyService.transferHomemaker(currentUserId, newHomemakerId, familyId);
+  return res.status(200).json({ success: true, message: 'Nhường quyền Homemaker thành công' });
 };
