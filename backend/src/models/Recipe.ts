@@ -1,4 +1,5 @@
 export interface Ingredient {
+  category?: string;
   name: string;
   quantity: number;
   unit: string;
@@ -16,7 +17,7 @@ export interface Recipe {
   servings: number;
   ingredients: Ingredient[];
   instructions: string[];
-  visibility: 'Private' | 'Public' | null;
+  visibility: 'Private' | 'Public' | 'Pending' | null;
   likes_count: number | null;
   created_at?: string;
   updated_at?: string;

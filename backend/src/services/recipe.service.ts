@@ -1,0 +1,200 @@
+import * as RecipeRepo from '../repo/recipe.repo.js';
+import type { Recipe } from '../models/Recipe.js';
+import { NotFoundError, ForbiddenError } from '../errors/CommonError.js';
+
+/**
+ * Get all private recipes for a family, mapped with isFavorited for the current user
+ */
+export const getFamilyRecipes = async (familyId: string, userId: string) => {
+  const recipes = await RecipeRepo.getFamilyRecipes(familyId);
+  const favorites = await RecipeRepo.getUserFavoriteRecipes(userId);
+  const favIds = new Set(favorites.map(r => r.id));
+
+  return recipes.map(recipe => ({
+    ...recipe,
+    isFavorited: favIds.has(recipe.id),
+  }));
+};
+
+/**
+ * Get all public community recipes
+ */
+export const getCommunityRecipes = async (userId: string) => {
+  const recipes = await RecipeRepo.getCommunityRecipes();
+  
+  // Format for frontend (frontend expects `author` object)
+  return recipes.map(recipe => ({
+    id: recipe.id,
+    author: {
+      id: recipe.author?.id,
+      name: recipe.author?.full_name || 'Người dùng Ẩn danh',
+      avatarEmoji: recipe.author?.avatar_url || '👤',
+    },
+    description: recipe.description || '',
+    recipe: {
+      ...recipe,
+      author: undefined, // remove raw author object from nested recipe
+    },
+    postedAt: recipe.created_at,
+    likes: recipe.likes_count || 0,
+    isLiked: false, // We don't have a user_liked_recipes table yet
+  }));
+};
+
+/**
+ * Get user's favorite recipes
+ */
+export const getFavoriteRecipes = async (userId: string) => {
+  const recipes = await RecipeRepo.getUserFavoriteRecipes(userId);
+  return recipes.map(recipe => ({
+    ...recipe,
+    isFavorited: true,
+  }));
+};
+
+/**
+ * Create a new private recipe
+ */
+export const createRecipe = async (authorId: string, data: any) => {
+  const newRecipe: Partial<Recipe> = {
+    author_id: authorId,
+    name: data.name,
+    description: data.description || null,
+    image_url: data.image_url || null,
+    image_public_id: data.image_public_id || null,
+    cooking_time: data.cookingTimeMinutes || data.cooking_time,
+    difficulty: data.difficulty || 'Dễ',
+    servings: data.servings || 1,
+    ingredients: data.ingredients || [],
+    instructions: data.steps ? data.steps.map((s: any) => s.description || s) : data.instructions || [],
+    visibility: 'Private',
+    likes_count: 0,
+  };
+
+  return RecipeRepo.createRecipe(newRecipe);
+};
+
+/**
+ * Update a recipe
+ */
+export const updateRecipe = async (recipeId: string, authorId: string, data: any) => {
+  const recipe = await RecipeRepo.getRecipeById(recipeId);
+  
+  if (recipe.author_id !== authorId) {
+    throw new ForbiddenError('Bạn không có quyền sửa công thức này.');
+  }
+
+  const updateData: Partial<Recipe> = {
+    name: data.name,
+    description: data.description,
+    image_url: data.image_url,
+    image_public_id: data.image_public_id,
+    cooking_time: data.cookingTimeMinutes || data.cooking_time,
+    difficulty: data.difficulty,
+    servings: data.servings,
+    ingredients: data.ingredients,
+    instructions: data.steps ? data.steps.map((s: any) => s.description || s) : data.instructions,
+  };
+
+  // Remove undefined fields
+  Object.keys(updateData).forEach(key => {
+    if ((updateData as any)[key] === undefined) {
+      delete (updateData as any)[key];
+    }
+  });
+
+  return RecipeRepo.updateRecipe(recipeId, updateData);
+};
+
+/**
+ * Delete a recipe
+ */
+export const deleteRecipe = async (recipeId: string, authorId: string) => {
+  const recipe = await RecipeRepo.getRecipeById(recipeId);
+  
+  if (recipe.author_id !== authorId) {
+    throw new ForbiddenError('Bạn không có quyền xóa công thức này.');
+  }
+
+  await RecipeRepo.deleteRecipe(recipeId);
+};
+
+/**
+ * Share a recipe to community (sets to Pending)
+ */
+export const shareToCommunity = async (recipeId: string, authorId: string, description: string) => {
+  const recipe = await RecipeRepo.getRecipeById(recipeId);
+  
+  if (recipe.author_id !== authorId) {
+    throw new ForbiddenError('Bạn không có quyền chia sẻ công thức này.');
+  }
+
+  return RecipeRepo.updateRecipe(recipeId, {
+    visibility: 'Pending',
+    description: description,
+  });
+};
+
+/**
+ * Toggle favorite
+ */
+export const toggleFavorite = async (userId: string, recipeId: string) => {
+  const isFavorited = await RecipeRepo.toggleFavorite(userId, recipeId);
+  return { isFavorited };
+};
+
+/**
+ * Toggle like for a community post
+ */
+export const toggleLike = async (userId: string, recipeId: string) => {
+  const newLikes = await RecipeRepo.updateRecipeLikes(recipeId, true);
+  return { likes: newLikes, isLiked: true };
+};
+
+/**
+ * Add missing ingredients to shopping list
+ */
+export const addToShoppingList = async (recipeId: string, familyId: string, userId: string) => {
+  const recipe = await RecipeRepo.getRecipeById(recipeId);
+  const fridgeItems = await RecipeRepo.getFridgeItems(familyId);
+  
+  const missingItems: any[] = [];
+  
+  for (const ing of recipe.ingredients) {
+    const inFridge = fridgeItems.find(f => f.name.toLowerCase() === ing.name.toLowerCase());
+    const fridgeQty = inFridge ? inFridge.quantity : 0;
+    
+    if (fridgeQty < ing.quantity) {
+      missingItems.push({
+        name: ing.name,
+        category: ing.category || 'Khác',
+        quantity: ing.quantity - fridgeQty,
+        unit: ing.unit,
+        imageUrl: '',
+        imagePublicId: '',
+        isBought: false,
+        assigneeId: null
+      });
+    }
+  }
+
+  if (missingItems.length === 0) {
+    return { message: 'Đã đủ nguyên liệu trong tủ lạnh.' };
+  }
+
+  const shoppingList = await RecipeRepo.getOrCreateShoppingList(familyId, userId);
+  const existingItems = shoppingList.items || [];
+  
+  missingItems.forEach(missing => {
+    const existing = existingItems.find((i: any) => i.name.toLowerCase() === missing.name.toLowerCase());
+    if (existing) {
+      existing.quantity += missing.quantity;
+    } else {
+      existingItems.push(missing);
+    }
+  });
+
+  await RecipeRepo.updateShoppingListItems(shoppingList.id, existingItems);
+  
+  return { message: `Đã thêm ${missingItems.length} nguyên liệu vào danh sách mua sắm.`, missingItems };
+};
