@@ -161,20 +161,41 @@ export const addToShoppingList = async (recipeId: string, familyId: string, user
   const missingItems: any[] = [];
   
   for (const ing of recipe.ingredients) {
-    const inFridge = fridgeItems.find(f => f.name.toLowerCase() === ing.name.toLowerCase());
-    const fridgeQty = inFridge ? inFridge.quantity : 0;
+    const categoryMatch = ing.category || 'Khác';
+    const inFridge = fridgeItems.find(f => 
+      f.category === categoryMatch && 
+      f.name.toLowerCase() === ing.name.toLowerCase()
+    );
     
-    if (fridgeQty < ing.quantity) {
-      missingItems.push({
-        name: ing.name,
-        category: ing.category || 'Khác',
-        quantity: ing.quantity - fridgeQty,
-        unit: ing.unit,
-        imageUrl: '',
-        imagePublicId: '',
-        isBought: false,
-        assigneeId: null
-      });
+    if (categoryMatch === 'Gia vị') {
+      // Gia vị: chỉ kiểm tra xem có trong tủ không, không trừ định lượng
+      if (!inFridge) {
+        missingItems.push({
+          name: ing.name,
+          category: categoryMatch,
+          quantity: 0,
+          unit: ing.unit || '',
+          imageUrl: '',
+          imagePublicId: '',
+          isBought: false,
+          assigneeId: null
+        });
+      }
+    } else {
+      // Các loại khác: kiểm tra định lượng
+      const fridgeQty = inFridge ? inFridge.quantity : 0;
+      if (fridgeQty < ing.quantity) {
+        missingItems.push({
+          name: ing.name,
+          category: categoryMatch,
+          quantity: ing.quantity - fridgeQty,
+          unit: ing.unit || '',
+          imageUrl: '',
+          imagePublicId: '',
+          isBought: false,
+          assigneeId: null
+        });
+      }
     }
   }
 
@@ -186,7 +207,10 @@ export const addToShoppingList = async (recipeId: string, familyId: string, user
   const existingItems = shoppingList.items || [];
   
   missingItems.forEach(missing => {
-    const existing = existingItems.find((i: any) => i.name.toLowerCase() === missing.name.toLowerCase());
+    const existing = existingItems.find((i: any) => 
+      i.category === missing.category && 
+      i.name.toLowerCase() === missing.name.toLowerCase()
+    );
     if (existing) {
       existing.quantity += missing.quantity;
     } else {
