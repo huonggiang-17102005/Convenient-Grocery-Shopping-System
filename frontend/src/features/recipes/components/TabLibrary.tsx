@@ -1,7 +1,7 @@
 // src/features/recipes/components/TabLibrary.tsx
 
 import React from 'react';
-import type { Recipe, FilterIngredient } from '../recipes.types';
+import type { Recipe, FilterIngredient } from '../types';
 import SearchAndFilter from './SearchAndFilter';
 import RecipeCard from './RecipeCard';
 
@@ -9,7 +9,6 @@ interface TabLibraryProps {
   recipes: Recipe[];
   selectedIngredients: FilterIngredient[];
   onChangeIngredients: (ingredients: FilterIngredient[]) => void;
-  primaryColor: string;
   onRecipeClick: (recipe: Recipe) => void;
   onToggleFavorite: (recipeId: string) => void;
 }
@@ -18,7 +17,6 @@ const TabLibrary: React.FC<TabLibraryProps> = ({
   recipes,
   selectedIngredients,
   onChangeIngredients,
-  primaryColor,
   onRecipeClick,
   onToggleFavorite,
 }) => {
@@ -40,7 +38,6 @@ const TabLibrary: React.FC<TabLibraryProps> = ({
       <SearchAndFilter
         selectedIngredients={selectedIngredients}
         onChangeIngredients={onChangeIngredients}
-        primaryColor={primaryColor}
       />
 
       {/* Tip hint */}

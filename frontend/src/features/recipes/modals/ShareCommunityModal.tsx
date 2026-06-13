@@ -2,12 +2,10 @@
 // Full-form community share modal, same as RecipeFormModal but with description + "Gửi bài viết" action
 
 import React, { useState } from 'react';
-import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../recipes.types';
+import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
 
 interface ShareCommunityModalProps {
   isOpen: boolean;
-  role: 'homemaker' | 'member';
-  primaryColor: string;
   onClose: () => void;
   onSubmit: (description: string, recipeData: Omit<Recipe, 'id' | 'isFavorited'>) => void;
 }
@@ -69,8 +67,6 @@ const matchFoodEmoji = (nameStr: string): string => {
 
 const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   isOpen,
-  role,
-  primaryColor,
   onClose,
   onSubmit,
 }) => {
@@ -222,7 +218,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
           </div>
 
           {/* Ingredient info section */}
-          <div className="form-section-box" style={{ background: role === 'homemaker' ? '#FFE0B2' : '#BBDEFB' }}>
+          <div className="form-section-box">
             <h4 className="figma-section-title">Thông tin nguyên liệu</h4>
 
             {/* Servings */}
@@ -270,7 +266,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                   <div className="figma-category-select-wrapper">
                     <select
                       title="Phân loại"
-                      className={`figma-category-select figma-category-select-${role}`}
+                      className="figma-category-select"
                       value={ing.category}
                       onChange={(e) => handleIngredientChange(ing.id, 'category', e.target.value)}
                       style={{ paddingRight: '18px' }}
@@ -283,7 +279,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                       marginLeft: '-14px',
                       pointerEvents: 'none',
                       fontSize: '7px',
-                      color: role === 'homemaker' ? '#FF8A00' : '#1E88E5'
+                      color: 'var(--primary-color)'
                     }}>▼</span>
                   </div>
                   
@@ -317,7 +313,6 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
               id="share-form-add-ingredient-btn"
               type="button"
               className="form-add-btn"
-              style={{ color: primaryColor }}
               onClick={() => setIngredients((p) => [...p, emptyIngredient()])}
             >
               + Thêm nguyên liệu
@@ -353,7 +348,6 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
               id="share-form-add-spice-btn"
               type="button"
               className="form-add-btn"
-              style={{ color: primaryColor }}
               onClick={() => setSpices((p) => [...p, emptySpice()])}
             >
               + Thêm gia vị
@@ -382,7 +376,6 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
               id="share-form-add-step-btn"
               type="button"
               className="form-add-btn"
-              style={{ color: primaryColor }}
               onClick={() => setSteps((p) => [...p, emptyStep()])}
             >
               + Thêm bước làm
@@ -412,7 +405,6 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
             id="share-form-submit-btn"
             type="button"
             className="recipe-detail-primary-btn"
-            style={{ background: primaryColor }}
             onClick={handleSubmit}
           >
             Gửi bài viết

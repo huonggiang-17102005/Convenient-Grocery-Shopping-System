@@ -1,18 +1,16 @@
 // src/features/recipes/components/SearchAndFilter.tsx
 
 import React, { useState, useRef, useEffect } from 'react';
-import { FILTER_INGREDIENTS, type FilterIngredient } from '../recipes.types';
+import { FILTER_INGREDIENTS, type FilterIngredient } from '../types';
 
 interface SearchAndFilterProps {
   selectedIngredients: FilterIngredient[];
   onChangeIngredients: (ingredients: FilterIngredient[]) => void;
-  primaryColor: string;
 }
 
 const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   selectedIngredients,
   onChangeIngredients,
-  primaryColor,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -89,11 +87,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
             {/* Tất cả */}
             <label className="recipe-filter-item">
               <span
-                className="recipe-filter-checkbox"
-                style={{
-                  background: selectedIngredients.length === 0 ? primaryColor : 'white',
-                  border: selectedIngredients.length === 0 ? 'none' : '1.27px solid #757575',
-                }}
+                className={`recipe-filter-checkbox ${selectedIngredients.length === 0 ? 'checked' : ''}`}
               >
                 {selectedIngredients.length === 0 && <span className="recipe-filter-check">✓</span>}
               </span>
@@ -107,11 +101,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
               return (
                 <label key={ing} className="recipe-filter-item">
                   <span
-                    className="recipe-filter-checkbox"
-                    style={{
-                      background: isChecked ? primaryColor : 'white',
-                      border: isChecked ? 'none' : '1.27px solid #757575',
-                    }}
+                    className={`recipe-filter-checkbox ${isChecked ? 'checked' : ''}`}
                   >
                     {isChecked && <span className="recipe-filter-check">✓</span>}
                   </span>

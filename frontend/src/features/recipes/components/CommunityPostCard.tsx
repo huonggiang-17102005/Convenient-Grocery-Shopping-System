@@ -1,11 +1,10 @@
 // src/features/recipes/components/CommunityPostCard.tsx
 
 import React from 'react';
-import type { CommunityPost } from '../recipes.types';
+import type { CommunityPost } from '../types';
 
 interface CommunityPostCardProps {
   post: CommunityPost;
-  primaryColor: string;
   onRecipeClick: (post: CommunityPost) => void;
   onToggleLike: (postId: string) => void;
 }

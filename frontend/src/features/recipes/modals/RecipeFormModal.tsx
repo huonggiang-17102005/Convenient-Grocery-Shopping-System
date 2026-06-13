@@ -2,14 +2,12 @@
 // Shared form for both Add and Edit personal recipe
 
 import React, { useState } from 'react';
-import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../recipes.types';
+import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
 
 interface RecipeFormModalProps {
   isOpen: boolean;
   mode: 'create' | 'edit';
   recipe?: Recipe | null;
-  role: 'homemaker' | 'member';
-  primaryColor: string;
   onClose: () => void;
   onSubmit: (data: Omit<Recipe, 'id' | 'isFavorited'>) => void;
 }
@@ -58,8 +56,6 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   isOpen,
   mode,
   recipe,
-  role,
-  primaryColor,
   onClose,
   onSubmit,
 }) => {
@@ -217,7 +213,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
           </div>
 
           {/* Ingredient info section */}
-          <div className="form-section-box" style={{ background: role === 'homemaker' ? '#FFE0B2' : '#BBDEFB' }}>
+          <div className="form-section-box">
             <h4 className="figma-section-title">Thông tin nguyên liệu</h4>
 
             {/* Servings */}
@@ -265,7 +261,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                   <div className="figma-category-select-wrapper">
                     <select
                       title="Phân loại"
-                      className={`figma-category-select figma-category-select-${role}`}
+                      className="figma-category-select"
                       value={ing.category}
                       onChange={(e) => handleIngredientChange(ing.id, 'category', e.target.value)}
                       style={{ paddingRight: '18px' }}
@@ -278,7 +274,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                       marginLeft: '-14px',
                       pointerEvents: 'none',
                       fontSize: '7px',
-                      color: role === 'homemaker' ? '#FF8A00' : '#1E88E5'
+                      color: 'var(--primary-color)'
                     }}>▼</span>
                   </div>
                   
@@ -312,7 +308,6 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
               id="recipe-form-add-ingredient-btn"
               type="button"
               className="form-add-btn"
-              style={{ color: primaryColor }}
               onClick={() => setIngredients((p) => [...p, emptyIngredient()])}
             >
               + Thêm nguyên liệu
@@ -348,7 +343,6 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
               id="recipe-form-add-spice-btn"
               type="button"
               className="form-add-btn"
-              style={{ color: primaryColor }}
               onClick={() => setSpices((p) => [...p, emptySpice()])}
             >
               + Thêm gia vị
@@ -377,7 +371,6 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
               id="recipe-form-add-step-btn"
               type="button"
               className="form-add-btn"
-              style={{ color: primaryColor }}
               onClick={() => setSteps((p) => [...p, emptyStep()])}
             >
               + Thêm bước làm
@@ -407,7 +400,6 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
             id="recipe-form-submit-btn"
             type="button"
             className="recipe-detail-primary-btn"
-            style={{ background: primaryColor }}
             onClick={handleSubmit}
           >
             {mode === 'create' ? 'Lưu công thức' : 'Lưu thay đổi'}

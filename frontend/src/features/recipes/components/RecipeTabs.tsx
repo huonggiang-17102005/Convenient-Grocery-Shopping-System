@@ -7,7 +7,6 @@ type Tab = 'library' | 'favorites' | 'community';
 interface RecipeTabsProps {
   activeTab: Tab;
   onChangeTab: (tab: Tab) => void;
-  primaryColor: string;
 }
 
 const TABS: { id: Tab; label: string }[] = [
@@ -16,7 +15,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'community', label: 'Cộng đồng' },
 ];
 
-const RecipeTabs: React.FC<RecipeTabsProps> = ({ activeTab, onChangeTab, primaryColor }) => {
+const RecipeTabs: React.FC<RecipeTabsProps> = ({ activeTab, onChangeTab }) => {
   return (
     <div className="recipe-tabs">
       {TABS.map((tab) => {
@@ -26,7 +25,6 @@ const RecipeTabs: React.FC<RecipeTabsProps> = ({ activeTab, onChangeTab, primary
             key={tab.id}
             id={`recipe-tab-${tab.id}`}
             className={`recipe-tab-btn ${isActive ? 'active' : ''}`}
-            style={isActive ? { background: primaryColor, color: 'white', border: 'none' } : undefined}
             onClick={() => onChangeTab(tab.id)}
             type="button"
           >

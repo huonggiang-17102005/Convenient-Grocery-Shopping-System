@@ -1,0 +1,260 @@
+.fridge-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 1500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fridgeOverlayIn 0.25s ease-out;
+}
+
+@keyframes fridgeOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.fridge-bottom-sheet {
+  background: white;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 390px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1);
+  animation: fridgeSheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+}
+
+@keyframes fridgeSheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.fridge-sheet-handle-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.fridge-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #E0E0E0;
+  border-radius: 4px;
+}
+
+.fridge-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fridge-sheet-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0;
+}
+
+.fridge-btn-delete-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #FFEBEE;
+  border: 1.27px solid #FFCDD2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fridge-form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1A1A1A;
+}
+
+.form-label .required {
+  color: #D32F2F;
+  margin-left: 4px;
+}
+
+.form-input {
+  height: 52px;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #1A1A1A;
+  background: white;
+  outline: none;
+}
+
+.form-input::placeholder {
+  color: rgba(26, 26, 26, 0.50);
+}
+
+.form-input:disabled {
+  background: #F5F5F5;
+  color: #757575;
+}
+
+.form-select-wrapper {
+  position: relative;
+}
+
+.form-select {
+  width: 100%;
+  appearance: none;
+  cursor: pointer;
+}
+
+.form-select:disabled {
+  cursor: default;
+}
+
+.select-icon {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  color: #757575;
+  pointer-events: none;
+}
+
+.form-image-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.image-btn {
+  height: 52px;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1A1A1A;
+  cursor: pointer;
+}
+
+.image-btn:disabled {
+  background: #F5F5F5;
+  color: #757575;
+  cursor: default;
+}
+
+.quantity-unit-row {
+  display: flex;
+  gap: 12px;
+}
+
+.quantity-stepper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 52px;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  overflow: hidden;
+  background: white;
+}
+
+.qty-stepper-btn {
+  width: 52px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: #F5F5F5;
+  font-size: 20px;
+  color: #1A1A1A;
+  cursor: pointer;
+}
+
+.qty-stepper-btn.plus {
+  background: #FF8A00;
+  color: white;
+}
+
+.qty-stepper-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.qty-stepper-input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1A1A1A;
+  width: 100%;
+  outline: none;
+  background: white;
+}
+
+.qty-stepper-input:disabled {
+  background: #F5F5F5;
+  color: #757575;
+}
+
+.unit-select-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.unit-select-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 14px;
+  color: #1A1A1A;
+  cursor: pointer;
+}
+
+.unit-select-btn:disabled {
+  background: #F5F5F5;
+  color: #757575;
+  cursor: default;
+}
+
+.fridge-sheet-footer {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
