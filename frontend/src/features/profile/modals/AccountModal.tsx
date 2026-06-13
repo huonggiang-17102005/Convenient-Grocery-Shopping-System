@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import '../profile.css';
 
@@ -24,6 +24,16 @@ const AccountModal: React.FC<AccountModalProps> = ({
   // Profile fields state
   const [inputName, setInputName] = useState(name);
   const [inputEmail, setInputEmail] = useState(email);
+
+  useEffect(() => {
+    if (isOpen) {
+      setInputName(name);
+      setInputEmail(email);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+  }, [isOpen, name, email]);
 
   // Password fields state
   const [currentPassword, setCurrentPassword] = useState('');

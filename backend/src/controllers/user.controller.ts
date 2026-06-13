@@ -9,35 +9,44 @@ export const getMe = async (req: AuthRequest, res: Response) => {
   return res.status(200).json({ success: true, data: user });
 };
 
-export const updateRole = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { role } = req.body;
-    const userId = req.user?.id;
+export const updateProfile = async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id as string;
+  const { full_name, email } = req.body;
+  const updatedUser = await userService.updateProfile(userId, full_name, email);
+  return res.status(200).json({ success: true, data: updatedUser, message: 'Cập nhật thông tin thành công' });
+};
 
-    if (!userId) {
-      res.status(401).json({ message: 'Người dùng chưa xác thực' });
-      return;
-    }
+export const updateAvatar = async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id as string;
+  const { avatar } = req.body;
+  const updatedUser = await userService.updateAvatar(userId, avatar);
+  return res.status(200).json({ success: true, data: updatedUser, message: 'Cập nhật ảnh đại diện thành công' });
+};
 
-    if (!role || (role !== 'Homemaker' && role !== 'Member')) {
-      res.status(400).json({ message: 'Vai trò không hợp lệ' });
-      return;
-    }
+export const updatePassword = async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id as string;
+  const { current_password, new_password } = req.body;
+  await userService.updatePassword(userId, current_password, new_password);
+  return res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công' });
+};
 
-    const { error } = await supabase
-      .from('users')
-      .update({ role })
-      .eq('id', userId);
+export const updateRole = async (req: AuthRequest, res: Response) => {
+  const { role } = req.body;
+  const userId = req.user?.id;
 
-    if (error) {
-      console.error(error);
-      res.status(500).json({ message: `Lỗi Database: ${error.message}` });
-      return;
-    }
-
-    res.status(200).json({ message: 'Cập nhật vai trò thành công', role });
-  } catch (error: any) {
-    console.error(error);
-    res.status(500).json({ message: 'Lỗi server nội bộ', error: error.message });
+  if (!role || (role !== 'Homemaker' && role !== 'Member')) {
+    return res.status(400).json({ message: 'Vai trò không hợp lệ' });
   }
+
+  const { error: updateRoleError } = await supabase
+    .from('users')
+    .update({ role })
+    .eq('id', userId);
+
+  if (updateRoleError) {
+    console.error('Lỗi khi update role:', updateRoleError);
+    return res.status(500).json({ message: 'Lỗi server khi cập nhật vai trò', error: updateRoleError.message });
+  }
+
+  return res.status(200).json({ message: 'Cập nhật vai trò thành công', role });
 };

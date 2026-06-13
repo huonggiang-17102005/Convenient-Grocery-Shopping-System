@@ -35,10 +35,10 @@ const Jointhegroup: React.FC = () => {
       const data = await response.json();
       
       if (!response.ok) {
-        throw new Error('Mã tham gia không tồn tại');
+        throw new Error(data.message || 'Mã tham gia không tồn tại');
       }
       
-      const meRes = await fetch(`http://localhost:5000/api/auth/me`, {
+      const meRes = await fetch(`http://localhost:5000/api/users/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const meData = await meRes.json();

@@ -37,7 +37,7 @@ const CreateGroup: React.FC = () => {
         throw new Error((data.message || 'Lỗi khi tạo nhóm') + (data.error ? ': ' + data.error : ''));
       }
 
-      const meRes = await fetch(`http://localhost:5000/api/auth/me`, {
+      const meRes = await fetch(`http://localhost:5000/api/users/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const meData = await meRes.json();

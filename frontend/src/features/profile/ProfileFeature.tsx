@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './profile.css';
 export interface ProfileFeatureProps {
@@ -23,12 +23,43 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
 
   // User details state
+  const localUserStr = localStorage.getItem('user');
+  const localUser = localUserStr ? JSON.parse(localUserStr) : null;
+
   const [user, setUser] = useState({
-    name: role === 'homemaker' ? 'Mỹ Anh' : 'Shin',
-    email: role === 'homemaker' ? 'myanh@gmail.com' : 'shin@gmail.com',
-    avatar: role === 'homemaker' ? '👩' : '👤',
-    role: role === 'homemaker' ? 'Homemaker' : 'Thành viên',
+    name: localUser?.full_name || '',
+    email: localUser?.email || '',
+    avatar: localUser?.avatar || '',
+    role: localUser?.role === 'Homemaker' ? 'Homemaker' : 'Thành viên',
   });
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await fetch('http://localhost:5000/api/users/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          const freshUser = data.data;
+          // Update local storage
+          localStorage.setItem('user', JSON.stringify(freshUser));
+          // Update state
+          setUser({
+            name: freshUser.full_name || '',
+            email: freshUser.email || '',
+            avatar: freshUser.avatar || '',
+            role: freshUser.role === 'Homemaker' ? 'Homemaker' : 'Thành viên',
+          });
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy thông tin user:', err);
+      }
+    };
+    fetchUser();
+  }, []);
 
   // Family members list state
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(
@@ -67,30 +98,76 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   };
 
   // Avatar Selection Handlers
-  const handleSelectAvatar = (newAvatar: string) => {
-    setUser((prev) => ({ ...prev, avatar: newAvatar }));
-    
-    // Also update current user avatar in the family list
-    setFamilyMembers((prev) =>
-      prev.map((m) => (m.isCurrentUser ? { ...m, avatar: newAvatar } : m))
-    );
-    triggerToast('Thay đổi ảnh đại diện thành công!');
+  const handleSelectAvatar = async (newAvatar: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/users/avatar', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ avatar: newAvatar })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Lỗi cập nhật ảnh đại diện');
+      
+      setUser((prev) => ({ ...prev, avatar: newAvatar }));
+      setFamilyMembers((prev) =>
+        prev.map((m) => (m.isCurrentUser ? { ...m, avatar: newAvatar } : m))
+      );
+      
+      if (localUser) {
+        localUser.avatar = newAvatar;
+        localStorage.setItem('user', JSON.stringify(localUser));
+      }
+      triggerToast('Thay đổi ảnh đại diện thành công!');
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
   // Account Settings Handlers
-  const handleUpdateProfile = (newName: string, newEmail: string) => {
-    setUser((prev) => ({ ...prev, name: newName, email: newEmail }));
-    
-    // Also update current user name in the family list
-    setFamilyMembers((prev) =>
-      prev.map((m) => (m.isCurrentUser ? { ...m, name: newName } : m))
-    );
-    triggerToast('Cập nhật hồ sơ thành công!');
+  const handleUpdateProfile = async (newName: string, newEmail: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ full_name: newName, email: newEmail })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Lỗi cập nhật hồ sơ');
+      
+      setUser((prev) => ({ ...prev, name: newName, email: newEmail }));
+      setFamilyMembers((prev) =>
+        prev.map((m) => (m.isCurrentUser ? { ...m, name: newName } : m))
+      );
+      
+      if (localUser) {
+        localUser.full_name = newName;
+        localUser.email = newEmail;
+        localStorage.setItem('user', JSON.stringify(localUser));
+      }
+      triggerToast('Cập nhật hồ sơ thành công!');
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
   // Account Password Handlers
-  const handleUpdatePassword = () => {
-    triggerToast('Đổi mật khẩu thành công!');
+  const handleUpdatePassword = async (currentPass: string, newPass: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('http://localhost:5000/api/users/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ current_password: currentPass, new_password: newPass })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Lỗi đổi mật khẩu');
+      
+      triggerToast('Đổi mật khẩu thành công!');
+    } catch (err: any) {
+      alert(err.message);
+    }
   };
 
   // Family Actions Handlers
@@ -152,13 +229,14 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
       setFamilyMembers((prev) => prev.filter((m) => m.id !== selectedMember.id));
       triggerToast('Xóa thành viên thành công!');
     } else if (confirmVariant === 'logout') {
-      // Mock logout by navigating to choose-role or root
+      // Clear token and user data from local storage
+      //localStorage.removeItem('token');
+      //localStorage.removeItem('user');
       triggerToast('Đăng xuất thành công!');
       setTimeout(() => {
-        navigate('/choose-role');
+        navigate('/');
       }, 800);
     } else if (confirmVariant === 'export') {
-      // Export report in chosen format
       const format = data === 'pdf' ? 'PDF' : 'Excel';
       triggerToast(`Xuất báo cáo gia đình định dạng ${format} thành công!`);
     } else if (confirmVariant === 'leave') {
