@@ -1,9 +1,9 @@
 export interface InventoryLog {
   id: string;
   family_id: string | null;
-  action_type: string;
   category: string;
-  unit: string;
+  action_type: string;
   amount: number;
+  unit: string;
   created_at?: string;
 }

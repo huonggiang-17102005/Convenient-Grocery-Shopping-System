@@ -1,6 +1,13 @@
 import type { Response } from 'express';
 import type { AuthRequest } from '../middlewares/auth.middleware.js';
+import * as userService from '../services/user.service.js';
 import supabase from '../config/db.config.js';
+
+export const getMe = async (req: AuthRequest, res: Response) => {
+  const userId = req.user?.id as string;
+  const user = await userService.getMe(userId);
+  return res.status(200).json({ success: true, data: user });
+};
 
 export const updateRole = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

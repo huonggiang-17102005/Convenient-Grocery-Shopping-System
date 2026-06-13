@@ -47,8 +47,7 @@ export default function Register() {
         headers: {
           'Content-Type': 'application/json',
         },
-        // Lưu ý: Backend hiện tại chỉ lưu email và password, tạm thời chưa gửi name xuống DB
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, full_name: name }),
       });
 
       const data = await response.json();

@@ -41,7 +41,7 @@ export default function Login() {
         throw new Error(data.message || 'Có lỗi xảy ra');
       }
 
-      // Lưu token vào localStorage
+      // Lưu token và thông tin user mới nhất vào localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
