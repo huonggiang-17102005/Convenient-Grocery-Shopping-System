@@ -64,6 +64,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   const [difficulty, setDifficulty] = useState<DifficultyLevel>(() => (mode === 'edit' && recipe ? recipe.difficulty : 'Dễ'));
   const [servings, setServings] = useState<number>(() => (mode === 'edit' && recipe ? recipe.servings : 4));
   const [emoji] = useState(() => (mode === 'edit' && recipe ? recipe.emoji : '🍽️'));
+  const [imageUrl, setImageUrl] = useState(() => (mode === 'edit' && recipe ? recipe.imageUrl || '' : ''));
   
   const [ingredients, setIngredients] = useState<Ingredient[]>(() => {
     if (mode === 'edit' && recipe && recipe.ingredients.length > 0) {
@@ -136,6 +137,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
     onSubmit({
       name: name.trim(),
       emoji,
+      imageUrl: imageUrl.trim() || undefined,
       cookTimeMinutes: cookTime,
       difficulty,
       servings,
@@ -377,19 +379,23 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
             </button>
           </div>
 
-          {/* Image upload (UI only) */}
+          {/* Image URL Input & Preview */}
           <div className="form-group">
-            <label className="form-label">Hình ảnh món ăn</label>
+            <label className="form-label">Hình ảnh món ăn (Đường dẫn URL)</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Nhập đường dẫn ảnh từ Unsplash, Pexels..."
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              style={{ marginBottom: '12px' }}
+            />
             <div className="form-image-preview">
-              <span style={{ fontSize: 64 }}>{emoji}</span>
-            </div>
-            <div className="form-image-actions">
-              <button id="recipe-form-pick-image-btn" type="button" className="form-image-btn">
-                📷 Chọn ảnh
-              </button>
-              <button id="recipe-form-take-photo-btn" type="button" className="form-image-btn">
-                📷 Chụp ảnh
-              </button>
+              {imageUrl ? (
+                <img src={imageUrl} alt="Preview" style={{ width: '100%', height: '150px', borderRadius: '8px', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontSize: 64 }}>{emoji}</span>
+              )}
             </div>
           </div>
         </div>

@@ -56,7 +56,11 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
         {item.category}
       </div>
       
-      <div className="food-card-emoji">{item.emoji}</div>
+      {item.image ? (
+        <img src={item.image} alt={item.name} className="food-card-img" />
+      ) : (
+        <div className="food-card-emoji">{item.emoji}</div>
+      )}
       <div className="food-card-name">{item.name}</div>
       
       {!isGiaVi && (

@@ -1,13 +1,4 @@
-export interface ShoppingItem {
-  name: string;
-  category: string;
-  quantity: number;
-  unit: string;
-  imageUrl: string;
-  imagePublicId: string;
-  isBought: boolean;
-  assigneeId: string | null;
-}
+import type { ShoppingListItem } from './ShoppingListItem.js';
 
 export interface ShoppingList {
   id: string;
@@ -15,7 +6,7 @@ export interface ShoppingList {
   title: string;
   target_date: string | null;
   status: 'Planning' | 'Shopping' | 'Completed' | null;
-  items: ShoppingItem[];
+  items?: ShoppingListItem[];
   created_at?: string;
   updated_at?: string;
 }

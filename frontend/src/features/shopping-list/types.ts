@@ -7,9 +7,11 @@ export interface ShoppingItem {
   quantity: number;
   unit: string;
   isBought: boolean;
-  assigneeId: 'Kat' | 'Shin' | null;
+  assigneeId: 'Kat' | 'Shin' | string | null;
   deadlineDate: string; // YYYY-MM-DD
   deadlineTime: string; // HH:mm
+  imageUrl?: string | null;
+  imagePublicId?: string | null;
 }
 
 export interface FamilyMember {
