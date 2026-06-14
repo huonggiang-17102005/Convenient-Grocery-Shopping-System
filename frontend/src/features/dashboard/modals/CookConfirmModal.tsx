@@ -112,8 +112,8 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
         <div style={{ alignSelf: 'stretch', paddingTop: 16, paddingBottom: 4, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'flex' }}>
           
           {ingredients.map((item, index) => (
-            <div key={index} style={{ alignSelf: 'stretch', justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'inline-flex' }}>
-              <div style={{ flex: '1 1 0', background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'inline-flex' }}>
+            <div key={index} style={{ alignSelf: 'stretch', justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex', width: '100%', boxSizing: 'border-box' }}>
+              <div style={{ flex: 1, width: '100%', background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex', overflow: 'hidden' }}>
                 <div style={{ width: '100%', paddingTop: 8, paddingBottom: 4, paddingLeft: 12, paddingRight: 12, justifyContent: 'space-between', alignItems: 'center', gap: 8, display: 'inline-flex', boxSizing: 'border-box' }}>
                   <div style={{ flex: 1, height: 32, overflow: 'hidden', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', display: 'inline-flex' }}>
                     <input
@@ -130,8 +130,8 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
                 <div style={{ width: '100%', paddingLeft: 12, paddingRight: 12, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex', boxSizing: 'border-box' }}>
                   <div style={{ width: '100%', height: 1, position: 'relative', background: '#F0F0F0' }} />
                 </div>
-                <div style={{ alignSelf: 'stretch', paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, justifyContent: 'flex-start', alignItems: 'center', display: 'inline-flex' }}>
-                  <div style={{ width: 90, justifyContent: 'flex-start', alignItems: 'center', display: 'flex' }}>
+                <div style={{ alignSelf: 'stretch', paddingLeft: 12, paddingRight: 12, paddingTop: 8, paddingBottom: 8, justifyContent: 'flex-start', alignItems: 'center', display: 'flex', boxSizing: 'border-box' }}>
+                  <div style={{ width: 90, flexShrink: 0, justifyContent: 'flex-start', alignItems: 'center', display: 'flex' }}>
                     <div style={{ width: '100%', height: 30, background: '#FFF3E0', borderRadius: 6, position: 'relative', overflow: 'hidden' }}>
                       <select 
                         style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' }}
@@ -149,8 +149,8 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
                       </div>
                     </div>
                   </div>
-                  <div style={{ width: 1, height: 20, position: 'relative', background: '#E0E0E0', margin: '0 8px' }} />
-                  <div style={{ flex: 1, height: 30, overflow: 'hidden', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', display: 'inline-flex' }}>
+                  <div style={{ width: 1, height: 20, position: 'relative', background: '#E0E0E0', margin: '0 8px', flexShrink: 0 }} />
+                  <div style={{ flex: 1, height: 30, overflow: 'hidden', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', display: 'flex' }}>
                     <input
                       style={{ alignSelf: 'stretch', textAlign: 'center', border: 'none', outline: 'none', color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', background: 'transparent' }}
                       value={item.amountValue}
@@ -158,8 +158,8 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
                       placeholder="Số lượng"
                     />
                   </div>
-                  <div style={{ width: 1, height: 20, position: 'relative', background: '#E0E0E0', margin: '0 8px' }} />
-                  <div style={{ width: 46, height: 30, minWidth: 36, paddingLeft: 8, paddingRight: 8, justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
+                  <div style={{ width: 1, height: 20, position: 'relative', background: '#E0E0E0', margin: '0 8px', flexShrink: 0 }} />
+                  <div style={{ width: 46, flexShrink: 0, height: 30, minWidth: 36, paddingLeft: 8, paddingRight: 8, justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
                     <input
                       style={{ alignSelf: 'stretch', width: '100%', textAlign: 'center', border: 'none', outline: 'none', color: '#757575', fontSize: 12, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', background: 'transparent' }}
                       value={item.amountUnit}
@@ -173,10 +173,8 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
           ))}
 
         </div>
-        <div style={{ alignSelf: 'stretch', height: 45, position: 'relative', cursor: 'pointer' }} onClick={addIngredient}>
-          <div style={{ width: '100%', height: 18, position: 'absolute', top: 4, display: 'flex', justifyContent: 'center' }}>
-            <div style={{ textAlign: 'center', color: '#FF8A00', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px', wordWrap: 'break-word' }}>+ Thêm nguyên liệu mới</div>
-          </div>
+        <div style={{ alignSelf: 'stretch', height: 45, paddingTop: 4, cursor: 'pointer', display: 'flex', justifyContent: 'flex-start' }} onClick={addIngredient}>
+          <div style={{ color: '#FF8A00', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>+ Thêm nguyên liệu mới</div>
         </div>
 
         {/* Warnings */}

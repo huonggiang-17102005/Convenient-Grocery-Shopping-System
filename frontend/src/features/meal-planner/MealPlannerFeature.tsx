@@ -17,12 +17,12 @@ import AddDishBottomSheet from './modals/AddDishBottomSheet';
 import Toast from '@/components/shared/Toast';
 
 // ── Helper: build week tabs starting from current Monday ─────────────────────
-function buildWeekDays(): DayTab[] {
+function buildWeekDays(weekOffset: number = 0): DayTab[] {
   const today = new Date();
   const dayOfWeek = today.getDay(); // 0 = Sun, 1 = Mon ...
   const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const monday = new Date(today);
-  monday.setDate(today.getDate() + diffToMon);
+  monday.setDate(today.getDate() + diffToMon + (weekOffset * 7));
 
   const labels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
   const keys   = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -49,7 +49,9 @@ import { mealPlannerService } from './mealPlanner.service';
 export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
 
-  const [weekDays]  = useState<DayTab[]>(buildWeekDays);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekDays = React.useMemo(() => buildWeekDays(weekOffset), [weekOffset]);
+
   const [activeDay, setActiveDay] = useState<string>(() => {
     const dayOfWeek = new Date().getDay();
     const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
@@ -250,6 +252,8 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           days={weekDays}
           activeDay={activeDay}
           onSelectDay={setActiveDay}
+          onPrevWeek={() => setWeekOffset(prev => prev - 1)}
+          onNextWeek={() => setWeekOffset(prev => prev + 1)}
         />
 
         {/* ── Scrollable content ── */}
