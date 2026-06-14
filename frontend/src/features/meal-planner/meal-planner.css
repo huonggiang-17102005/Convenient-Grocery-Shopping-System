@@ -242,7 +242,7 @@
 
 /* ── Day tabs ── */
 .mp-weekday-tabs {
-  padding: 0 16px 16px 16px;
+  padding: 16px;
   background: white;
   border-bottom: 1.27px solid #E0E0E0;
   display: flex;
@@ -282,7 +282,9 @@
 }
 
 .mp-weekday-tab__date {
-  display: none;
+  display: block;
+  font-size: 10px;
+  color: #757575;
 }
 
 .mp-weekday-tab--active {

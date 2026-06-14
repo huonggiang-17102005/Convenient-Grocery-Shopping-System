@@ -15,3 +15,27 @@ export const getItemsByFamilyId = async (familyId: string): Promise<FridgeItem[]
 
   return data as FridgeItem[];
 };
+
+export const updateItemQuantity = async (id: string, newQuantity: number): Promise<void> => {
+  const { error } = await supabase
+    .from('fridge_items')
+    .update({ quantity: newQuantity })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Lỗi khi cập nhật số lượng fridge_items:', error);
+    throw new InternalServerError('Không thể cập nhật số lượng nguyên liệu.');
+  }
+};
+
+export const deleteItem = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('fridge_items')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Lỗi khi xóa fridge_items:', error);
+    throw new InternalServerError('Không thể xóa nguyên liệu.');
+  }
+};
