@@ -9,6 +9,7 @@ export interface MealPlannerFeatureProps {
 }
 
 import type { Recipe, MealKey, DayMeals, WeekPlan } from './types';
+import type { DifficultyLevel, Ingredient } from '../recipes/types';
 import WeekDayTabs from './components/WeekDayTabs';
 import type { DayTab } from './components/WeekDayTabs';
 import MealSection from './components/MealSection';
@@ -34,68 +35,6 @@ function buildWeekDays(): DayTab[] {
   });
 }
 
-// ── Mock Recipes ──────────────────────────────────────────────────────────────
-const MOCK_RECIPES: Record<string, Recipe> = {
-  caKhoTo: { id: 'r4', name: 'Cá kho tộ', emoji: '🐟', duration: '45 phút' },
-  thitBoXao: { id: 'r1', name: 'Thịt bò xào cà chua', emoji: '🥩', duration: '25 phút' },
-  gaXaoHanhTay: { id: 'r3', name: 'Gà xào hành tây', emoji: '🍗', duration: '30 phút' },
-  trungChien: { id: 'r8', name: 'Trứng chiên cà chua', emoji: '🍳', duration: '12 phút' },
-  canhCaChua: { id: 'r2', name: 'Canh cà chua trứng', emoji: '🍅', duration: '15 phút' },
-  tomRangMe: { id: 'r5', name: 'Tôm rang me', emoji: '🦐', duration: '20 phút' },
-  rauMuong: { id: 'r6', name: 'Rau muống xào tỏi', emoji: '🥬', duration: '10 phút' },
-  canhBiDo: { id: 'r7', name: 'Canh bí đỏ thịt băm', emoji: '🎃', duration: '20 phút' },
-  suonRam: { id: 'r9', name: 'Sườn ram mặn', emoji: '🍖', duration: '35 phút' },
-  bunBoHue: { id: 'r10', name: 'Bún bò Huế', emoji: '🍜', duration: '60 phút' },
-  phoGa: { id: 'r11', name: 'Phở gà', emoji: '🍲', duration: '40 phút' },
-};
-
-// ── Initial default plan with mockup data ──────────────────────────────────────
-function createDefaultPlan(days: DayTab[]): WeekPlan {
-  const plan: WeekPlan = {};
-  days.forEach(({ key }) => {
-    if (key === 'mon') {
-      plan[key] = {
-        breakfast: [MOCK_RECIPES.caKhoTo, MOCK_RECIPES.thitBoXao, MOCK_RECIPES.gaXaoHanhTay],
-        lunch: [MOCK_RECIPES.caKhoTo, MOCK_RECIPES.thitBoXao, MOCK_RECIPES.gaXaoHanhTay],
-        dinner: [],
-      };
-    } else if (key === 'tue') {
-      plan[key] = {
-        breakfast: [MOCK_RECIPES.trungChien, MOCK_RECIPES.canhCaChua],
-        lunch: [MOCK_RECIPES.tomRangMe, MOCK_RECIPES.rauMuong],
-        dinner: [MOCK_RECIPES.canhBiDo],
-      };
-    } else if (key === 'wed') {
-      plan[key] = {
-        breakfast: [MOCK_RECIPES.suonRam, MOCK_RECIPES.rauMuong],
-        lunch: [MOCK_RECIPES.bunBoHue],
-        dinner: [MOCK_RECIPES.phoGa],
-      };
-    } else if (key === 'thu') {
-      plan[key] = {
-        breakfast: [MOCK_RECIPES.caKhoTo, MOCK_RECIPES.rauMuong],
-        lunch: [MOCK_RECIPES.thitBoXao],
-        dinner: [MOCK_RECIPES.gaXaoHanhTay],
-      };
-    } else if (key === 'fri') {
-      plan[key] = {
-        breakfast: [MOCK_RECIPES.canhBiDo, MOCK_RECIPES.trungChien],
-        lunch: [MOCK_RECIPES.suonRam],
-        dinner: [MOCK_RECIPES.tomRangMe],
-      };
-    } else if (key === 'sat') {
-      plan[key] = {
-        breakfast: [MOCK_RECIPES.bunBoHue],
-        lunch: [MOCK_RECIPES.phoGa],
-        dinner: [],
-      };
-    } else {
-      plan[key] = { breakfast: [], lunch: [], dinner: [] };
-    }
-  });
-  return plan;
-}
-
 // ── Meal meta ─────────────────────────────────────────────────────────────────
 const MEALS: { key: MealKey; title: string }[] = [
   { key: 'breakfast', title: 'Bữa Sáng' },
@@ -104,37 +43,123 @@ const MEALS: { key: MealKey; title: string }[] = [
 ];
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
+import { recipesService } from '../recipes/recipes.service';
+import { mealPlannerService } from './mealPlanner.service';
+
 export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
 
   const [weekDays]  = useState<DayTab[]>(buildWeekDays);
   const [activeDay, setActiveDay] = useState<string>(() => {
-    // Default to today's key
     const dayOfWeek = new Date().getDay();
     const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
     const key  = keys[dayOfWeek];
-    // If not in the week array fall back to 'mon'
     return ['mon','tue','wed','thu','fri','sat','sun'].includes(key) ? key : 'mon';
   });
 
-  const [plan, setPlan] = useState<WeekPlan>(() => {
-    const saved = localStorage.getItem('meal_planner_week_plan');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse saved week plan:', e);
-      }
-    }
-    const defaultPlan = createDefaultPlan(buildWeekDays());
-    localStorage.setItem('meal_planner_week_plan', JSON.stringify(defaultPlan));
-    return defaultPlan;
+  const [availableRecipes, setAvailableRecipes] = useState<Recipe[]>([]);
+  const [plan, setPlan] = useState<WeekPlan>({
+    mon: { breakfast: [], lunch: [], dinner: [] },
+    tue: { breakfast: [], lunch: [], dinner: [] },
+    wed: { breakfast: [], lunch: [], dinner: [] },
+    thu: { breakfast: [], lunch: [], dinner: [] },
+    fri: { breakfast: [], lunch: [], dinner: [] },
+    sat: { breakfast: [], lunch: [], dinner: [] },
+    sun: { breakfast: [], lunch: [], dinner: [] },
   });
 
-  // Persist plan changes to localStorage
+  // Fetch recipes
   useEffect(() => {
-    localStorage.setItem('meal_planner_week_plan', JSON.stringify(plan));
-  }, [plan]);
+    Promise.all([
+      recipesService.getFamilyRecipes().catch(() => []),
+      recipesService.getFavoriteRecipes().catch(() => [])
+    ]).then(([family, favs]) => {
+      // Merge unique
+      const map = new Map<string, Recipe>();
+      family.forEach(r => map.set(r.id, r));
+      favs.forEach(r => map.set(r.id, r));
+      setAvailableRecipes(Array.from(map.values()));
+    });
+  }, []);
+
+  // Fetch meal plans
+  const fetchMealPlans = useCallback(async () => {
+    // start date is mon, end is sun
+    // Get real date strings from weekDays
+    const startDateStr = weekDays[0].date;
+    const endDateStr = weekDays[6].date;
+    const year = new Date().getFullYear();
+    
+    // Convert 'dd/mm' to 'yyyy-mm-dd'
+    const parseDate = (dStr: string) => {
+      const [d, m] = dStr.split('/');
+      return `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    };
+
+    try {
+      const plans = await mealPlannerService.getMealPlan(parseDate(startDateStr!), parseDate(endDateStr!));
+      const newPlan: WeekPlan = {
+        mon: { breakfast: [], lunch: [], dinner: [] },
+        tue: { breakfast: [], lunch: [], dinner: [] },
+        wed: { breakfast: [], lunch: [], dinner: [] },
+        thu: { breakfast: [], lunch: [], dinner: [] },
+        fri: { breakfast: [], lunch: [], dinner: [] },
+        sat: { breakfast: [], lunch: [], dinner: [] },
+        sun: { breakfast: [], lunch: [], dinner: [] },
+      };
+
+      interface BackendMealPlan {
+        id: string;
+        date: string;
+        meal_type: string;
+        recipes: {
+          id: string;
+          name: string;
+          emoji?: string;
+          cooking_time?: number;
+          image_url?: string;
+          difficulty?: DifficultyLevel;
+          servings?: number;
+          ingredients?: Ingredient[];
+          instructions?: string[];
+        };
+      }
+
+      plans.forEach((p: BackendMealPlan) => {
+        const d = new Date(p.date);
+        const dayOfWeek = d.getDay();
+        const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        const key = keys[dayOfWeek];
+        if (newPlan[key] && newPlan[key][p.meal_type as MealKey]) {
+          newPlan[key][p.meal_type as MealKey].push({
+            id: p.id,
+            recipe: {
+              id: p.recipes.id,
+              name: p.recipes.name,
+              emoji: p.recipes.emoji || '🍽️',
+              cookTimeMinutes: p.recipes.cooking_time || 30,
+              imageUrl: p.recipes.image_url,
+              difficulty: p.recipes.difficulty || 'Dễ',
+              servings: p.recipes.servings || 1,
+              ingredients: p.recipes.ingredients || [],
+              steps: p.recipes.instructions ? p.recipes.instructions.map((desc: string, i: number) => ({ id: `s_${i}`, description: desc })) : [],
+              isFavorited: false
+            }
+          });
+        }
+      });
+      setPlan(newPlan);
+    } catch (err) {
+      console.error('Lỗi khi tải thực đơn:', err);
+    }
+  }, [weekDays]);
+
+  useEffect(() => {
+    const init = async () => {
+      await fetchMealPlans();
+    };
+    void init();
+  }, [fetchMealPlans]);
 
   // Bottom sheet state
   const [sheetOpen,     setSheetOpen]     = useState(false);
@@ -143,7 +168,6 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
   // Toast
   const [toastMsg,     setToastMsg]     = useState('');
   const [toastTrigger, setToastTrigger] = useState(0);
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   const hideToast = useCallback(() => {}, []);
 
   const openSheet = (mealKey: MealKey) => {
@@ -151,26 +175,50 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     setSheetOpen(true);
   };
 
-  const handleConfirm = (selected: Recipe[]) => {
-    setPlan((prev) => {
-      const dayPlan: DayMeals = { ...prev[activeDay] };
-      dayPlan[activeMealKey] = selected;
-      return { ...prev, [activeDay]: dayPlan };
-    });
+  const handleConfirm = async (selected: Recipe[]) => {
+    // Add recipes to backend
+    const activeDayTab = weekDays.find(d => d.key === activeDay);
+    if (!activeDayTab) return;
+    
+    const year = new Date().getFullYear();
+    const [d, m] = activeDayTab.date!.split('/');
+    const dateStr = `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
 
-    const mealLabel = MEALS.find((m) => m.key === activeMealKey)?.title ?? '';
-    const count     = selected.length;
-    if (count > 0) {
-      setToastMsg(`Đã thêm ${count} món ăn vào ${mealLabel.toLowerCase()}`);
+    try {
+      for (const recipe of selected) {
+        await mealPlannerService.addMealPlan(recipe.id, dateStr, activeMealKey);
+      }
+      
+      const mealLabel = MEALS.find((m) => m.key === activeMealKey)?.title ?? '';
+      const count     = selected.length;
+      if (count > 0) {
+        setToastMsg(`Đã thêm ${count} món ăn vào ${mealLabel.toLowerCase()}`);
+        setToastTrigger(prev => prev + 1);
+      }
+      
+      // Reload plans
+      fetchMealPlans();
+    } catch (err) {
+      console.error('Lỗi thêm món:', err);
+      setToastMsg('Có lỗi xảy ra khi thêm món');
       setToastTrigger(prev => prev + 1);
     }
   };
-  const handleRemoveDish = (mealKey: MealKey, dishId: string) => {
-    setPlan((prev) => {
-      const dayPlan: DayMeals = { ...prev[activeDay] };
-      dayPlan[mealKey] = dayPlan[mealKey].filter((d) => d.id !== dishId);
-      return { ...prev, [activeDay]: dayPlan };
-    });
+
+  const handleRemoveDish = async (mealKey: MealKey, plannedMealId: string) => {
+    try {
+      await mealPlannerService.removeMealPlan(plannedMealId);
+      // Optimistic update
+      setPlan((prev) => {
+        const dayPlan: DayMeals = { ...prev[activeDay] };
+        dayPlan[mealKey] = dayPlan[mealKey].filter((d) => d.id !== plannedMealId);
+        return { ...prev, [activeDay]: dayPlan };
+      });
+    } catch (err) {
+      console.error('Lỗi xóa món:', err);
+      setToastMsg('Có lỗi xảy ra khi xóa món');
+      setToastTrigger(prev => prev + 1);
+    }
   };
 
   const currentDay: DayMeals = plan[activeDay] ?? { breakfast: [], lunch: [], dinner: [] };
@@ -225,7 +273,8 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           isOpen={sheetOpen}
           mealTitle={activeMealTitle}
           mealKey={activeMealKey}
-          existingDishes={currentDay[activeMealKey]}
+          availableRecipes={availableRecipes}
+          existingDishes={currentDay[activeMealKey].map(pm => pm.recipe)}
           onClose={() => setSheetOpen(false)}
           onConfirm={handleConfirm}
         />
