@@ -9,6 +9,7 @@ export type MealKey = 'breakfast' | 'lunch' | 'dinner';
 export interface PlannedMeal {
   id: string; // The meal_plan id from database
   recipe: Recipe;
+  people_count?: number;
 }
 
 export interface DayMeals {

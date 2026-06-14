@@ -24,10 +24,10 @@ export const mealPlannerController = {
       const userId = req.user?.id;
       if (!familyId || !userId) return res.status(403).json({ error: 'Require family access' });
 
-      const { recipeId, date, mealType } = req.body;
+      const { recipeId, date, mealType, peopleCount } = req.body;
       if (!recipeId || !date || !mealType) return res.status(400).json({ error: 'Missing fields' });
 
-      const data = await mealPlannerService.addMealPlan(familyId, userId, recipeId, date, mealType);
+      const data = await mealPlannerService.addMealPlan(familyId, userId, recipeId, date, mealType, peopleCount || 1);
       res.status(201).json(data);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
