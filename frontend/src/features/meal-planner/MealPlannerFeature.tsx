@@ -112,6 +112,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
         id: string;
         date: string;
         meal_type: string;
+        people_count: number;
         recipes: {
           id: string;
           name: string;
@@ -133,6 +134,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
         if (newPlan[key] && newPlan[key][p.meal_type as MealKey]) {
           newPlan[key][p.meal_type as MealKey].push({
             id: p.id,
+            people_count: p.people_count,
             recipe: {
               id: p.recipes.id,
               name: p.recipes.name,
@@ -175,7 +177,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     setSheetOpen(true);
   };
 
-  const handleConfirm = async (selected: Recipe[]) => {
+  const handleConfirm = async (selected: Recipe[], peopleCount: number) => {
     // Add recipes to backend
     const activeDayTab = weekDays.find(d => d.key === activeDay);
     if (!activeDayTab) return;
@@ -186,7 +188,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
 
     try {
       for (const recipe of selected) {
-        await mealPlannerService.addMealPlan(recipe.id, dateStr, activeMealKey);
+        await mealPlannerService.addMealPlan(recipe.id, dateStr, activeMealKey, peopleCount);
       }
       
       const mealLabel = MEALS.find((m) => m.key === activeMealKey)?.title ?? '';

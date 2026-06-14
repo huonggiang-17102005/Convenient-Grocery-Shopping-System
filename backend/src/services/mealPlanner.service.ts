@@ -19,7 +19,8 @@ export const mealPlannerService = {
     userId: string, 
     recipeId: string, 
     date: string, 
-    mealType: string
+    mealType: string,
+    peopleCount: number
   ) => {
     // Thêm món ăn vào kế hoạch
     const { data, error } = await supabase
@@ -30,7 +31,8 @@ export const mealPlannerService = {
           added_by: userId,
           recipe_id: recipeId,
           date,
-          meal_type: mealType
+          meal_type: mealType,
+          people_count: peopleCount
         }
       ])
       .select('*, recipes!inner(*)')
