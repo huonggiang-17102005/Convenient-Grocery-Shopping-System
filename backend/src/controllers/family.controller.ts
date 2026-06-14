@@ -162,7 +162,7 @@ export const leaveFamily = async (req: AuthRequest, res: Response) => {
 export const removeMember = async (req: AuthRequest, res: Response) => {
   const currentUserId = req.user?.id as string;
   const familyId = req.user?.family_id as string;
-  const targetUserId = req.params.userId;
+  const targetUserId = req.params.userId as string;
   
   await familyService.removeMember(currentUserId, targetUserId, familyId);
   return res.status(200).json({ success: true, message: 'Đã xóa thành viên khỏi gia đình' });

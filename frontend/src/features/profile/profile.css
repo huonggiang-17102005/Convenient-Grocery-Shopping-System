@@ -171,7 +171,11 @@
 }
 
 .profile-member-badge {
-  display: inline-block;
+  display: inline-flex;
+  width: fit-content;
+  white-space: nowrap;
+  align-items: center;
+  justify-content: center;
   padding: 2px 8px;
   border-radius: 8px;
   font-size: 11px;

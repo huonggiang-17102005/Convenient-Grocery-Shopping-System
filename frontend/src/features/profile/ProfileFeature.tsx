@@ -18,6 +18,8 @@ import AccountModal from './modals/AccountModal';
 import ConfirmModal from './modals/ConfirmModal';
 import type { ConfirmVariant } from './modals/ConfirmModal';
 import Toast from '@/components/shared/Toast';
+import useRealtimeNoti from '../../hooks/useRealtimeNoti';
+import { useFamilyContext } from '../../contexts/FamilyContext';
 
 export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
@@ -30,8 +32,26 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
     name: localUser?.full_name || '',
     email: localUser?.email || '',
     avatar: localUser?.avatar || '',
-    role: localUser?.role === 'Homemaker' ? 'Homemaker' : 'Thành viên',
+    role: localUser?.role === 'Homemaker' ? 'Nội trợ' : 'Thành viên',
   });
+
+  // Gọi Hook Realtime để lắng nghe thông báo đổi quyền
+  useRealtimeNoti(localUser?.family_id, localUser?.id, (newRole) => {
+    // 1. Cập nhật Local Storage
+    if (localUser) {
+      localUser.role = newRole;
+      localStorage.setItem('user', JSON.stringify(localUser));
+    }
+    // 2. Chuyển trang theo Role mới
+    if (newRole === 'Homemaker') {
+      navigate('/homemaker/dashboard');
+    } else {
+      navigate('/member/dashboard');
+    }
+  });
+
+  // Lấy danh sách thành viên từ Context (đã được cache ở tầng Layout)
+  const { familyMembers, setFamilyMembers } = useFamilyContext();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -51,7 +71,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
             name: freshUser.full_name || '',
             email: freshUser.email || '',
             avatar: freshUser.avatar || '',
-            role: freshUser.role === 'Homemaker' ? 'Homemaker' : 'Thành viên',
+            role: freshUser.role === 'Homemaker' ? 'Nội trợ' : 'Thành viên',
           });
         }
       } catch (err) {
@@ -60,20 +80,6 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
     };
     fetchUser();
   }, []);
-
-  // Family members list state
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(
-    role === 'homemaker'
-      ? [
-          { id: '1', name: 'Mỹ Anh', avatar: '👩', role: 'homemaker', isCurrentUser: true },
-          { id: '2', name: 'Shin', avatar: '🧑', role: 'member', isCurrentUser: false },
-          { id: '3', name: 'Bố Shin', avatar: '👨', role: 'member', isCurrentUser: false },
-        ]
-      : [
-          { id: '1', name: 'Mỹ Anh', avatar: '👤', role: 'homemaker', isCurrentUser: false },
-          { id: '2', name: 'Shin', avatar: '👨', role: 'member', isCurrentUser: true },
-        ]
-  );
 
   // Waste statistics state
   const [wasteStats] = useState({
@@ -206,44 +212,65 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   };
 
   // Confirmed Actions Handlers
-  const handleConfirmAction = (data?: string) => {
+  const handleConfirmAction = async (data?: string) => {
     setIsConfirmOpen(false);
 
-    if (confirmVariant === 'transfer' && selectedMember) {
-      // Transfer Homemaker role to the selected member
-      setFamilyMembers((prev) =>
-        prev.map((m) => {
-          if (m.id === selectedMember.id) {
-            return { ...m, role: 'homemaker' };
-          }
-          if (m.isCurrentUser) {
-            return { ...m, role: 'member' };
-          }
-          return m;
-        })
-      );
-      setUser((prev) => ({ ...prev, role: 'Thành viên' }));
-      triggerToast('Nhường quyền Homemaker thành công!');
-    } else if (confirmVariant === 'delete' && selectedMember) {
-      // Remove selected member from list
-      setFamilyMembers((prev) => prev.filter((m) => m.id !== selectedMember.id));
-      triggerToast('Xóa thành viên thành công!');
-    } else if (confirmVariant === 'logout') {
-      // Clear token and user data from local storage
-      //localStorage.removeItem('token');
-      //localStorage.removeItem('user');
-      triggerToast('Đăng xuất thành công!');
-      setTimeout(() => {
-        navigate('/');
-      }, 800);
-    } else if (confirmVariant === 'export') {
-      const format = data === 'pdf' ? 'PDF' : 'Excel';
-      triggerToast(`Xuất báo cáo gia đình định dạng ${format} thành công!`);
-    } else if (confirmVariant === 'leave') {
-      triggerToast('Rời nhóm thành công!');
-      setTimeout(() => {
-        navigate('/choose-role');
-      }, 800);
+    try {
+      const token = localStorage.getItem('token');
+
+      if (confirmVariant === 'transfer' && selectedMember) {
+        const res = await fetch('http://localhost:5000/api/families/transfer-homemaker', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ newHomemakerId: selectedMember.id })
+        });
+        const resData = await res.json();
+        if (!res.ok) throw new Error(resData.message || 'Lỗi nhường quyền');
+
+        triggerToast('Đang xử lý nhường quyền...');
+
+      } else if (confirmVariant === 'delete' && selectedMember) {
+        const res = await fetch(`http://localhost:5000/api/families/members/${selectedMember.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const resData = await res.json();
+        if (!res.ok) throw new Error(resData.message || 'Lỗi xóa thành viên');
+
+        setFamilyMembers((prev) => prev.filter((m) => m.id !== selectedMember.id));
+        triggerToast('Xóa thành viên thành công!');
+
+      } else if (confirmVariant === 'logout') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        triggerToast('Đăng xuất thành công!');
+        setTimeout(() => {
+          navigate('/');
+        }, 800);
+
+      } else if (confirmVariant === 'export') {
+        const format = data === 'pdf' ? 'PDF' : 'Excel';
+        triggerToast(`Xuất báo cáo gia đình định dạng ${format} thành công!`);
+
+      } else if (confirmVariant === 'leave') {
+        const res = await fetch('http://localhost:5000/api/families/leave', {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const resData = await res.json();
+        if (!res.ok) throw new Error(resData.message || 'Lỗi rời nhóm');
+
+        if (localUser) {
+          localUser.family_id = null;
+          localStorage.setItem('user', JSON.stringify(localUser));
+        }
+        triggerToast('Rời nhóm thành công!');
+        setTimeout(() => {
+          navigate('/choose-role');
+        }, 800);
+      }
+    } catch (err: any) {
+      alert(err.message);
     }
   };
 

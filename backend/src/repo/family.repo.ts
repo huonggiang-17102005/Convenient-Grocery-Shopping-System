@@ -30,7 +30,10 @@ export const transferHomemakerRole = async (currentHomemakerId: string, newHomem
     .update({ role: 'Member' })
     .eq('id', currentHomemakerId);
 
-  if (error1) throw new InternalServerError('Lỗi khi hạ quyền Homemaker hiện tại');
+  if (error1) {
+    console.error('Lỗi hạ quyền chi tiết:', error1);
+    throw new InternalServerError(`Lỗi khi hạ quyền Homemaker hiện tại: ${error1.message}`);
+  }
 
   // Nâng quyền người mới lên Homemaker
   const { data, error: error2 } = await supabase
@@ -40,7 +43,10 @@ export const transferHomemakerRole = async (currentHomemakerId: string, newHomem
     .select('*')
     .single();
 
-  if (error2) throw new InternalServerError('Lỗi khi cấp quyền Homemaker mới');
+  if (error2) {
+    console.error('Lỗi cấp quyền chi tiết:', error2);
+    throw new InternalServerError(`Lỗi khi cấp quyền Homemaker mới: ${error2.message}`);
+  }
 
   return data;
 };

@@ -16,11 +16,23 @@ interface FamilySectionProps {
 }
 
 const FamilySection: React.FC<FamilySectionProps> = ({ members, role = 'homemaker', onTransfer, onDelete }) => {
+  // Sắp xếp: User hiện tại đứng đầu → Nội trợ → Thành viên
+  const sortedMembers = [...members].sort((a, b) => {
+    // 1. User hiện tại luôn đứng đầu
+    if (a.isCurrentUser) return -1;
+    if (b.isCurrentUser) return 1;
+    // 2. Nội trợ đứng sau user hiện tại
+    if (a.role === 'homemaker' && b.role !== 'homemaker') return -1;
+    if (b.role === 'homemaker' && a.role !== 'homemaker') return 1;
+    // 3. Còn lại giữ nguyên thứ tự
+    return 0;
+  });
+
   return (
     <div className="profile-section">
       <h2 className="profile-section-title">Thành viên gia đình</h2>
       <div className="profile-family-list">
-        {members.map((member) => (
+        {sortedMembers.map((member) => (
           <div key={member.id} className="profile-member-card">
             {/* Left: avatar + info */}
             <div className="profile-member-left">
@@ -36,7 +48,7 @@ const FamilySection: React.FC<FamilySectionProps> = ({ members, role = 'homemake
                       : 'profile-member-badge--member'
                   }`}
                 >
-                  {member.role === 'homemaker' ? 'Homemaker' : 'Thành viên'}
+                  {member.role === 'homemaker' ? 'Nội trợ' : 'Thành viên'}
                 </span>
               </div>
             </div>
