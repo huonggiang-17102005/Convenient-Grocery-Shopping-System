@@ -10,8 +10,10 @@ interface FridgeItem {
 }
 
 interface MealPlanPayload {
+  meal_type?: string;
   people_count?: number;
   recipes?: {
+    name?: string;
     servings?: number;
     ingredients?: {
       name: string;
@@ -79,11 +81,7 @@ const EXPIRING_ITEMS: IngredientCardProps[] = [
   },
 ];
 
-const TODAY_MEALS: MealItem[] = [
-  { session: 'morning', dish: 'Bánh mỳ' },
-  { session: 'noon',    dish: 'Cơm tấm' },
-  { session: 'evening', dish: 'Gà rán' },
-];
+// Removed hardcoded TODAY_MEALS
 
 // ─── Dashboard Page ─────────────────────────────────────────────────────────────
 
@@ -102,6 +100,11 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   const [familyId, setFamilyId] = useState<string | null>(null);
   const [fridgeItems, setFridgeItems] = useState<FridgeItem[]>([]);
   const [todayIngredients, setTodayIngredients] = useState<CookIngredient[]>([]);
+  const [todayMeals, setTodayMeals] = useState<MealItem[]>([
+    { session: 'morning', dish: 'Chưa có kế hoạch' },
+    { session: 'noon', dish: 'Chưa có kế hoạch' },
+    { session: 'evening', dish: 'Chưa có kế hoạch' }
+  ]);
 
   useEffect(() => {
     const fetchFamilyInfo = async () => {
@@ -132,8 +135,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
           
           const plans = await mealPlannerService.getMealPlan(dateStr, dateStr);
           
+          const mealMap: Record<string, string[]> = { breakfast: [], lunch: [], dinner: [] };
           const ingMap = new Map<string, CookIngredient>();
+          
           plans.forEach((p: MealPlanPayload) => {
+            if (p.recipes && p.recipes.name) {
+              const mt = p.meal_type || 'breakfast';
+              if (mealMap[mt]) mealMap[mt].push(p.recipes.name);
+            }
             if (p.recipes && p.recipes.ingredients) {
                const multiplier = (p.people_count || 1) / (p.recipes.servings || 1);
                p.recipes.ingredients.forEach((ing) => {
@@ -155,6 +164,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
             }
           });
           setTodayIngredients(Array.from(ingMap.values()));
+
+          const newTodayMeals: MealItem[] = [
+            { session: 'morning', dish: mealMap.breakfast.length > 0 ? mealMap.breakfast.join(', ') : 'Chưa có kế hoạch' },
+            { session: 'noon', dish: mealMap.lunch.length > 0 ? mealMap.lunch.join(', ') : 'Chưa có kế hoạch' },
+            { session: 'evening', dish: mealMap.dinner.length > 0 ? mealMap.dinner.join(', ') : 'Chưa có kế hoạch' }
+          ];
+          
+          setTodayMeals(newTodayMeals);
 
         } else {
           setRealInviteCode('Chưa có mã');
@@ -293,7 +310,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
       {/* Today Menu */}
       <TodayMenu
-        meals={TODAY_MEALS}
+        meals={todayMeals}
         role={role}
         onMarkCooked={() => setIsCookOpen(true)}
       />
