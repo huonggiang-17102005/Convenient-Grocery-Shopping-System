@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { mealPlannerService } from '../services/mealPlanner.service';
+import { mealPlannerService } from '../services/mealPlanner.service.js';
 
 export const mealPlannerController = {
   getMealPlan: async (req: Request, res: Response) => {

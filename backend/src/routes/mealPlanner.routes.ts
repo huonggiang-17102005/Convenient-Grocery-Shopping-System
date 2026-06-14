@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { mealPlannerController } from '../controllers/mealPlanner.controller';
-import { requireAuth } from '../middleware/auth.middleware';
+import { mealPlannerController } from '../controllers/mealPlanner.controller.js';
+import { requireAuth } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
