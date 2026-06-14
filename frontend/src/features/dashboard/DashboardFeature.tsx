@@ -1,5 +1,26 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { X } from 'lucide-react';
+
+interface FridgeItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  category?: string;
+}
+
+interface MealPlanPayload {
+  people_count?: number;
+  recipes?: {
+    servings?: number;
+    ingredients?: {
+      name: string;
+      quantity: string;
+      unit: string;
+      category?: string;
+    }[];
+  };
+}
 import './dashboard.css';
 
 // Color theme per role
@@ -20,6 +41,8 @@ import Toast from '@/components/shared/Toast';
 import type { IngredientCardProps } from './components/IngredientCard';
 import ShoppingMission from './components/ShoppingMission';
 import { shoppingService } from '../shopping-list/shopping-list.service';
+import { fridgeService } from '../fridge/fridge.service';
+import { mealPlannerService } from '../meal-planner/mealPlanner.service';
 
 // Modals
 import InviteCodeModal from './modals/InviteCodeModal';
@@ -58,8 +81,8 @@ const EXPIRING_ITEMS: IngredientCardProps[] = [
 
 const TODAY_MEALS: MealItem[] = [
   { session: 'morning', dish: 'Bánh mỳ' },
-  { session: 'noon',    dish: 'Thịt bò xào' },
-  { session: 'evening', dish: 'Canh cà chua' },
+  { session: 'noon',    dish: 'Cơm tấm' },
+  { session: 'evening', dish: 'Gà rán' },
 ];
 
 // ─── Dashboard Page ─────────────────────────────────────────────────────────────
@@ -75,7 +98,12 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   // Real Invite Code state
   const [realInviteCode, setRealInviteCode] = useState('Đang tải...');
 
-  React.useEffect(() => {
+  // States for CookConfirmModal
+  const [familyId, setFamilyId] = useState<string | null>(null);
+  const [fridgeItems, setFridgeItems] = useState<FridgeItem[]>([]);
+  const [todayIngredients, setTodayIngredients] = useState<CookIngredient[]>([]);
+
+  useEffect(() => {
     const fetchFamilyInfo = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -88,6 +116,46 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
         
         if (response.ok && data.family) {
           setRealInviteCode(data.family.invite_code);
+          const famId = data.family.id;
+          setFamilyId(famId);
+
+          // Lấy tủ lạnh
+          const fRes = await fridgeService.getFamilyFridge(famId);
+          setFridgeItems(fRes.data || []);
+
+          // Lấy thực đơn hôm nay
+          const today = new Date();
+          const y = today.getFullYear();
+          const m = String(today.getMonth() + 1).padStart(2, '0');
+          const d = String(today.getDate()).padStart(2, '0');
+          const dateStr = `${y}-${m}-${d}`;
+          
+          const plans = await mealPlannerService.getMealPlan(dateStr, dateStr);
+          
+          const ingMap = new Map<string, CookIngredient>();
+          plans.forEach((p: MealPlanPayload) => {
+            if (p.recipes && p.recipes.ingredients) {
+               const multiplier = (p.people_count || 1) / (p.recipes.servings || 1);
+               p.recipes.ingredients.forEach((ing) => {
+                 const key = ing.name.toLowerCase();
+                 const current = ingMap.get(key);
+                 const parsedAmount = parseFloat(ing.quantity) || 0;
+                 const addedAmount = parsedAmount * multiplier;
+                 if (current) {
+                   current.amountValue = String(parseFloat(current.amountValue) + addedAmount);
+                 } else {
+                   ingMap.set(key, {
+                     name: ing.name,
+                     category: ing.category || 'Khác',
+                     amountValue: String(addedAmount),
+                     amountUnit: ing.unit
+                   });
+                 }
+               });
+            }
+          });
+          setTodayIngredients(Array.from(ingMap.values()));
+
         } else {
           setRealInviteCode('Chưa có mã');
         }
@@ -118,7 +186,6 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
     setToastTrigger(prev => prev + 1);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   const hideToast = useCallback(() => {}, []);
 
   // Handlers
@@ -132,10 +199,18 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
     showToast('Đã sao chép mã nhóm thành công!');
   };
 
-  const handleCookConfirm = (ingredients: CookIngredient[]) => {
-    console.log('Trừ kho:', ingredients);
-    // TODO: Gọi API trừ kho ở đây
-    showToast('Đã trừ kho thành công !');
+  const handleCookConfirm = async (ingredients: CookIngredient[]) => {
+    if (!familyId) return;
+    try {
+      await fridgeService.deductInventory(familyId, ingredients);
+      showToast('Đã trừ kho thành công!');
+      // Refresh tủ lạnh
+      const fRes = await fridgeService.getFamilyFridge(familyId);
+      setFridgeItems(fRes.data || []);
+    } catch (err: unknown) {
+      console.error(err);
+      showToast('Có lỗi xảy ra khi trừ kho!');
+    }
   };
 
   // Shopping items state for member
@@ -241,11 +316,15 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
         }}
       />
 
-      <CookConfirmModal
-        isOpen={isCookOpen}
-        onClose={() => setIsCookOpen(false)}
-        onConfirm={handleCookConfirm}
-      />
+      {isCookOpen && (
+        <CookConfirmModal
+          isOpen={isCookOpen}
+          onClose={() => setIsCookOpen(false)}
+          onConfirm={handleCookConfirm}
+          initialIngredients={todayIngredients}
+          fridgeItems={fridgeItems}
+        />
+      )}
     </>
   );
 };

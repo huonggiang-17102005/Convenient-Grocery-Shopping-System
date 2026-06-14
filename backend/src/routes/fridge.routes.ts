@@ -7,4 +7,8 @@ const router = Router();
 // GET /api/fridge/family/:familyId
 router.get('/family/:familyId', fridgeController.getByFamilyId);
 
+// Trừ nguyên liệu từ tủ lạnh
+// POST /api/fridge/deduct
+router.post('/deduct', fridgeController.deduct);
+
 export default router;
