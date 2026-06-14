@@ -13,12 +13,21 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   
   const [errorMsg, setErrorMsg] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setEmailError('');
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Email không hợp lệ!');
+      return;
+    }
 
     if (password.length < 6) {
       setErrorMsg('Mật khẩu ít nhất có 6 kí tự');
@@ -38,8 +47,7 @@ export default function Register() {
         headers: {
           'Content-Type': 'application/json',
         },
-        // Lưu ý: Backend hiện tại chỉ lưu email và password, tạm thời chưa gửi name xuống DB
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, full_name: name }),
       });
 
       const data = await response.json();
@@ -83,7 +91,7 @@ export default function Register() {
         </div>
       </div>
 
-      <form className="auth-form" onSubmit={handleRegister}>
+      <form className="auth-form" onSubmit={handleRegister} noValidate>
         <div className="form-group">
           <label htmlFor="name">Họ và tên</label>
           <input 
@@ -104,8 +112,13 @@ export default function Register() {
             placeholder="your@email.com" 
             required 
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (emailError) setEmailError('');
+            }}
+            style={{ borderColor: emailError ? '#F44336' : '' }}
           />
+          {emailError && <div style={{ color: '#F44336', fontSize: '13px', marginTop: '8px' }}>{emailError}</div>}
         </div>
         
         <div className="form-group">
