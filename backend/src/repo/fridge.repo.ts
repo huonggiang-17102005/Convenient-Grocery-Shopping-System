@@ -1,4 +1,4 @@
-import supabase from '../config/supabase.config.js';
+import supabase from '../config/db.config.js';
 import type { FridgeItem } from '../models/FridgeItem.js';
 import { InternalServerError } from '../errors/CommonError.js';
 

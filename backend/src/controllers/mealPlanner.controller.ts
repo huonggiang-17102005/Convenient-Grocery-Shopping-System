@@ -1,8 +1,9 @@
-import { Request, Response } from 'express';
+import type { Response } from 'express';
 import { mealPlannerService } from '../services/mealPlanner.service.js';
+import type { AuthRequest } from '../middlewares/auth.middleware.js';
 
 export const mealPlannerController = {
-  getMealPlan: async (req: Request, res: Response) => {
+  getMealPlan: async (req: AuthRequest, res: Response) => {
     try {
       const familyId = req.user?.familyId;
       if (!familyId) return res.status(403).json({ error: 'Require family access' });
@@ -17,7 +18,7 @@ export const mealPlannerController = {
     }
   },
 
-  addMealPlan: async (req: Request, res: Response) => {
+  addMealPlan: async (req: AuthRequest, res: Response) => {
     try {
       const familyId = req.user?.familyId;
       const userId = req.user?.id;
@@ -33,12 +34,12 @@ export const mealPlannerController = {
     }
   },
 
-  removeMealPlan: async (req: Request, res: Response) => {
+  removeMealPlan: async (req: AuthRequest, res: Response) => {
     try {
       const familyId = req.user?.familyId;
       if (!familyId) return res.status(403).json({ error: 'Require family access' });
 
-      const { id } = req.params;
+      const id = req.params.id as string;
       const data = await mealPlannerService.removeMealPlan(familyId, id);
       res.json(data);
     } catch (error: any) {

@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase.config.js';
+import supabase from '../config/db.config.js';
 
 export const mealPlannerService = {
   getMealPlan: async (familyId: string, startDate: string, endDate: string) => {
