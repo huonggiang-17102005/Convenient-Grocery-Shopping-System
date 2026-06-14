@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import TimeFilterTabs from './components/TimeFilterTabs';
 import CategoryGroup from './components/CategoryGroup';
@@ -23,8 +23,25 @@ export interface ShoppingListFeatureProps {
 
 export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }) => {
   const primaryColor = ROLE_COLORS[role];
-  const [items, setItems] = useState<ShoppingItem[]>(() => shoppingService.getShoppingItems());
+  const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
+
+  const fetchItems = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await shoppingService.getShoppingItems();
+      setItems(data);
+    } catch (error) {
+      console.error('Error fetching shopping items:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   // Modal states
   const [selectedItem, setSelectedItem] = useState<ShoppingItem | null>(null);
@@ -46,73 +63,60 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   const hideToast = useCallback(() => {}, []);
 
-  // Helper to save items
-  const updateItemsList = (newItems: ShoppingItem[]) => {
-    setItems(newItems);
-    shoppingService.saveShoppingItems(newItems);
-  };
-
   // Toggle item status
-  const handleToggleCheck = (id: string, e: React.MouseEvent) => {
+  const handleToggleCheck = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening bottom sheet
 
-    const updated = items.map(item => {
-      if (item.id === id) {
-        const nextBought = !item.isBought;
-        if (nextBought) {
-          // If bought, sync to fridge and show toast
-          shoppingService.syncItemToFridge(item);
-          showToast(`Đã mua xong! Số lượng đã tự động cộng vào kho Tủ lạnh`);
-        }
-        return { ...item, isBought: nextBought };
-      }
-      return item;
-    });
+    const item = items.find(i => i.id === id);
+    if (!item) return;
 
-    updateItemsList(updated);
+    try {
+      const nextBought = !item.isBought;
+      const updatedItem = await shoppingService.updateShoppingItem(id, { isBought: nextBought });
+      
+      setItems(prev => prev.map(i => i.id === id ? updatedItem : i));
+      
+      if (nextBought) {
+        showToast(`Đã mua xong! Số lượng đã tự động cộng vào kho Tủ lạnh`);
+      }
+    } catch (error) {
+      console.error('Error toggling check:', error);
+      showToast('Lỗi khi cập nhật trạng thái');
+    }
   };
 
   // Add or edit item submit
-  const handleFormSubmit = (itemData: Omit<ShoppingItem, 'id' | 'isBought' | 'assigneeId'>) => {
-    if (formMode === 'create') {
-      const newItem: ShoppingItem = {
-        ...itemData,
-        id: 'shop_' + Date.now() + Math.random().toString(36).substr(2, 4),
-        isBought: false,
-        assigneeId: null,
-      };
-      const updated = [...items, newItem];
-      updateItemsList(updated);
-      showToast('Đã thêm vào danh sách mua sắm');
-    } else if (formMode === 'edit' && selectedItem) {
-      const updated = items.map(item => {
-        if (item.id === selectedItem.id) {
-          return {
-            ...item,
-            ...itemData,
-          };
-        }
-        return item;
-      });
-      updateItemsList(updated);
-      showToast('Đã cập nhật mặt hàng thành công!');
+  const handleFormSubmit = async (itemData: Omit<ShoppingItem, 'id' | 'isBought' | 'assigneeId'>) => {
+    try {
+      if (formMode === 'create') {
+        const newItem = await shoppingService.createShoppingItem(itemData);
+        setItems(prev => [...prev, newItem]);
+        showToast('Đã thêm vào danh sách mua sắm');
+      } else if (formMode === 'edit' && selectedItem) {
+        const updatedItem = await shoppingService.updateShoppingItem(selectedItem.id, itemData);
+        setItems(prev => prev.map(i => i.id === selectedItem.id ? updatedItem : i));
+        showToast('Đã cập nhật mặt hàng thành công!');
+      }
+      setIsFormModalOpen(false);
+    } catch (error) {
+      console.error('Error saving item:', error);
+      showToast('Lỗi khi lưu mặt hàng');
     }
   };
 
   // Assign member
-  const handleAssignMember = (itemId: string, assigneeId: 'Kat' | 'Shin' | null) => {
-    const updated = items.map(item => {
-      if (item.id === itemId) {
-        return { ...item, assigneeId };
+  const handleAssignMember = async (itemId: string, assigneeId: 'Kat' | 'Shin' | null) => {
+    try {
+      const updatedItem = await shoppingService.updateShoppingItem(itemId, { assigneeId });
+      setItems(prev => prev.map(i => i.id === itemId ? updatedItem : i));
+      if (assigneeId) {
+        showToast(`Đã giao cho ${assigneeId}`);
+      } else {
+        showToast('Đã hủy giao việc thành công!');
       }
-      return item;
-    });
-    updateItemsList(updated);
-
-    if (assigneeId) {
-      showToast(`Đã giao cho ${assigneeId}`);
-    } else {
-      showToast('Đã hủy giao việc thành công!');
+    } catch (error) {
+      console.error('Error assigning member:', error);
+      showToast('Lỗi khi phân công');
     }
 
     // Close bottom sheet and clear selection
@@ -121,12 +125,18 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   };
 
   // Delete item confirm
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (selectedItem) {
-      const updated = items.filter(item => item.id !== selectedItem.id);
-      updateItemsList(updated);
-      showToast('Đã xóa mặt hàng thành công!');
+      try {
+        await shoppingService.deleteShoppingItem(selectedItem.id);
+        setItems(prev => prev.filter(item => item.id !== selectedItem.id));
+        showToast('Đã xóa mặt hàng thành công!');
+      } catch (error) {
+        console.error('Error deleting item:', error);
+        showToast('Lỗi khi xóa mặt hàng');
+      }
       setSelectedItem(null);
+      setIsDeleteModalOpen(false);
     }
   };
 
@@ -205,7 +215,11 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
 
       {/* Shopping List Container */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
-        {Object.keys(groupedItems).length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '48px 16px', color: '#757575' }}>
+            Đang tải danh sách...
+          </div>
+        ) : Object.keys(groupedItems).length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 16px', color: '#757575' }}>
             Không có mặt hàng nào cần mua.
           </div>

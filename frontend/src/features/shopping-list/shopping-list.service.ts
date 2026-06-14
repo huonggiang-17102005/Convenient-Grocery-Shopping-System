@@ -1,100 +1,72 @@
-import type { ShoppingItem, FoodCategory } from './types';
-import type { FoodItem, StorageType, FoodCategory as FridgeCategory } from '../fridge';
+import axios from 'axios';
+import type { ShoppingItem } from './types';
 
-// Mock initial data for Shopping List
-const INITIAL_SHOPPING_ITEMS: ShoppingItem[] = [
-  {
-    id: 's1',
-    name: 'Thịt bò',
-    category: 'Thịt cá',
-    quantity: 500,
-    unit: 'g',
-    isBought: true,
-    assigneeId: 'Shin',
-    deadlineDate: '2026-06-11', // Today
-    deadlineTime: '12:00'
-  },
-  {
-    id: 's2',
-    name: 'Cà chua',
-    category: 'Rau củ quả',
-    quantity: 400,
-    unit: 'g',
-    isBought: false,
-    assigneeId: 'Shin',
-    deadlineDate: '2026-06-12',
-    deadlineTime: '18:00'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const api = axios.create({
+  baseURL: `${API_URL}/shopping-list`,
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-];
+  return config;
+});
 
-// Mock initial data for Refrigerator (for sync)
-const INITIAL_FRIDGE_ITEMS = [
-  { id: '1', emoji: '🥕', name: 'Cà rốt', quantity: 300, daysRemaining: 7, category: 'Rau củ quả', storageType: 'Ngăn mát' },
-  { id: '2', emoji: '🥩', name: 'Thịt bò', quantity: 500, daysRemaining: 1, category: 'Thịt cá', storageType: 'Ngăn đông' },
-  { id: '3', emoji: '🥛', name: 'Sữa tươi', quantity: 1000, daysRemaining: 3, category: 'Chất lỏng', storageType: 'Ngăn mát' },
-  { id: '4', emoji: '🧅', name: 'Hành tây', quantity: 400, daysRemaining: 5, category: 'Rau củ quả', storageType: 'Khô' },
-];
+// UUID Mapping to frontend names 'Shin' & 'Kat' (Hima in db)
+const UUID_TO_NAME: Record<string, string> = {
+  'd1fd2b6f-7778-4419-99a4-8eafc2ba0619': 'Shin',
+  '5b7e60c4-28e5-48a8-92c5-6b5f9349c7ca': 'Kat'
+};
 
-const LOCAL_STORAGE_KEY = 'homemaker_shopping_items';
-const FRIDGE_LOCAL_STORAGE_KEY = 'homemaker_fridge_items';
+const NAME_TO_UUID: Record<string, string> = {
+  'Shin': 'd1fd2b6f-7778-4419-99a4-8eafc2ba0619',
+  'Kat': '5b7e60c4-28e5-48a8-92c5-6b5f9349c7ca'
+};
 
-const getCategoryEmoji = (category: FoodCategory): string => {
-  switch (category) {
-    case 'Thịt cá': return '🥩';
-    case 'Rau củ quả': return '🍅';
-    case 'Trứng': return '🥚';
-    case 'Chất lỏng': return '🥛';
-    case 'Đồ khô': return '🍞';
-    case 'Gia vị': return '🌶️';
-    default: return '📦';
+const mapBackendToFrontend = (item: any): ShoppingItem => {
+  return {
+    id: item.id,
+    name: item.name,
+    category: item.category,
+    quantity: Number(item.quantity),
+    unit: item.unit,
+    isBought: item.isBought,
+    assigneeId: item.assigneeId ? (UUID_TO_NAME[item.assigneeId] || null) : null,
+    deadlineDate: item.deadlineDate,
+    deadlineTime: item.deadlineTime,
+    imageUrl: item.imageUrl,
+    imagePublicId: item.imagePublicId
+  };
+};
+
+const mapFrontendToBackend = (itemData: any) => {
+  const mapped: any = { ...itemData };
+  if (itemData.assigneeId !== undefined) {
+    mapped.assigneeId = itemData.assigneeId ? (NAME_TO_UUID[itemData.assigneeId] || null) : null;
   }
+  return mapped;
 };
 
 export const shoppingService = {
-  getShoppingItems(): ShoppingItem[] {
-    const data = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!data) {
-      this.saveShoppingItems(INITIAL_SHOPPING_ITEMS);
-      return INITIAL_SHOPPING_ITEMS;
-    }
-    return JSON.parse(data);
+  async getShoppingItems(): Promise<ShoppingItem[]> {
+    const response = await api.get('/items');
+    return response.data.map(mapBackendToFrontend);
   },
 
-  saveShoppingItems(items: ShoppingItem[]) {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
+  async createShoppingItem(itemData: Omit<ShoppingItem, 'id' | 'isBought' | 'assigneeId'>): Promise<ShoppingItem> {
+    const response = await api.post('/items', mapFrontendToBackend(itemData));
+    return mapBackendToFrontend(response.data);
   },
 
-  syncItemToFridge(item: ShoppingItem) {
-    let fridgeItems: FoodItem[];
-    const data = localStorage.getItem(FRIDGE_LOCAL_STORAGE_KEY);
-    if (!data) {
-      // Use existing mock fridge items as base
-      fridgeItems = [...INITIAL_FRIDGE_ITEMS] as unknown as FoodItem[];
-    } else {
-      fridgeItems = JSON.parse(data);
-    }
+  async updateShoppingItem(id: string, itemData: Partial<ShoppingItem>): Promise<ShoppingItem> {
+    const response = await api.patch(`/items/${id}`, mapFrontendToBackend(itemData));
+    return mapBackendToFrontend(response.data);
+  },
 
-    // Try to find if item exists in fridge by name (case-insensitive)
-    const existingIndex = fridgeItems.findIndex(
-      (f: FoodItem) => f.name.toLowerCase() === item.name.toLowerCase()
-    );
-
-    if (existingIndex !== -1) {
-      // Add quantity
-      fridgeItems[existingIndex].quantity += item.quantity;
-    } else {
-      const newFridgeItem: FoodItem = {
-        id: 'fridge_' + Date.now() + Math.random().toString(36).substr(2, 4),
-        emoji: getCategoryEmoji(item.category),
-        name: item.name,
-        quantity: item.quantity,
-        daysRemaining: 7, // default 7 days shelf life
-        category: item.category as FridgeCategory,
-        storageType: (item.category === 'Thịt cá' ? 'Ngăn đông' : 'Ngăn mát') as StorageType
-      };
-      fridgeItems.push(newFridgeItem);
-    }
-
-    localStorage.setItem(FRIDGE_LOCAL_STORAGE_KEY, JSON.stringify(fridgeItems));
+  async deleteShoppingItem(id: string): Promise<void> {
+    await api.delete(`/items/${id}`);
   }
 };

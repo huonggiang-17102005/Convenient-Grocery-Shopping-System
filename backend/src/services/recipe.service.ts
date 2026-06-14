@@ -1,6 +1,7 @@
 import * as RecipeRepo from '../repo/recipe.repo.js';
 import type { Recipe } from '../models/Recipe.js';
-import { NotFoundError, ForbiddenError } from '../errors/CommonError.js';
+import { NotFoundError, ForbiddenError, InternalServerError } from '../errors/CommonError.js';
+import supabase from '../config/db.config.js';
 
 /**
  * Get all private recipes for a family, mapped with isFavorited for the current user
@@ -21,6 +22,8 @@ export const getFamilyRecipes = async (familyId: string, userId: string) => {
  */
 export const getCommunityRecipes = async (userId: string) => {
   const recipes = await RecipeRepo.getCommunityRecipes();
+  const favorites = userId ? await RecipeRepo.getUserFavoriteRecipes(userId) : [];
+  const favIds = new Set(favorites.map(r => r.id));
   
   // Format for frontend (frontend expects `author` object)
   return recipes.map(recipe => ({
@@ -28,12 +31,13 @@ export const getCommunityRecipes = async (userId: string) => {
     author: {
       id: recipe.author?.id,
       name: recipe.author?.full_name || 'Người dùng Ẩn danh',
-      avatarEmoji: recipe.author?.avatar_url || '👤',
+      avatarEmoji: recipe.author?.avatar || '👤',
     },
     description: recipe.description || '',
     recipe: {
       ...recipe,
       author: undefined, // remove raw author object from nested recipe
+      isFavorited: favIds.has(recipe.id),
     },
     postedAt: recipe.created_at,
     likes: recipe.likes_count || 0,
@@ -204,21 +208,54 @@ export const addToShoppingList = async (recipeId: string, familyId: string, user
   }
 
   const shoppingList = await RecipeRepo.getOrCreateShoppingList(familyId, userId);
-  const existingItems = shoppingList.items || [];
   
-  missingItems.forEach(missing => {
+  // Fetch existing items for this list
+  const { data: existingItems, error: fetchErr } = await supabase
+    .from('shopping_list_items')
+    .select('*')
+    .eq('list_id', shoppingList.id);
+
+  if (fetchErr) {
+    console.error('Error fetching existing items in addToShoppingList:', fetchErr);
+    throw new InternalServerError('Không thể lấy danh sách mua sắm hiện tại.');
+  }
+
+  for (const missing of missingItems) {
     const existing = existingItems.find((i: any) => 
       i.category === missing.category && 
       i.name.toLowerCase() === missing.name.toLowerCase()
     );
-    if (existing) {
-      existing.quantity += missing.quantity;
-    } else {
-      existingItems.push(missing);
-    }
-  });
 
-  await RecipeRepo.updateShoppingListItems(shoppingList.id, existingItems);
+    if (existing) {
+      const newQty = Number(existing.quantity) + missing.quantity;
+      const { error: updateErr } = await supabase
+        .from('shopping_list_items')
+        .update({ quantity: newQty })
+        .eq('id', existing.id);
+
+      if (updateErr) {
+        console.error('Error updating item quantity in addToShoppingList:', updateErr);
+        throw new InternalServerError('Không thể cập nhật số lượng nguyên liệu mua sắm.');
+      }
+    } else {
+      const { error: insertErr } = await supabase
+        .from('shopping_list_items')
+        .insert({
+          list_id: shoppingList.id,
+          name: missing.name,
+          category: missing.category,
+          quantity: missing.quantity || 1,
+          unit: missing.unit,
+          is_bought: false,
+          deadline_date: new Date().toISOString().split('T')[0]
+        });
+
+      if (insertErr) {
+        console.error('Error inserting item in addToShoppingList:', insertErr);
+        throw new InternalServerError('Không thể thêm nguyên liệu vào danh sách mua sắm.');
+      }
+    }
+  }
   
   return { message: `Đã thêm ${missingItems.length} nguyên liệu vào danh sách mua sắm.`, missingItems };
 };

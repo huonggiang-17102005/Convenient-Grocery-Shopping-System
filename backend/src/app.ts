@@ -11,6 +11,7 @@ import adminRoute from './routes/admin.route.js';
 import fridgeRoute from './routes/fridge.routes.js';
 import recipeRoute from './routes/recipe.route.js';
 import mealPlannerRoute from './routes/mealPlanner.routes.js';
+import shoppingListRoute from './routes/shoppingList.route.js';
 import errorMiddleware from './middlewares/error.middleware.js';
 
 dotenv.config();
@@ -29,6 +30,7 @@ app.use('/api/families', familyRoute);
 app.use('/api/fridge', fridgeRoute);
 app.use('/api/recipes', recipeRoute);
 app.use('/api/meal-planner', mealPlannerRoute);
+app.use('/api/shopping-list', shoppingListRoute);
 app.use('/api/admin', adminRoute);
 const PORT = process.env.PORT || 5000;
 

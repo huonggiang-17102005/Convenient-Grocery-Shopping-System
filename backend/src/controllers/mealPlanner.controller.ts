@@ -5,7 +5,7 @@ import type { AuthRequest } from '../middlewares/auth.middleware.js';
 export const mealPlannerController = {
   getMealPlan: async (req: AuthRequest, res: Response) => {
     try {
-      const familyId = req.user?.familyId;
+      const familyId = req.user?.family_id;
       if (!familyId) return res.status(403).json({ error: 'Require family access' });
 
       const { startDate, endDate } = req.query;
@@ -20,7 +20,7 @@ export const mealPlannerController = {
 
   addMealPlan: async (req: AuthRequest, res: Response) => {
     try {
-      const familyId = req.user?.familyId;
+      const familyId = req.user?.family_id;
       const userId = req.user?.id;
       if (!familyId || !userId) return res.status(403).json({ error: 'Require family access' });
 
@@ -36,7 +36,7 @@ export const mealPlannerController = {
 
   removeMealPlan: async (req: AuthRequest, res: Response) => {
     try {
-      const familyId = req.user?.familyId;
+      const familyId = req.user?.family_id;
       if (!familyId) return res.status(403).json({ error: 'Require family access' });
 
       const id = req.params.id as string;

@@ -40,7 +40,7 @@ export const getCommunityRecipes = async (): Promise<any[]> => {
     .from('recipes')
     .select(`
       *,
-      author:users!author_id(id, full_name, avatar_url)
+      author:users!author_id(id, full_name, avatar)
     `)
     .eq('visibility', 'Public')
     .order('created_at', { ascending: false });
@@ -209,7 +209,7 @@ export const getOrCreateShoppingList = async (familyId: string, userId: string):
     family_id: familyId,
     title: 'Danh sách cần mua (Tự động)',
     status: 'Planning',
-    items: [],
+    target_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] // tomorrow
   };
 
   const { data: created, error: createErr } = await supabase
@@ -220,13 +220,4 @@ export const getOrCreateShoppingList = async (familyId: string, userId: string):
 
   if (createErr) throw new InternalServerError('Không thể tạo Shopping List.');
   return created;
-};
-
-export const updateShoppingListItems = async (listId: string, items: any[]): Promise<void> => {
-  const { error } = await supabase
-    .from('shopping_lists')
-    .update({ items })
-    .eq('id', listId);
-
-  if (error) throw new InternalServerError('Không thể cập nhật Shopping List.');
 };

@@ -129,7 +129,11 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
       }
 
       plans.forEach((p: BackendMealPlan) => {
-        const d = new Date(p.date);
+        const parts = p.date.split('-');
+        const y = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10) - 1;
+        const dVal = parseInt(parts[2], 10);
+        const d = new Date(y, m, dVal);
         const dayOfWeek = d.getDay();
         const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
         const key = keys[dayOfWeek];

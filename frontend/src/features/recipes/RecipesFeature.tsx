@@ -20,6 +20,7 @@ type ActiveTab = 'library' | 'favorites' | 'community';
 export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   // ── Data state ──────────────────────────────────────────────
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([]);
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
   const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       }));
       
       setRecipes(allRecipes);
+      setFavoriteRecipes(favRecipes);
       setCommunityPosts(posts);
     } catch (error) {
       console.error('Error fetching recipes:', error);
@@ -89,9 +91,33 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   const handleToggleFavorite = useCallback(async (recipeId: string) => {
     try {
       const { isFavorited } = await recipesService.toggleFavorite(recipeId);
+      
+      // Update family/library recipes
       setRecipes((prev) =>
         prev.map((r) => (r.id === recipeId ? { ...r, isFavorited } : r))
       );
+
+      // Update community posts
+      setCommunityPosts((prev) =>
+        prev.map((post) =>
+          post.recipe.id === recipeId
+            ? { ...post, recipe: { ...post.recipe, isFavorited } }
+            : post
+        )
+      );
+
+      // Update detailRecipe if open
+      setDetailRecipe((prev) =>
+        prev && prev.id === recipeId ? { ...prev, isFavorited } : prev
+      );
+
+      // Refresh/update favorite recipes list
+      if (isFavorited) {
+        const favs = await recipesService.getFavoriteRecipes();
+        setFavoriteRecipes(favs);
+      } else {
+        setFavoriteRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+      }
     } catch (error) {
       console.error('Error toggling favorite:', error);
       alert('Không thể cập nhật yêu thích');
@@ -242,7 +268,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         )}
         {activeTab === 'favorites' && (
           <TabFavorites
-            recipes={recipes}
+            recipes={favoriteRecipes}
             onRecipeClick={handleRecipeClick}
             onToggleFavorite={handleToggleFavorite}
           />
