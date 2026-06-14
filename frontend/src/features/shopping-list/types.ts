@@ -1,4 +1,4 @@
-export type FoodCategory = 'Thịt cá' | 'Rau củ' | 'Đồ khô' | 'Gia vị' | 'Đồ uống' | 'Khác';
+export type FoodCategory = 'Thịt cá' | 'Rau củ quả' | 'Trứng' | 'Chất lỏng' | 'Đồ khô' | 'Gia vị' | 'Khác';
 
 export interface ShoppingItem {
   id: string;

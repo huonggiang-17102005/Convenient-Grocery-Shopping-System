@@ -9,11 +9,12 @@ interface ShoppingCardProps {
 
 const getCategoryClass = (category: string): string => {
   switch (category) {
-    case 'Rau củ': return 'shopping-card__badge--rau-cu';
+    case 'Rau củ quả': return 'shopping-card__badge--rau-cu';
     case 'Thịt cá': return 'shopping-card__badge--thit-ca';
-    case 'Đồ uống': return 'shopping-card__badge--do-uong';
+    case 'Chất lỏng': return 'shopping-card__badge--do-uong';
     case 'Gia vị': return 'shopping-card__badge--gia-vi';
     case 'Đồ khô': return 'shopping-card__badge--do-kho';
+    case 'Trứng': return 'shopping-card__badge--default';
     default: return 'shopping-card__badge--default';
   }
 };

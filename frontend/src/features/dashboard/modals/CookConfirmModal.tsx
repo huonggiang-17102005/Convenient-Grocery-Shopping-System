@@ -24,9 +24,10 @@ interface CookConfirmModalProps {
 
 const CATEGORIES = [
   'Thịt cá',
-  'Rau củ',
-  'Trái cây',
-  'Đồ uống',
+  'Rau củ quả',
+  'Trứng',
+  'Chất lỏng',
+  'Đồ khô',
   'Gia vị',
   'Khác'
 ];

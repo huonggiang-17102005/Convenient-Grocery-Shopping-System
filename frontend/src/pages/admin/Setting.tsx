@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText } from 'lucide-react';
-// @ts-ignore
 import html2pdf from 'html2pdf.js';
 import './Dashboard.css';
 import './Setting.css';
@@ -24,10 +23,12 @@ const COLORS = [
 ];
 
 const getColorForCategory = (category: string, index: number) => {
-  if (category === 'Rau củ' || category === 'Vegetables') return '#FFB74D';
+  if (category === 'Rau củ quả' || category === 'Rau củ' || category === 'Vegetables') return '#FFB74D';
   if (category === 'Thịt cá' || category === 'Meat') return '#EF5350';
-  if (category === 'Đồ uống' || category === 'Drinks') return '#42A5F5';
+  if (category === 'Chất lỏng' || category === 'Đồ uống' || category === 'Drinks') return '#42A5F5';
   if (category === 'Gia vị' || category === 'Spices') return '#AB47BC';
+  if (category === 'Trứng') return '#D4E157';
+  if (category === 'Đồ khô') return '#8D6E63';
   return COLORS[index % COLORS.length];
 };
 
@@ -58,17 +59,21 @@ const SettingAdmin: React.FC = () => {
     setIsExporting(true);
     setTimeout(() => {
       const element = document.getElementById('pdf-report-content');
-      const opt: any = {
-        margin:       10,
-        filename:     `BaoCao_FridMate_${selectedMonth || 'All'}_${selectedYear || 'All'}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      
-      html2pdf().set(opt).from(element).save().then(() => {
+      if (element) {
+        const opt = {
+          margin:       10,
+          filename:     `BaoCao_FridMate_${selectedMonth || 'All'}_${selectedYear || 'All'}.pdf`,
+          image:        { type: 'jpeg' as const, quality: 0.98 },
+          html2canvas:  { scale: 2 },
+          jsPDF:        { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
+        };
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+          setIsExporting(false);
+        });
+      } else {
         setIsExporting(false);
-      });
+      }
     }, 300);
   };
 
@@ -265,6 +270,7 @@ const SettingAdmin: React.FC = () => {
                     <div className="admin-setting-filter-label">Thời gian:</div>
                     
                     <select 
+                      title="Chọn tháng"
                       className="admin-setting-dropdown"
                       style={{ 
                         outline: 'none', 

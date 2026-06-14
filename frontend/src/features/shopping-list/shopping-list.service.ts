@@ -17,9 +17,9 @@ const INITIAL_SHOPPING_ITEMS: ShoppingItem[] = [
   {
     id: 's2',
     name: 'Cà chua',
-    category: 'Rau củ',
-    quantity: 3,
-    unit: 'quả',
+    category: 'Rau củ quả',
+    quantity: 400,
+    unit: 'g',
     isBought: false,
     assigneeId: 'Shin',
     deadlineDate: '2026-06-12',
@@ -29,10 +29,10 @@ const INITIAL_SHOPPING_ITEMS: ShoppingItem[] = [
 
 // Mock initial data for Refrigerator (for sync)
 const INITIAL_FRIDGE_ITEMS = [
-  { id: '1', emoji: '🥕', name: 'Cà rốt', quantity: 3, daysRemaining: 7, category: 'Rau củ', storageType: 'Ngăn mát' },
-  { id: '2', emoji: '🥩', name: 'Thịt bò', quantity: 1, daysRemaining: 1, category: 'Thịt cá', storageType: 'Ngăn đông' },
-  { id: '3', emoji: '🥛', name: 'Sữa tươi', quantity: 2, daysRemaining: 3, category: 'Đồ uống', storageType: 'Ngăn mát' },
-  { id: '4', emoji: '🧅', name: 'Hành tây', quantity: 4, daysRemaining: 5, category: 'Rau củ', storageType: 'Khô' },
+  { id: '1', emoji: '🥕', name: 'Cà rốt', quantity: 300, daysRemaining: 7, category: 'Rau củ quả', storageType: 'Ngăn mát' },
+  { id: '2', emoji: '🥩', name: 'Thịt bò', quantity: 500, daysRemaining: 1, category: 'Thịt cá', storageType: 'Ngăn đông' },
+  { id: '3', emoji: '🥛', name: 'Sữa tươi', quantity: 1000, daysRemaining: 3, category: 'Chất lỏng', storageType: 'Ngăn mát' },
+  { id: '4', emoji: '🧅', name: 'Hành tây', quantity: 400, daysRemaining: 5, category: 'Rau củ quả', storageType: 'Khô' },
 ];
 
 const LOCAL_STORAGE_KEY = 'homemaker_shopping_items';
@@ -41,8 +41,9 @@ const FRIDGE_LOCAL_STORAGE_KEY = 'homemaker_fridge_items';
 const getCategoryEmoji = (category: FoodCategory): string => {
   switch (category) {
     case 'Thịt cá': return '🥩';
-    case 'Rau củ': return '🍅';
-    case 'Đồ uống': return '🥛';
+    case 'Rau củ quả': return '🍅';
+    case 'Trứng': return '🥚';
+    case 'Chất lỏng': return '🥛';
     case 'Đồ khô': return '🍞';
     case 'Gia vị': return '🌶️';
     default: return '📦';

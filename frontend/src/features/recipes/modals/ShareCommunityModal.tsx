@@ -11,7 +11,7 @@ interface ShareCommunityModalProps {
 }
 
 const DIFFICULTIES: DifficultyLevel[] = ['Dễ', 'Trung bình', 'Khó'];
-const INGREDIENT_CATEGORIES = ['Thịt cá', 'Rau củ', 'Gia vị', 'Đồ khô', 'Khác'];
+const INGREDIENT_CATEGORIES = ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'];
 
 const emptyIngredient = (): Ingredient => ({
   id: 'ing_' + Date.now() + Math.random(),

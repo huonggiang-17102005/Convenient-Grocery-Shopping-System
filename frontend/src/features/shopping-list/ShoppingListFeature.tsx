@@ -177,7 +177,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   });
 
   // Group items by category
-  const categoriesList: FoodCategory[] = ['Thịt cá', 'Rau củ', 'Đồ khô', 'Gia vị', 'Đồ uống', 'Khác'];
+  const categoriesList: FoodCategory[] = ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'];
   const groupedItems = categoriesList.reduce((acc, cat) => {
     const catItems = filteredItems.filter(item => item.category === cat);
     if (catItems.length > 0) {

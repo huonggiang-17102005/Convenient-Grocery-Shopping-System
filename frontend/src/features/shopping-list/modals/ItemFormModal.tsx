@@ -9,13 +9,13 @@ interface ItemFormModalProps {
   mode: 'create' | 'edit';
 }
 
-const CATEGORIES: FoodCategory[] = ['Rau củ', 'Thịt cá', 'Đồ khô', 'Gia vị', 'Đồ uống', 'Khác'];
+const CATEGORIES: FoodCategory[] = ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'];
 const UNITS = ['g', 'kg', 'cái', 'hộp', 'bó', 'túi', 'lít', 'ml'];
 
 const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit, item, mode }) => {
   const [category, setCategory] = useState<FoodCategory>(() => {
     if (mode === 'edit' && item) return item.category;
-    return 'Rau củ';
+    return 'Rau củ quả';
   });
 
   const [name, setName] = useState(() => {
