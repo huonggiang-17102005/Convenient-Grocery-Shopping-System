@@ -6,8 +6,7 @@
 
 .meal-planner-page {
   background-color: #F8FAFC;
-  min-height: 100vh;
-  padding-bottom: 90px;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -615,8 +614,8 @@
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
   z-index: 1500;
   display: flex;
   align-items: flex-end;

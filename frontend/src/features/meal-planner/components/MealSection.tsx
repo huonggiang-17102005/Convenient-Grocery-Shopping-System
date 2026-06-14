@@ -1,11 +1,11 @@
 import React from 'react';
-import type { Recipe } from '../types';
+import type { PlannedMeal } from '../types';
 import SelectedDishCard from './SelectedDishCard';
 
 interface MealSectionProps {
   title: string;          // 'Bữa Sáng' | 'Bữa Trưa' | 'Bữa Tối'
   mealKey: string;        // 'breakfast' | 'lunch' | 'dinner'
-  dishes: Recipe[];
+  dishes: PlannedMeal[];
   showAdd?: boolean;
   showRemove?: boolean;
   onAddDish: () => void;
@@ -27,12 +27,12 @@ const MealSection: React.FC<MealSectionProps> = ({
 
       {dishes.length > 0 ? (
         <ul className="mp-meal-section__dishes">
-          {dishes.map((dish) => (
+          {dishes.map((plannedMeal) => (
             <SelectedDishCard
-              key={dish.id}
-              dish={dish}
+              key={plannedMeal.id}
+              plannedMeal={plannedMeal}
               showRemove={showRemove}
-              onRemove={() => onRemoveDish(dish.id)}
+              onRemove={() => onRemoveDish(plannedMeal.id)}
             />
           ))}
         </ul>

@@ -1,24 +1,28 @@
 import React from 'react';
-import type { Recipe } from '../types';
+import type { PlannedMeal } from '../types';
 
 interface SelectedDishCardProps {
-  dish: Recipe;
+  plannedMeal: PlannedMeal;
   showRemove?: boolean;
   onRemove: () => void;
 }
 
-const SelectedDishCard: React.FC<SelectedDishCardProps> = ({ dish, showRemove = true, onRemove }) => {
+const SelectedDishCard: React.FC<SelectedDishCardProps> = ({ plannedMeal, showRemove = true, onRemove }) => {
+  const dish = plannedMeal.recipe;
   return (
     <li className={`mp-dish-card${!showRemove ? ' mp-dish-card--readonly' : ''}`}>
       <div className="mp-dish-card__left">
         <div className="mp-dish-card__emoji-wrap" aria-hidden="true">
-          {dish.image ? (
-            <img src={dish.image} alt="" className="mp-dish-card__img-el" />
+          {dish.imageUrl ? (
+            <img src={dish.imageUrl} alt={dish.name} className="mp-dish-card__img-el" />
           ) : (
-            dish.emoji
+            <span className="mp-dish-card__emoji">{dish.emoji || '🍽️'}</span>
           )}
         </div>
-        <span className="mp-dish-card__name">{dish.name}</span>
+        <div className="mp-dish-card__info">
+          <h4 className="mp-dish-card__name">{dish.name}</h4>
+          <p className="mp-dish-card__time">⏰ {dish.cookTimeMinutes} phút</p>
+        </div>
       </div>
       {showRemove && (
         <button

@@ -33,6 +33,7 @@ const mapBackendToFrontendRecipe = (item: any): Recipe => {
       name: ing.name,
       amount: ing.quantity || 0,
       unit: ing.unit || '',
+      imageUrl: ing.image_url,
     })),
     steps: (item.instructions || []).map((inst: string, i: number) => ({
       id: `step_${i}`,

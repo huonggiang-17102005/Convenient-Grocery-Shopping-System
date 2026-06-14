@@ -26,16 +26,16 @@ const RecipeSelectCard: React.FC<RecipeSelectCardProps> = ({
           {isSelected && <Check size={12} color="white" strokeWidth={3.5} />}
         </div>
         <div className="mp-select-card__emoji" aria-hidden="true">
-          {recipe.image ? (
-            <img src={recipe.image} alt="" className="mp-select-card__img-el" />
+          {recipe.imageUrl ? (
+            <img src={recipe.imageUrl} alt={recipe.name} style={{width: 32, height: 32, borderRadius: 6, objectFit: 'cover'}} />
           ) : (
-            recipe.emoji
+            recipe.emoji || '🍽️'
           )}
         </div>
         <div className="mp-select-card__info">
           <span className="mp-select-card__name">{recipe.name}</span>
           <div className="mp-select-card__tags">
-            <span className="mp-select-card__tag">{recipe.duration}</span>
+            <span className="mp-select-card__tag">⏰ {recipe.cookTimeMinutes} phút</span>
           </div>
         </div>
       </div>

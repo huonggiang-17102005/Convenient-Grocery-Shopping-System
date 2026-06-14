@@ -22,7 +22,10 @@ const WeekDayTabs: React.FC<WeekDayTabsProps> = ({ days, activeDay, onSelectDay 
       '.mp-weekday-tab--active'
     );
     if (activeEl) {
-      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      // Prevent whole page shifting by scrolling only the container
+      const container = containerRef.current;
+      const scrollLeft = activeEl.offsetLeft - (container.offsetWidth / 2) + (activeEl.offsetWidth / 2);
+      container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
     }
   }, [activeDay]);
 

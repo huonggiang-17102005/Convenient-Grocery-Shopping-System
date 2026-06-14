@@ -4,26 +4,12 @@ import SearchAndFilter from './SearchAndFilter';
 import SelectedChipsList from './SelectedChipsList';
 import RecipeSelectCard from './RecipeSelectCard';
 
-// ── Mock recipe catalogue ────────────────────────────────────────────────────
-const ALL_RECIPES: Recipe[] = [
-  { id: 'r1',  name: 'Thịt bò xào cà chua',  emoji: '🥩', duration: '25 phút' },
-  { id: 'r2',  name: 'Canh cà chua trứng',    emoji: '🍅', duration: '15 phút' },
-  { id: 'r3',  name: 'Gà xào hành tây',       emoji: '🍗', duration: '30 phút' },
-  { id: 'r4',  name: 'Cá kho tộ',             emoji: '🐟', duration: '45 phút' },
-  { id: 'r5',  name: 'Tôm rang me',           emoji: '🦐', duration: '20 phút' },
-  { id: 'r6',  name: 'Rau muống xào tỏi',     emoji: '🥬', duration: '10 phút' },
-  { id: 'r7',  name: 'Canh bí đỏ thịt băm',   emoji: '🎃', duration: '20 phút' },
-  { id: 'r8',  name: 'Trứng chiên cà chua',   emoji: '🍳', duration: '12 phút' },
-  { id: 'r9',  name: 'Sườn ram mặn',          emoji: '🍖', duration: '35 phút' },
-  { id: 'r10', name: 'Bún bò Huế',            emoji: '🍜', duration: '60 phút' },
-  { id: 'r11', name: 'Phở gà',                emoji: '🍲', duration: '40 phút' },
-  { id: 'r12', name: 'Đậu hũ sốt cà chua',   emoji: '🧆', duration: '15 phút' },
-];
-
 interface AddDishBottomSheetProps {
   isOpen: boolean;
   mealTitle: string;   // e.g. 'Bữa Sáng'
   mealKey: MealKey;
+  /** Dishes available to be added (from Library and Favorites) */
+  availableRecipes: Recipe[];
   /** Dishes already added to this meal (to pre-check them) */
   existingDishes: Recipe[];
   onClose: () => void;
@@ -32,6 +18,7 @@ interface AddDishBottomSheetProps {
 
 const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
   isOpen,
+  availableRecipes,
   existingDishes,
   onClose,
   onConfirm,
@@ -57,9 +44,17 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
   // Filtered recipe list
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return ALL_RECIPES;
-    return ALL_RECIPES.filter((r) => r.name.toLowerCase().includes(q));
-  }, [query]);
+    if (!q) return availableRecipes;
+    
+    return availableRecipes.filter((r) => {
+      if (filterMode === 'name') {
+        return r.name.toLowerCase().includes(q);
+      } else {
+        // filterMode === 'ingredient'
+        return r.ingredients?.some(ing => ing.name.toLowerCase().includes(q));
+      }
+    });
+  }, [query, availableRecipes, filterMode]);
 
   const toggle = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -74,8 +69,8 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
   }, []);
 
   const selectedRecipes = useMemo(
-    () => ALL_RECIPES.filter((r) => selectedIds.has(r.id)),
-    [selectedIds]
+    () => availableRecipes.filter((r) => selectedIds.has(r.id)),
+    [availableRecipes, selectedIds]
   );
 
   const handleConfirm = () => {

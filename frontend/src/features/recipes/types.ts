@@ -9,6 +9,7 @@ export interface Ingredient {
   amount: number;
   unit: string;     // e.g. 'g', 'quả', 'củ', 'tép', 'gói'
   isExpiringSoon?: boolean; // flags items sắp hết hạn
+  imageUrl?: string; // Optional image URL for ingredient
 }
 
 export interface CookingStep {
