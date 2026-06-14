@@ -1,0 +1,317 @@
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import type { Recipe, CommunityPost, FilterIngredient, RecipesFeatureProps, PendingPost } from './types';
+import { matchFoodImageUrl } from './recipes.utils';
+import { recipesService } from './recipes.service';
+
+import RecipeTabs from './components/RecipeTabs';
+import TabLibrary from './components/TabLibrary';
+import TabFavorites from './components/TabFavorites';
+import TabCommunity from './components/TabCommunity';
+
+import RecipeDetailModal from './modals/RecipeDetailModal';
+import RecipeFormModal from './modals/RecipeFormModal';
+import ShareCommunityModal from './modals/ShareCommunityModal';
+import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
+
+import './recipes.css';
+
+type ActiveTab = 'library' | 'favorites' | 'community';
+
+export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
+  // ── Data state ──────────────────────────────────────────────
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
+  const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const [familyRecipes, favRecipes, posts] = await Promise.all([
+        recipesService.getFamilyRecipes(),
+        recipesService.getFavoriteRecipes(),
+        recipesService.getCommunityRecipes(),
+      ]);
+      
+      // Merge family and favorite recipes to ensure isFavorited is true
+      const favMap = new Map(favRecipes.map(r => [r.id, true]));
+      const allRecipes = familyRecipes.map(r => ({
+        ...r,
+        isFavorited: r.isFavorited || favMap.has(r.id),
+      }));
+      
+      setRecipes(allRecipes);
+      setCommunityPosts(posts);
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // ── UI state ─────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<ActiveTab>('library');
+  const [selectedIngredients, setSelectedIngredients] = useState<FilterIngredient[]>([]);
+
+  // ── Modal state ──────────────────────────────────────────────
+  const [detailRecipe, setDetailRecipe] = useState<Recipe | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isViewingCommunity, setIsViewingCommunity] = useState(false);
+
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [formRecipe, setFormRecipe] = useState<Recipe | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  const [deleteRecipe, setDeleteRecipe] = useState<Recipe | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  // ── Refs ─────────────────────────────────────────────────────
+  const pendingTimeoutRef = useRef<any>(null);
+
+  // ── Cleanup on unmount ───────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      if (pendingTimeoutRef.current) {
+        clearTimeout(pendingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // ── Handlers ─────────────────────────────────────────────────
+
+  const handleToggleFavorite = useCallback(async (recipeId: string) => {
+    try {
+      const { isFavorited } = await recipesService.toggleFavorite(recipeId);
+      setRecipes((prev) =>
+        prev.map((r) => (r.id === recipeId ? { ...r, isFavorited } : r))
+      );
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      alert('Không thể cập nhật yêu thích');
+    }
+  }, []);
+
+  const handleRecipeClick = useCallback((recipe: Recipe) => {
+    setIsViewingCommunity(false);
+    setDetailRecipe(recipe);
+    setIsDetailOpen(true);
+  }, []);
+
+  const handleOpenCreate = useCallback(() => {
+    setFormMode('create');
+    setFormRecipe(null);
+    setIsFormOpen(true);
+  }, []);
+
+  const handleOpenEdit = useCallback((recipe: Recipe) => {
+    setFormMode('edit');
+    setFormRecipe(recipe);
+    setIsDetailOpen(false);
+    setIsFormOpen(true);
+  }, []);
+
+  const handleOpenDelete = useCallback((recipe: Recipe) => {
+    setDeleteRecipe(recipe);
+    setIsDetailOpen(false);
+    setIsDeleteOpen(true);
+  }, []);
+
+  const handleFormSubmit = useCallback(
+    async (data: Omit<Recipe, 'id' | 'isFavorited'>) => {
+      try {
+        if (formMode === 'create') {
+          const newRecipe = await recipesService.createRecipe(data);
+          setRecipes((prev) => [newRecipe, ...prev]);
+        } else if (formMode === 'edit' && formRecipe) {
+          const updatedRecipe = await recipesService.updateRecipe(formRecipe.id, data);
+          setRecipes((prev) =>
+            prev.map((r) =>
+              r.id === formRecipe.id ? { ...r, ...updatedRecipe } : r
+            )
+          );
+        }
+      } catch (error) {
+        console.error('Error saving recipe:', error);
+        alert('Lỗi khi lưu công thức');
+      }
+    },
+    [formMode, formRecipe]
+  );
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (deleteRecipe) {
+      try {
+        await recipesService.deleteRecipe(deleteRecipe.id);
+        setRecipes((prev) => prev.filter((r) => r.id !== deleteRecipe.id));
+        setDeleteRecipe(null);
+        setIsDeleteOpen(false);
+      } catch (error) {
+        console.error('Error deleting recipe:', error);
+        alert('Lỗi khi xóa công thức');
+      }
+    }
+  }, [deleteRecipe]);
+
+  const handleToggleCommunityLike = useCallback(async (postId: string) => {
+    try {
+      // Pass recipe id to like (since post ID here is mapped to recipe id)
+      const result = await recipesService.toggleLike(postId);
+      setCommunityPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? { ...p, isLiked: result.isLiked, likes: result.likes }
+            : p
+        )
+      );
+    } catch (error) {
+      console.error('Error toggling like:', error);
+    }
+  }, []);
+
+  const handleAddToShoppingList = useCallback(async (recipe: Recipe) => {
+    try {
+      const result = await recipesService.addToShoppingList(recipe.id);
+      alert(result.message);
+    } catch (error) {
+      console.error('Error adding to shopping list:', error);
+      alert('Lỗi khi kiểm tra nguyên liệu hoặc thêm vào giỏ hàng.');
+    }
+  }, []);
+
+  const handleCommunityPostClick = useCallback((post: CommunityPost) => {
+    setIsViewingCommunity(true);
+    setDetailRecipe(post.recipe);
+    setIsDetailOpen(true);
+  }, []);
+
+  const handleCancelPending = useCallback(() => {
+    if (pendingTimeoutRef.current) {
+      clearTimeout(pendingTimeoutRef.current);
+      pendingTimeoutRef.current = null;
+    }
+    setPendingPost(null);
+  }, []);
+
+  const handleShareSubmit = useCallback(
+    async (description: string, recipeData: Omit<Recipe, 'id' | 'isFavorited'>) => {
+      try {
+        // Create recipe first, then share
+        const createdRecipe = await recipesService.createRecipe(recipeData);
+        await recipesService.shareToCommunity(createdRecipe.id, description);
+        
+        setIsShareOpen(false);
+        // Refresh data to show in community or just show success alert
+        alert('Đã gửi công thức lên cộng đồng, vui lòng chờ duyệt!');
+      } catch (error) {
+        console.error('Error sharing recipe:', error);
+        alert('Lỗi khi chia sẻ công thức');
+      }
+    },
+    []
+  );
+
+  // ── Render ────────────────────────────────────────────────────
+  return (
+    <div className="recipes-feature" id="recipes-feature">
+      {/* Sticky page header */}
+      <div className="recipes-page-header">
+        <h1 className="recipes-page-title">Công thức nấu ăn</h1>
+        <RecipeTabs
+          activeTab={activeTab}
+          onChangeTab={setActiveTab}
+        />
+      </div>
+
+      {/* Tab content area (scrollable) */}
+      <div className="recipes-content">
+        {activeTab === 'library' && (
+          <TabLibrary
+            recipes={recipes}
+            selectedIngredients={selectedIngredients}
+            onChangeIngredients={setSelectedIngredients}
+            onRecipeClick={handleRecipeClick}
+            onToggleFavorite={handleToggleFavorite}
+          />
+        )}
+        {activeTab === 'favorites' && (
+          <TabFavorites
+            recipes={recipes}
+            onRecipeClick={handleRecipeClick}
+            onToggleFavorite={handleToggleFavorite}
+          />
+        )}
+        {activeTab === 'community' && (
+          <TabCommunity
+            posts={communityPosts}
+            pendingPost={pendingPost}
+            role={role}
+            onPostRecipeClick={handleCommunityPostClick}
+            onToggleLike={handleToggleCommunityLike}
+            onShareClick={() => setIsShareOpen(true)}
+            onCancelPending={handleCancelPending}
+          />
+        )}
+      </div>
+
+      {/* FAB: Thêm công thức (homemaker & member cho cả thư viện và cộng đồng) */}
+      {(activeTab === 'library' || activeTab === 'community') && (
+        <button
+          id="recipe-fab-btn"
+          type="button"
+          className="recipe-fab"
+          onClick={activeTab === 'community' ? () => setIsShareOpen(true) : handleOpenCreate}
+          aria-label={activeTab === 'community' ? "Chia sẻ bài viết mới" : "Thêm công thức mới"}
+        >
+          <span>+</span>
+        </button>
+      )}
+
+      {/* ── Modals ────────────────────────────────────────────── */}
+      <RecipeDetailModal
+        isOpen={isDetailOpen}
+        recipe={detailRecipe}
+        showEditDelete={!isViewingCommunity}
+        onClose={() => {
+          setIsDetailOpen(false);
+          setIsViewingCommunity(false);
+        }}
+        onEdit={handleOpenEdit}
+        onDelete={handleOpenDelete}
+        onToggleFavorite={handleToggleFavorite}
+        onAddToShoppingList={handleAddToShoppingList}
+      />
+
+      <RecipeFormModal
+        key={isFormOpen ? (formRecipe?.id ?? 'new') : 'closed'}
+        isOpen={isFormOpen}
+        mode={formMode}
+        recipe={formRecipe}
+        onClose={() => setIsFormOpen(false)}
+        onSubmit={handleFormSubmit}
+      />
+
+      <ShareCommunityModal
+        key={isShareOpen ? 'open' : 'closed'}
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        onSubmit={handleShareSubmit}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={isDeleteOpen}
+        recipeName={deleteRecipe?.name}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleDeleteConfirm}
+      />
+    </div>
+  );
+};
+
+export default RecipesFeature;

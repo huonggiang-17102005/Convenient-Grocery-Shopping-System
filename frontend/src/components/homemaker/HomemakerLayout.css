@@ -4,7 +4,7 @@
   height: 100vh;
   width: 100%;
   margin: 0 auto;
-  background-color: #F5F5F5;
+  background-color: #F8FAFC;
   position: relative;
   overflow: hidden;
 }
@@ -18,7 +18,7 @@
   background-color: #ffffff;
   border-bottom: 1px solid #E0E0E0;
   flex-shrink: 0;
-  z-index: 10;
+  z-index: 90;
 }
 
 .header-user-info {
@@ -146,8 +146,9 @@
 .homemaker-content {
   flex: 1;
   overflow-y: auto;
-  background-color: #F5F5F5;
-  padding-bottom: 20px;
+  overflow-x: hidden;
+  background-color: #F8FAFC;
+  padding-bottom: 0;
 }
 
 /* Bottom Navigation Styles */
@@ -163,7 +164,7 @@
   z-index: 10;
 }
 
-.nav-item {
+.homemaker-bottom-nav .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -176,15 +177,15 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.nav-item.active {
+.homemaker-bottom-nav .nav-item.active {
   color: #FF8A00;
 }
 
-.nav-item.active svg {
+.homemaker-bottom-nav .nav-item.active svg {
   stroke: #FF8A00;
 }
 
-.nav-label {
+.homemaker-bottom-nav .nav-label {
   font-size: 12px;
   font-weight: 500;
   font-family: 'Plus Jakarta Sans', sans-serif;

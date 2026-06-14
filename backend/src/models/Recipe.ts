@@ -1,4 +1,5 @@
 export interface Ingredient {
+  category?: string;
   name: string;
   quantity: number;
   unit: string;
@@ -6,18 +7,18 @@ export interface Ingredient {
 
 export interface Recipe {
   id: string;
-  author_id: string;
+  author_id: string | null;
   name: string;
-  description: string;
-  image_url: string;
-  image_public_id: string;
-  cooking_time: number;
-  difficulty: 'Dễ' | 'Trung bình' | 'Khó';
+  description: string | null;
+  image_url: string | null;
+  image_public_id: string | null;
+  cooking_time: number | null;
+  difficulty: 'Dễ' | 'Trung bình' | 'Khó' | null;
   servings: number;
   ingredients: Ingredient[];
   instructions: string[];
-  visibility: 'Private' | 'Public';
-  likes_count: number;
+  visibility: 'Private' | 'Public' | 'Pending' | null;
+  likes_count: number | null;
   created_at?: string;
   updated_at?: string;
 }

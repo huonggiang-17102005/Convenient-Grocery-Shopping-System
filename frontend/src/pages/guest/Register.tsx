@@ -13,12 +13,21 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   
   const [errorMsg, setErrorMsg] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+    setEmailError('');
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setEmailError('Email không hợp lệ!');
+      return;
+    }
 
     if (password.length < 6) {
       setErrorMsg('Mật khẩu ít nhất có 6 kí tự');
@@ -38,8 +47,7 @@ export default function Register() {
         headers: {
           'Content-Type': 'application/json',
         },
-        // Lưu ý: Backend hiện tại chỉ lưu email và password, tạm thời chưa gửi name xuống DB
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, full_name: name }),
       });
 
       const data = await response.json();
@@ -52,9 +60,10 @@ export default function Register() {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      navigate('/homemaker/dashboard');
-    } catch (err: any) {
-      setErrorMsg(err.message);
+      // Đăng ký thành công thì nhảy sang trang chọn vai trò
+      navigate('/choose-role');
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Có lỗi xảy ra');
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +75,7 @@ export default function Register() {
         <div className="auth-logo">
           <ShoppingCart size={32} color="#1A1A1A" />
         </div>
-        <h1 className="auth-title">Chào mừng đến BridMate</h1>
+        <h1 className="auth-title">Chào mừng đến FridMate</h1>
         <p className="auth-subtitle">Bắt đầu quản lý bếp nhà thông minh</p>
       </div>
 
@@ -82,7 +91,7 @@ export default function Register() {
         </div>
       </div>
 
-      <form className="auth-form" onSubmit={handleRegister}>
+      <form className="auth-form" onSubmit={handleRegister} noValidate>
         <div className="form-group">
           <label htmlFor="name">Họ và tên</label>
           <input 
@@ -103,8 +112,13 @@ export default function Register() {
             placeholder="your@email.com" 
             required 
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (emailError) setEmailError('');
+            }}
+            style={{ borderColor: emailError ? '#F44336' : '' }}
           />
+          {emailError && <div style={{ color: '#F44336', fontSize: '13px', marginTop: '8px' }}>{emailError}</div>}
         </div>
         
         <div className="form-group">

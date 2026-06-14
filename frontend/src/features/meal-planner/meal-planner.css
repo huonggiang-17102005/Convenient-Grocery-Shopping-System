@@ -1,0 +1,807 @@
+/* ============================================
+   MealPlanner.css — Meal Planner tab styles
+   Font: Plus Jakarta Sans
+   Primary: #FF8A00
+   ============================================ */
+
+.meal-planner-page {
+  background-color: #F8FAFC;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mp-header {
+  position: relative;
+  padding: 16px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  border-bottom: 1.27px solid #E0E0E0;
+}
+
+.mp-header__back {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+.mp-header__back:hover {
+  background: #F5F5F5;
+}
+
+.mp-header__title {
+  color: #1A1A1A;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: center;
+}
+
+/* ── Meal Section ── */
+.mp-meal-section {
+  margin: 16px 16px 0 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  border: 1.27px solid #E0E0E0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mp-meal-section__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mp-meal-section__title {
+  color: #1A1A1A;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.mp-add-btn {
+  width: 100%;
+  height: 40px;
+  background: transparent;
+  color: var(--primary-color);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border: 1.27px solid var(--primary-color);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-add-btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.mp-meal-section__dishes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.mp-meal-section__empty {
+  color: #757575;
+  font-size: 14px;
+  font-weight: 400;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  margin: 0;
+}
+
+/* ── Empty state card ── */
+.mp-empty-card {
+  height: 80px;
+  border: 1.5px dashed var(--primary-color);
+  background: var(--primary-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.mp-empty-card:hover {
+  background: var(--primary-light-hover);
+}
+
+/* ── Dish Card ── */
+.mp-dish-card {
+  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+
+.mp-dish-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.mp-dish-card--readonly {
+  cursor: default;
+}
+
+.mp-dish-card--readonly:hover {
+  box-shadow: none;
+}
+
+.mp-dish-card__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-dish-card__emoji-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #F5F5F5 0%, #E5E7EB 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.mp-dish-card__img-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.mp-dish-card__emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.mp-dish-card__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.mp-dish-card__name {
+  color: #1A1A1A;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.mp-dish-card__time {
+  color: #757575;
+  font-size: 12px;
+  font-weight: 400;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.mp-dish-card__remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: #D32F2F;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.mp-dish-card__remove:hover {
+  background: #FFEBEE;
+}
+
+/* ── Content ── */
+.mp-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ── Day tabs ── */
+.mp-weekday-tabs {
+  padding: 0 16px 16px 16px;
+  background: white;
+  border-bottom: 1.27px solid #E0E0E0;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+@supports (scrollbar-width: none) {
+  .mp-weekday-tabs {
+    scrollbar-width: none;
+  }
+}
+.mp-weekday-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.mp-weekday-tab {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  background: white;
+  border-radius: 50%;
+  border: 1.27px solid #E0E0E0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mp-weekday-tab__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #1A1A1A;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.mp-weekday-tab__date {
+  display: none;
+}
+
+.mp-weekday-tab--active {
+  background: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.mp-weekday-tab--active .mp-weekday-tab__label {
+  color: white !important;
+}
+
+/* ── Bottom Sheet Search/Filter ── */
+.mp-bottom-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mp-search-container {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.mp-search-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.mp-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  color: #757575;
+}
+
+.mp-search-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px 0 48px;
+  background: #F5F5F5;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  font-size: 14px;
+  color: #1A1A1A;
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.mp-search-input:focus {
+  border-color: var(--primary-color);
+  background: white;
+}
+
+.mp-search-btn {
+  width: 52px;
+  height: 52px;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: background 0.15s;
+}
+
+.mp-search-btn:hover {
+  background: var(--primary-hover);
+}
+
+/* Stepper selection chips */
+.mp-chips-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.mp-chips-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+@supports (scrollbar-width: none) {
+  .mp-chips-scroll {
+    scrollbar-width: none;
+  }
+}
+.mp-chips-scroll::-webkit-scrollbar { display: none; }
+
+.mp-selected-chip {
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 8px 0 12px;
+  background: var(--primary-light);
+  border: 1.27px solid var(--primary-color);
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mp-selected-chip__name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1A1A1A;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.mp-selected-chip__remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color);
+}
+
+.mp-count-badge {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary-color);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: left;
+}
+
+/* ── Recipe Selection Grid ── */
+.mp-recipe-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+@supports (scrollbar-width: none) {
+  .mp-recipe-grid {
+    scrollbar-width: none;
+  }
+}
+.mp-recipe-grid::-webkit-scrollbar { display: none; }
+
+.mp-select-card {
+  padding: 12px;
+  background: white;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.mp-select-card__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mp-select-card__checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1.27px solid #757575;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  cursor: pointer;
+}
+
+.mp-select-card--selected .mp-select-card__checkbox {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.mp-select-card__check-icon {
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mp-select-card__emoji {
+  font-size: 32px;
+}
+
+.mp-select-card__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.mp-select-card__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A1A1A;
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: left;
+}
+
+.mp-select-card__tags {
+  display: flex;
+  gap: 6px;
+}
+
+.mp-select-card__tag {
+  font-size: 11px;
+  color: #757575;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ── Actions ── */
+.mp-bottom-sheet-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.mp-bottom-sheet-btn {
+  width: 100%;
+  height: 48px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+}
+
+.mp-bottom-sheet-btn--primary {
+  background: var(--primary-color);
+  border: 1.27px solid var(--primary-color);
+  color: white;
+}
+
+.mp-bottom-sheet-btn--secondary {
+  background: white;
+  border: 1.27px solid #E0E0E0;
+  color: #1A1A1A;
+}
+
+/* ── Toast (scoped inline to meal planner) ── */
+.mp-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--primary-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.10), 0 4px 6px -4px rgba(0,0,0,0.10);
+  padding: 16px;
+  min-width: 280px;
+  max-width: calc(100vw - 32px);
+  animation: mpToastIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes mpToastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.mp-toast--visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.mp-toast--hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mp-toast__icon {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  background: rgba(255, 255, 255, 0.20);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-toast__text {
+  font-size: 14px;
+  color: white;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 500;
+  line-height: 20px;
+  text-align: left;
+}
+
+@media (min-width: 480px) {
+  .mp-toast {
+    width: calc(480px - 32px);
+  }
+}
+
+/* ── Screen reader only utility ── */
+.mp-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Overlay and Bottom Sheet Layout ── */
+.mp-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  z-index: 1500;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: mpOverlayIn 0.25s ease-out;
+}
+
+@keyframes mpOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.mp-bottom-sheet {
+  background: white;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: 24px 24px 0 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1), 0 -8px 10px -6px rgba(0, 0, 0, 0.1);
+  animation: mpSheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow-y: auto;
+}
+
+@keyframes mpSheetUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.mp-sheet-handle-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom: 4px;
+  flex-shrink: 0;
+}
+
+.mp-sheet-handle {
+  width: 40px;
+  height: 4px;
+  background-color: #E0E0E0;
+  border-radius: 2px;
+}
+
+/* ── Search Area & Filter Row ── */
+.mp-search-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mp-search-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.mp-search-input-wrap .mp-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #757575;
+  display: flex;
+  align-items: center;
+}
+
+.mp-search-input-wrap .mp-search-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px 0 48px;
+  background: #F5F5F5;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  font-size: 14px;
+  color: #1A1A1A;
+  outline: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.2s;
+}
+
+.mp-search-input-wrap .mp-search-input:focus {
+  border-color: var(--primary-color);
+  background: white;
+}
+
+.mp-filter-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.mp-filter-btn {
+  flex: 1;
+  height: 40px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1.27px solid #E0E0E0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mp-filter-btn--inactive {
+  background: white;
+  color: #757575;
+}
+
+.mp-filter-btn--inactive:hover {
+  background: #F5F5F5;
+}
+
+.mp-filter-btn--active {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* ── Recipe Select List ── */
+.mp-recipe-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0 12px;
+}
+
+@supports (scrollbar-width: thin) {
+  .mp-recipe-list {
+    scrollbar-width: thin;
+  }
+}
+
+.mp-recipe-list::-webkit-scrollbar { width: 4px; }
+.mp-recipe-list::-webkit-scrollbar-thumb { background: #E0E0E0; border-radius: 2px; }
+
+.mp-recipe-empty {
+  text-align: center;
+  padding: 40px 0;
+  color: #757575;
+  font-size: 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.mp-recipe-empty__icon { font-size: 36px; margin-bottom: 12px; }
+
+/* ── Confirm Button ── */
+.mp-confirm-area {
+  padding: 12px 0 20px;
+  background: white;
+  flex-shrink: 0;
+}
+
+.mp-confirm-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 100px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mp-confirm-btn--active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 12px var(--primary-light-hover);
+}
+
+.mp-confirm-btn--active:hover  { background: var(--primary-hover); }
+.mp-confirm-btn--active:active { transform: scale(0.98); }
+
+.mp-confirm-btn--disabled {
+  background: #F5F5F5;
+  color: #BDBDBD;
+  cursor: not-allowed;
+}
+
