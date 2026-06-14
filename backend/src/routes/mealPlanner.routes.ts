@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { mealPlannerController } from '../controllers/mealPlanner.controller';
-import { requireAuth } from '../middleware/auth.middleware';
+import { mealPlannerController } from '../controllers/mealPlanner.controller.js';
+import { authenticateToken } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(authenticateToken);
 
 router.get('/', mealPlannerController.getMealPlan);
 router.post('/', mealPlannerController.addMealPlan);
