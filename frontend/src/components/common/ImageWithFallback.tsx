@@ -5,6 +5,9 @@ interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElemen
   customFallback?: string;
 }
 
+// Global cache to remember broken URLs so we don't retry them when navigating
+const brokenImagesCache = new Set<string>();
+
 const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({ 
   src, 
   fallbackType = 'food',
@@ -15,12 +18,16 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   // Determine which fallback image to use
   const defaultFallback = customFallback || (fallbackType === 'recipe' ? '/default-dish.png' : '/default-food.png');
   
-  const [imgSrc, setImgSrc] = useState<string | undefined>(src || defaultFallback);
+  // If the src is already known to be broken, start with the fallback immediately
+  const initialSrc = (src && !brokenImagesCache.has(src)) ? src : defaultFallback;
+  
+  const [imgSrc, setImgSrc] = useState<string | undefined>(initialSrc);
   const [hasError, setHasError] = useState(false);
 
   // If the parent changes the src prop, reset our state
   useEffect(() => {
-    setImgSrc(src || defaultFallback);
+    const newInitial = (src && !brokenImagesCache.has(src)) ? src : defaultFallback;
+    setImgSrc(newInitial);
     setHasError(false);
   }, [src, defaultFallback]);
 
@@ -32,6 +39,7 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       onError={(e) => {
         // Prevent infinite loop if the fallback image itself is broken
         if (!hasError) {
+          if (src) brokenImagesCache.add(src); // Remember this URL is broken
           setImgSrc(defaultFallback);
           setHasError(true);
         }
