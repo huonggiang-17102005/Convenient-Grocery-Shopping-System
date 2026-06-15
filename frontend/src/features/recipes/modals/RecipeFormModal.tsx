@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
+import ImageWithFallback from '../../../components/common/ImageWithFallback';
 
 interface RecipeFormModalProps {
   isOpen: boolean;
@@ -392,7 +393,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
             />
             <div className="form-image-preview">
               {imageUrl ? (
-                <img src={imageUrl} alt="Preview" style={{ width: '100%', height: '150px', borderRadius: '8px', objectFit: 'cover' }} />
+                <ImageWithFallback src={imageUrl} fallbackType="recipe" alt="Preview" style={{ width: '100%', height: '150px', borderRadius: '8px', objectFit: 'cover' }} />
               ) : (
                 <span style={{ fontSize: 64 }}>{emoji}</span>
               )}

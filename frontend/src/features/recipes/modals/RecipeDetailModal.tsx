@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { Recipe } from '../types';
+import ImageWithFallback from '../../../components/common/ImageWithFallback';
 
 interface RecipeDetailModalProps {
   isOpen: boolean;
@@ -63,7 +64,7 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
           {/* Image */}
           <div className="recipe-detail-image" style={{ margin: '0 0 20px 0' }}>
             {recipe.imageUrl ? (
-              <img src={recipe.imageUrl} alt={recipe.name} className="recipe-detail-img-element" />
+              <ImageWithFallback src={recipe.imageUrl} fallbackType="recipe" alt={recipe.name} className="recipe-detail-img-element" />
             ) : (
               <span className="recipe-detail-emoji">{recipe.emoji}</span>
             )}

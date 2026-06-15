@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { CommunityPost } from '../types';
+import ImageWithFallback from '../../../components/common/ImageWithFallback';
 
 interface CommunityPostCardProps {
   post: CommunityPost;
@@ -66,7 +67,7 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
         {/* Large image area */}
         <div className="community-recipe-image-box">
           {post.recipe.imageUrl ? (
-            <img src={post.recipe.imageUrl} alt={post.recipe.name} className="community-recipe-img-element" />
+            <ImageWithFallback src={post.recipe.imageUrl} fallbackType="recipe" alt={post.recipe.name} className="community-recipe-img-element" />
           ) : (
             <span className="community-recipe-emoji">{post.recipe.emoji}</span>
           )}

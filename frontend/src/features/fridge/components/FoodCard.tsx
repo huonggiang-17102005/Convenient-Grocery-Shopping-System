@@ -1,5 +1,6 @@
 import React from 'react';
 import type { FoodItem } from '../types';
+import ImageWithFallback from '../../../components/common/ImageWithFallback';
 
 interface FoodCardProps {
   item: FoodItem;
@@ -57,7 +58,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
       </div>
       
       {item.image ? (
-        <img src={item.image} alt={item.name} className="food-card-img" />
+        <ImageWithFallback src={item.image} fallbackType="food" alt={item.name} className="food-card-img" />
       ) : (
         <div className="food-card-emoji">{item.emoji}</div>
       )}

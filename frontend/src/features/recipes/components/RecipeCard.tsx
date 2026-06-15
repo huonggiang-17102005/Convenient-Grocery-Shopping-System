@@ -2,6 +2,7 @@
 
 import React from 'react';
 import type { Recipe } from '../types';
+import ImageWithFallback from '../../../components/common/ImageWithFallback';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -26,7 +27,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       {/* Image area */}
       <div className="recipe-card-image">
         {recipe.imageUrl ? (
-          <img src={recipe.imageUrl} alt={recipe.name} className="recipe-card-img-element" />
+          <ImageWithFallback src={recipe.imageUrl} fallbackType="recipe" alt={recipe.name} className="recipe-card-img-element" />
         ) : (
           <div className="recipe-card-emoji">{recipe.emoji}</div>
         )}

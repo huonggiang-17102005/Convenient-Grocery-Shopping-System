@@ -1,6 +1,7 @@
 // src/features/recipes/components/PendingPostCard.tsx
 
 import React from 'react';
+import ImageWithFallback from '../../../components/common/ImageWithFallback';
 
 interface PendingPostCardProps {
   recipeEmoji?: string;
@@ -24,7 +25,7 @@ const PendingPostCard: React.FC<PendingPostCardProps> = ({
       <div className="pending-post-left">
         <div className="pending-post-avatar-box">
           {recipeImageUrl ? (
-            <img src={recipeImageUrl} alt={recipeName} className="pending-post-img-element" />
+            <ImageWithFallback src={recipeImageUrl} fallbackType="recipe" alt={recipeName} className="pending-post-img-element" />
           ) : (
             <span className="pending-post-emoji">{recipeEmoji}</span>
           )}

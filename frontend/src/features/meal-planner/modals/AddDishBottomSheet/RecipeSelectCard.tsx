@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import type { Recipe } from '../../types';
+import ImageWithFallback from '../../../../components/common/ImageWithFallback';
 
 interface RecipeSelectCardProps {
   recipe: Recipe;
@@ -27,7 +28,7 @@ const RecipeSelectCard: React.FC<RecipeSelectCardProps> = ({
         </div>
         <div className="mp-select-card__emoji" aria-hidden="true">
           {recipe.imageUrl ? (
-            <img src={recipe.imageUrl} alt={recipe.name} style={{width: 32, height: 32, borderRadius: 6, objectFit: 'cover'}} />
+            <ImageWithFallback src={recipe.imageUrl} fallbackType="recipe" alt={recipe.name} style={{width: 32, height: 32, borderRadius: 6, objectFit: 'cover'}} />
           ) : (
             recipe.emoji || '🍽️'
           )}

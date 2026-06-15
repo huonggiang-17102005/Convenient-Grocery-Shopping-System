@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './RecipeApprovalModal.css';
+import ImageWithFallback from '../../components/common/ImageWithFallback';
 
 interface Ingredient {
   name: string;
@@ -69,10 +70,7 @@ const RecipeApprovalModal: React.FC<Props> = ({ recipe, onClose, onApprove, onRe
           <div className="ra-modal-preview-card">
             <div className="ra-modal-image-container">
               {recipe.image_url ? (
-                <img src={recipe.image_url} alt={recipe.name} onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = 'https://placehold.co/500x300/e0e0e0/757575?text=L%E1%BB%97i+%E1%BA%A3nh';
-                }} />
+                <ImageWithFallback src={recipe.image_url} fallbackType="recipe" alt={recipe.name} />
               ) : (
                 <div className="ra-modal-no-image">Không có ảnh</div>
               )}

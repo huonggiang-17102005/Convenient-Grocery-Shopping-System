@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PlannedMeal } from '../types';
+import ImageWithFallback from '../../../components/common/ImageWithFallback';
 
 interface SelectedDishCardProps {
   plannedMeal: PlannedMeal;
@@ -14,7 +15,7 @@ const SelectedDishCard: React.FC<SelectedDishCardProps> = ({ plannedMeal, showRe
       <div className="mp-dish-card__left">
         <div className="mp-dish-card__emoji-wrap" aria-hidden="true">
           {dish.imageUrl ? (
-            <img src={dish.imageUrl} alt={dish.name} className="mp-dish-card__img-el" />
+            <ImageWithFallback src={dish.imageUrl} fallbackType="recipe" alt={dish.name} className="mp-dish-card__img-el" />
           ) : (
             <span className="mp-dish-card__emoji">{dish.emoji || '🍽️'}</span>
           )}

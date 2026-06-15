@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './RecipeApproval.css';
 import './Dashboard.css'; // Reusing sidebar styling
 import RecipeApprovalModal from './RecipeApprovalModal';
+import ImageWithFallback from '../../components/common/ImageWithFallback';
 
 interface AuthorInfo {
   full_name: string;
@@ -164,14 +165,11 @@ const RecipeApprovalAdmin: React.FC = () => {
               >
                 <div className="recipe-approval-img-container">
                   {recipe.image_url ? (
-                    <img 
+                    <ImageWithFallback 
                       src={recipe.image_url} 
+                      fallbackType="recipe"
                       alt={recipe.name} 
                       className="recipe-approval-img" 
-                      onError={(e) => {
-                        e.currentTarget.onerror = null; // Prevent infinite loop if fallback also fails
-                        e.currentTarget.src = 'https://placehold.co/500x300/e0e0e0/757575?text=L%E1%BB%97i+%E1%BA%A3nh';
-                      }}
                     />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e0e0e0', color: '#757575' }}>
