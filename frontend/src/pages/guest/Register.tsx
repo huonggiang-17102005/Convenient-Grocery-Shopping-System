@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingCart, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './Login.css'; 
 
 export default function Register() {
@@ -16,6 +17,7 @@ export default function Register() {
   const [emailError, setEmailError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +58,8 @@ export default function Register() {
         throw new Error(data.message || 'Có lỗi xảy ra');
       }
 
-      // Lưu token vào localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Đăng nhập thông qua AuthContext
+      login(data.token, data.user);
 
       // Đăng ký thành công thì nhảy sang trang chọn vai trò
       navigate('/choose-role');

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ArrowLeft, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import { useAuth } from '../../contexts/AuthContext';
 import './CreateGroup.css';
 
 const CreateGroup: React.FC = () => {
@@ -10,6 +11,7 @@ const CreateGroup: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [groupCode, setGroupCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { refreshUser } = useAuth();
 
   const handleCreateGroup = async () => {
     if (!groupName.trim()) return;
@@ -37,13 +39,7 @@ const CreateGroup: React.FC = () => {
         throw new Error((data.message || 'Lỗi khi tạo nhóm') + (data.error ? ': ' + data.error : ''));
       }
 
-      const meRes = await fetch(`http://localhost:5000/api/users/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const meData = await meRes.json();
-      if (meData.success) {
-        localStorage.setItem('user', JSON.stringify(meData.data));
-      }
+      await refreshUser();
 
       setGroupCode(data.family.invite_code);
       setShowPopup(true);

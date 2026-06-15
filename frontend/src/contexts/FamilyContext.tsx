@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { FamilyMember } from '../features/profile/components/FamilySection';
+import { useAuth } from './AuthContext';
 
 interface FamilyContextType {
   familyMembers: FamilyMember[];
@@ -20,14 +21,13 @@ export const useFamilyContext = () => useContext(FamilyContext);
 export const FamilyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
 
   const refreshMembers = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      if (!token || !userStr) return;
+      if (!token || !user) return;
 
-      const currentUser = JSON.parse(userStr);
       setIsLoading(true);
 
       const res = await fetch('http://localhost:5000/api/families/members', {
@@ -41,7 +41,7 @@ export const FamilyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           name: m.full_name || '',
           avatar: m.avatar || '👤',
           role: m.role ? m.role.toLowerCase() : 'member',
-          isCurrentUser: m.id === currentUser.id,
+          isCurrentUser: m.id === user.id,
         }));
         setFamilyMembers(mapped);
       }
@@ -50,7 +50,7 @@ export const FamilyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // Fetch lần đầu khi Provider mount
   useEffect(() => {

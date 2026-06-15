@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 
 interface FridgeItem {
@@ -36,15 +36,17 @@ export interface DashboardFeatureProps {
 }
 
 // Components
+import Toast from '@/components/shared/Toast';
 import ExpiringWarningList from './components/ExpiringWarningList';
 import TodayMenu from './components/TodayMenu';
-import type { MealItem } from './components/TodayMenu';
-import Toast from '@/components/shared/Toast';
 import type { IngredientCardProps } from './components/IngredientCard';
 import ShoppingMission from './components/ShoppingMission';
+import { useAuth } from '../../contexts/AuthContext';
+import { useFridgeContext } from '../../contexts/FridgeContext';
+import { useShoppingListContext } from '../../contexts/ShoppingListContext';
+import { useMealPlannerContext } from '../../contexts/MealPlannerContext';
 import { shoppingService } from '../shopping-list/shopping-list.service';
 import { fridgeService } from '../fridge/fridge.service';
-import { mealPlannerService } from '../meal-planner/mealPlanner.service';
 
 // Modals
 import InviteCodeModal from './modals/InviteCodeModal';
@@ -93,97 +95,15 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   const [isExpireOpen, setIsExpireOpen] = useState(false);
   const [isCookOpen,   setIsCookOpen]   = useState(false);
 
-  // Real Invite Code state
-  const [realInviteCode, setRealInviteCode] = useState('Đang tải...');
+  const { user, family } = useAuth();
+  const familyId = user?.family_id || null;
+  const realInviteCode = family?.invite_code || 'Chưa có mã';
 
-  // States for CookConfirmModal
-  const [familyId, setFamilyId] = useState<string | null>(null);
-  const [fridgeItems, setFridgeItems] = useState<FridgeItem[]>([]);
-  const [todayIngredients, setTodayIngredients] = useState<CookIngredient[]>([]);
-  const [todayMeals, setTodayMeals] = useState<MealItem[]>([
-    { session: 'morning', dish: 'Chưa có kế hoạch' },
-    { session: 'noon', dish: 'Chưa có kế hoạch' },
-    { session: 'evening', dish: 'Chưa có kế hoạch' }
-  ]);
+  const { items: fridgeItems, refreshFridge } = useFridgeContext();
+  const { items: shoppingItems, setItems: setShoppingItems } = useShoppingListContext();
+  const { getTodayPlan } = useMealPlannerContext();
 
-  useEffect(() => {
-    const fetchFamilyInfo = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        
-        const response = await fetch('http://localhost:5000/api/families/info', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        
-        if (response.ok && data.family) {
-          setRealInviteCode(data.family.invite_code);
-          const famId = data.family.id;
-          setFamilyId(famId);
-
-          // Lấy tủ lạnh
-          const fRes = await fridgeService.getFamilyFridge(famId);
-          setFridgeItems(fRes.data || []);
-
-          // Lấy thực đơn hôm nay
-          const today = new Date();
-          const y = today.getFullYear();
-          const m = String(today.getMonth() + 1).padStart(2, '0');
-          const d = String(today.getDate()).padStart(2, '0');
-          const dateStr = `${y}-${m}-${d}`;
-          
-          const plans = await mealPlannerService.getMealPlan(dateStr, dateStr);
-          
-          const mealMap: Record<string, string[]> = { breakfast: [], lunch: [], dinner: [] };
-          const ingMap = new Map<string, CookIngredient>();
-          
-          plans.forEach((p: MealPlanPayload) => {
-            if (p.recipes && p.recipes.name) {
-              const mt = p.meal_type || 'breakfast';
-              if (mealMap[mt]) mealMap[mt].push(p.recipes.name);
-            }
-            if (p.recipes && p.recipes.ingredients) {
-               const multiplier = (p.people_count || 1) / (p.recipes.servings || 1);
-               p.recipes.ingredients.forEach((ing) => {
-                 const key = ing.name.toLowerCase();
-                 const current = ingMap.get(key);
-                 const parsedAmount = parseFloat(ing.quantity) || 0;
-                 const addedAmount = parsedAmount * multiplier;
-                 if (current) {
-                   current.amountValue = String(parseFloat(current.amountValue) + addedAmount);
-                 } else {
-                   ingMap.set(key, {
-                     name: ing.name,
-                     category: ing.category || 'Khác',
-                     amountValue: String(addedAmount),
-                     amountUnit: ing.unit
-                   });
-                 }
-               });
-            }
-          });
-          setTodayIngredients(Array.from(ingMap.values()));
-
-          const newTodayMeals: MealItem[] = [
-            { session: 'morning', dish: mealMap.breakfast.length > 0 ? mealMap.breakfast.join(', ') : 'Chưa có kế hoạch' },
-            { session: 'noon', dish: mealMap.lunch.length > 0 ? mealMap.lunch.join(', ') : 'Chưa có kế hoạch' },
-            { session: 'evening', dish: mealMap.dinner.length > 0 ? mealMap.dinner.join(', ') : 'Chưa có kế hoạch' }
-          ];
-          
-          setTodayMeals(newTodayMeals);
-
-        } else {
-          setRealInviteCode('Chưa có mã');
-        }
-      } catch (error) {
-        console.error('Lỗi khi lấy thông tin nhóm:', error);
-        setRealInviteCode('Lỗi lấy mã');
-      }
-    };
-    
-    fetchFamilyInfo();
-  }, []);
+  const { todayMeals, todayIngredients } = React.useMemo(() => getTodayPlan(), [getTodayPlan]);
 
   // Selected item for ExpireItemModal
   const [selectedItem, setSelectedItem] = useState<IngredientCardProps | null>(null);
@@ -222,31 +142,33 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       await fridgeService.deductInventory(familyId, ingredients);
       showToast('Đã trừ kho thành công!');
       // Refresh tủ lạnh
-      const fRes = await fridgeService.getFamilyFridge(familyId);
-      setFridgeItems(fRes.data || []);
+      await refreshFridge();
     } catch (err: unknown) {
       console.error(err);
       showToast('Có lỗi xảy ra khi trừ kho!');
     }
   };
 
-  // Shopping items state for member
-  const [shoppingItems, setShoppingItems] = useState(() => shoppingService.getShoppingItems());
+  // Context provides shoppingItems, we just need to handle the toggle
 
-  const handleToggleShoppingItem = (id: string) => {
-    const updated = shoppingItems.map(item => {
-      if (item.id === id) {
-        const nextBought = !item.isBought;
-        if (nextBought) {
-          shoppingService.syncItemToFridge(item);
-          showToast('Đã mua thành công! Nguyên liệu đã được tự động cộng vào Tủ lạnh chung.');
-        }
-        return { ...item, isBought: nextBought };
+  const handleToggleShoppingItem = async (id: string) => {
+    const item = shoppingItems.find(i => i.id === id);
+    if (!item) return;
+
+    const nextBought = !item.isBought;
+
+    try {
+      await shoppingService.updateShoppingItem(id, { isBought: nextBought });
+      
+      setShoppingItems(prev => prev.map(i => i.id === id ? { ...i, isBought: nextBought } : i));
+
+      if (nextBought) {
+        showToast('Đã mua thành công!');
       }
-      return item;
-    });
-    setShoppingItems(updated);
-    shoppingService.saveShoppingItems(updated);
+    } catch (err) {
+      console.error(err);
+      showToast('Có lỗi xảy ra khi cập nhật mua sắm!');
+    }
   };
 
   return (

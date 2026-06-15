@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { FoodItem, FoodCategory, StorageType } from '../features/fridge/types';
+import { useAuth } from './AuthContext';
 
 const mapCategoryToEmoji = (category: string) => {
   const map: Record<string, string> = {
@@ -48,6 +49,7 @@ const FridgeContext = createContext<FridgeContextType>({
 export const useFridgeContext = () => useContext(FridgeContext);
 
 export const FridgeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [items, setItems] = useState<FoodItem[]>(() => {
     const cached = localStorage.getItem('cached_fridge_items');
     return cached ? JSON.parse(cached) : [];
@@ -61,12 +63,12 @@ export const FridgeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const refreshFridge = useCallback(async () => {
     try {
-      const userStr = localStorage.getItem('user');
-      if (!userStr) return;
-      const user = JSON.parse(userStr);
-      const familyId = user.family_id;
+      const familyId = user?.family_id;
       
-      if (!familyId) return;
+      if (!familyId) {
+        setItems([]);
+        return;
+      }
 
       setIsLoading(true);
 
@@ -82,7 +84,7 @@ export const FridgeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   // Fetch lần đầu
   useEffect(() => {

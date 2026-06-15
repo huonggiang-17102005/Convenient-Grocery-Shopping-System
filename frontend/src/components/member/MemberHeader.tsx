@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import './MemberLayout.css';
 
 const MemberHeader: React.FC = () => {
-  const userName = 'Thành viên';
-  const groupName = 'Gia đình của bạn';
+  const { user, family } = useAuth();
+  
+  const userName = user?.full_name || 'Thành viên';
+  const groupName = family?.name || 'Gia đình của bạn';
+  const avatar = user?.avatar || '👤';
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   const notifications = [
@@ -16,7 +20,7 @@ const MemberHeader: React.FC = () => {
     <header className="member-header">
       <div className="header-user-info">
         <div className="user-avatar">
-          👤
+          {avatar}
         </div>
         <div className="user-details">
           <h2 className="user-greeting">Chào {userName} 👋</h2>
