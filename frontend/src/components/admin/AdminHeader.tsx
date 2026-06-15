@@ -1,14 +1,18 @@
 import React from 'react';
 import { Bell, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './AdminLayout.css';
 
 const AdminHeader: React.FC = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const adminName = user?.full_name || 'Administrator';
+  const adminAvatar = user?.avatar || 'AD';
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    logout();
     navigate('/');
   };
 
@@ -26,9 +30,9 @@ const AdminHeader: React.FC = () => {
         </button>
         <div className="admin-profile-info">
           <div className="admin-avatar">
-            AD
+            {adminAvatar}
           </div>
-          <span className="admin-name">Administrator</span>
+          <span className="admin-name">{adminName}</span>
         </div>
         <button 
           onClick={handleLogout}

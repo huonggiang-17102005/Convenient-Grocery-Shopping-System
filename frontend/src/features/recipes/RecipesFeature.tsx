@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import type { Recipe, CommunityPost, FilterIngredient, RecipesFeatureProps, PendingPost } from './types';
-import { matchFoodImageUrl } from './recipes.utils';
 import { recipesService } from './recipes.service';
+import { useRecipesContext } from '../../contexts/RecipesContext';
 
 import RecipeTabs from './components/RecipeTabs';
 import TabLibrary from './components/TabLibrary';
@@ -19,45 +19,16 @@ type ActiveTab = 'library' | 'favorites' | 'community';
 
 export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   // ── Data state ──────────────────────────────────────────────
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([]);
-  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
-  const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch data
-  const fetchData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [familyRecipes, favRecipes, posts] = await Promise.all([
-        recipesService.getFamilyRecipes(),
-        recipesService.getFavoriteRecipes(),
-        recipesService.getCommunityRecipes(),
-      ]);
-      
-      // Merge family and favorite recipes to ensure isFavorited is true
-      const favMap = new Map(favRecipes.map(r => [r.id, true]));
-      const allRecipes = familyRecipes.map(r => ({
-        ...r,
-        isFavorited: r.isFavorited || favMap.has(r.id),
-      }));
-      
-      setRecipes(allRecipes);
-      setFavoriteRecipes(favRecipes);
-      setCommunityPosts(posts);
-    } catch (error) {
-      console.error('Error fetching recipes:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  const { 
+    recipes, setRecipes, 
+    favoriteRecipes, setFavoriteRecipes, 
+    communityPosts, setCommunityPosts, 
+    refreshRecipes 
+  } = useRecipesContext();
 
   // ── UI state ─────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<ActiveTab>('library');
+  const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<FilterIngredient[]>([]);
 
   // ── Modal state ──────────────────────────────────────────────
@@ -113,8 +84,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
       // Refresh/update favorite recipes list
       if (isFavorited) {
-        const favs = await recipesService.getFavoriteRecipes();
-        setFavoriteRecipes(favs);
+        refreshRecipes(); // Mới thêm favorited, có thể lấy lại danh sách
       } else {
         setFavoriteRecipes((prev) => prev.filter((r) => r.id !== recipeId));
       }

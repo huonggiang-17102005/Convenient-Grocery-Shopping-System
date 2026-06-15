@@ -9,6 +9,7 @@ import DeleteConfirmModal from './modals/DeleteConfirmModal';
 import type { ShoppingItem, FoodCategory } from './types';
 import { shoppingService } from './shopping-list.service';
 import Toast from '@/components/shared/Toast';
+import { useShoppingListContext } from '../../contexts/ShoppingListContext';
 import './shopping-list.css';
 
 // Color theme per role
@@ -23,25 +24,8 @@ export interface ShoppingListFeatureProps {
 
 export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }) => {
   const primaryColor = ROLE_COLORS[role];
-  const [items, setItems] = useState<ShoppingItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items, setItems, isLoading: loading } = useShoppingListContext();
   const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
-
-  const fetchItems = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await shoppingService.getShoppingItems();
-      setItems(data);
-    } catch (error) {
-      console.error('Error fetching shopping items:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
 
   // Modal states
   const [selectedItem, setSelectedItem] = useState<ShoppingItem | null>(null);

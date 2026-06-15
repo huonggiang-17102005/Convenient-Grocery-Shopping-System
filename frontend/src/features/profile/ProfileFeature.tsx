@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './profile.css';
 export interface ProfileFeatureProps {
@@ -20,29 +20,24 @@ import type { ConfirmVariant } from './modals/ConfirmModal';
 import Toast from '@/components/shared/Toast';
 import useRealtimeNoti from '../../hooks/useRealtimeNoti';
 import { useFamilyContext } from '../../contexts/FamilyContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
+  const { user: authUser, logout, refreshUser } = useAuth();
 
-  // User details state
-  const localUserStr = localStorage.getItem('user');
-  const localUser = localUserStr ? JSON.parse(localUserStr) : null;
-
-  const [user, setUser] = useState({
-    name: localUser?.full_name || '',
-    email: localUser?.email || '',
-    avatar: localUser?.avatar || '',
-    role: localUser?.role === 'Homemaker' ? 'Nội trợ' : 'Thành viên',
-  });
+  const user = {
+    name: authUser?.full_name || '',
+    email: authUser?.email || '',
+    avatar: authUser?.avatar || '',
+    role: authUser?.role === 'Homemaker' ? 'Nội trợ' : 'Thành viên',
+  };
 
   // Gọi Hook Realtime để lắng nghe thông báo đổi quyền
-  useRealtimeNoti(localUser?.family_id, localUser?.id, (newRole) => {
-    // 1. Cập nhật Local Storage
-    if (localUser) {
-      localUser.role = newRole;
-      localStorage.setItem('user', JSON.stringify(localUser));
-    }
-    // 2. Chuyển trang theo Role mới
+  useRealtimeNoti(authUser?.family_id, authUser?.id, async (newRole) => {
+    // Tải lại thông tin mới nhất
+    await refreshUser();
+    // Chuyển trang theo Role mới
     if (newRole === 'Homemaker') {
       navigate('/homemaker/dashboard');
     } else {
@@ -52,34 +47,6 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
 
   // Lấy danh sách thành viên từ Context (đã được cache ở tầng Layout)
   const { familyMembers, setFamilyMembers } = useFamilyContext();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        const res = await fetch('http://localhost:5000/api/users/me', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        if (data.success && data.data) {
-          const freshUser = data.data;
-          // Update local storage
-          localStorage.setItem('user', JSON.stringify(freshUser));
-          // Update state
-          setUser({
-            name: freshUser.full_name || '',
-            email: freshUser.email || '',
-            avatar: freshUser.avatar || '',
-            role: freshUser.role === 'Homemaker' ? 'Nội trợ' : 'Thành viên',
-          });
-        }
-      } catch (err) {
-        console.error('Lỗi khi lấy thông tin user:', err);
-      }
-    };
-    fetchUser();
-  }, []);
 
   // Waste statistics state
   const [wasteStats] = useState({
@@ -115,15 +82,12 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Lỗi cập nhật ảnh đại diện');
       
-      setUser((prev) => ({ ...prev, avatar: newAvatar }));
+      // setUser((prev) => ({ ...prev, avatar: newAvatar }));
       setFamilyMembers((prev) =>
         prev.map((m) => (m.isCurrentUser ? { ...m, avatar: newAvatar } : m))
       );
       
-      if (localUser) {
-        localUser.avatar = newAvatar;
-        localStorage.setItem('user', JSON.stringify(localUser));
-      }
+      await refreshUser();
       triggerToast('Thay đổi ảnh đại diện thành công!');
     } catch (err: any) {
       alert(err.message);
@@ -142,16 +106,12 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Lỗi cập nhật hồ sơ');
       
-      setUser((prev) => ({ ...prev, name: newName, email: newEmail }));
+      // setUser((prev) => ({ ...prev, name: newName, email: newEmail }));
       setFamilyMembers((prev) =>
         prev.map((m) => (m.isCurrentUser ? { ...m, name: newName } : m))
       );
       
-      if (localUser) {
-        localUser.full_name = newName;
-        localUser.email = newEmail;
-        localStorage.setItem('user', JSON.stringify(localUser));
-      }
+      await refreshUser();
       triggerToast('Cập nhật hồ sơ thành công!');
     } catch (err: any) {
       alert(err.message);
@@ -241,8 +201,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
         triggerToast('Xóa thành viên thành công!');
 
       } else if (confirmVariant === 'logout') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        logout();
         triggerToast('Đăng xuất thành công!');
         setTimeout(() => {
           navigate('/');
@@ -260,10 +219,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
         const resData = await res.json();
         if (!res.ok) throw new Error(resData.message || 'Lỗi rời nhóm');
 
-        if (localUser) {
-          localUser.family_id = null;
-          localStorage.setItem('user', JSON.stringify(localUser));
-        }
+        await refreshUser();
         triggerToast('Rời nhóm thành công!');
         setTimeout(() => {
           navigate('/choose-role');

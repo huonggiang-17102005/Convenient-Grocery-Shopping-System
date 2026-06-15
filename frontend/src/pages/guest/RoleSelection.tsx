@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './RoleSelection.css';
 
 export default function RoleSelection() {
@@ -7,6 +8,7 @@ export default function RoleSelection() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [selectedRole, setSelectedRole] = useState<'Homemaker' | 'Member' | null>(null);
+  const { refreshUser } = useAuth();
 
   const handleSelectRole = async (role: 'Homemaker' | 'Member') => {
     setSelectedRole(role);
@@ -34,13 +36,8 @@ export default function RoleSelection() {
         throw new Error(data.message || 'Lỗi khi cập nhật vai trò');
       }
 
-      // Cập nhật lại thông tin user trong localStorage
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        user.role = role;
-        localStorage.setItem('user', JSON.stringify(user));
-      }
+      // Tải lại thông tin user từ server để đồng bộ Global State
+      await refreshUser();
 
       // Điều hướng dựa vào vai trò
       if (role === 'Homemaker') {

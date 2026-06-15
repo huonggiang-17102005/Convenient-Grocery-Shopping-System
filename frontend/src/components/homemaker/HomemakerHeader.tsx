@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import './HomemakerLayout.css';
 
 const HomemakerHeader: React.FC = () => {
-  // TODO: Thay thế bằng dữ liệu thật từ Context/Redux hoặc API sau khi có tính năng đăng nhập
-  const userName = 'Bạn';
-  const groupName = 'Gia đình của bạn';
+  const { user, family } = useAuth();
+  
+  const userName = user?.full_name || 'Bạn';
+  const groupName = family?.name || 'Gia đình của bạn';
+  const avatar = user?.avatar || '👤';
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   // Fake data thông báo
@@ -18,7 +21,7 @@ const HomemakerHeader: React.FC = () => {
     <header className="homemaker-header">
       <div className="header-user-info">
         <div className="user-avatar">
-          👤
+          {avatar}
         </div>
         <div className="user-details">
           <h2 className="user-greeting">Chào {userName} 👋</h2>

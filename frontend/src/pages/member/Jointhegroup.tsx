@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import './Jointhegroup.css';
 
 const Jointhegroup: React.FC = () => {
@@ -8,6 +9,7 @@ const Jointhegroup: React.FC = () => {
   const [groupCode, setGroupCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const { refreshUser } = useAuth();
 
   const handleJoin = async () => {
     if (!groupCode.trim()) return;
@@ -38,13 +40,7 @@ const Jointhegroup: React.FC = () => {
         throw new Error(data.message || 'Mã tham gia không tồn tại');
       }
       
-      const meRes = await fetch(`http://localhost:5000/api/users/me`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const meData = await meRes.json();
-      if (meData.success) {
-        localStorage.setItem('user', JSON.stringify(meData.data));
-      }
+      await refreshUser();
 
       setIsLoading(false);
       navigate('/member/dashboard');
