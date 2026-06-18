@@ -10,7 +10,7 @@ interface ItemFormModalProps {
 }
 
 const CATEGORIES: FoodCategory[] = ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'];
-const UNITS = ['g', 'kg', 'cái', 'hộp', 'bó', 'túi', 'lít', 'ml'];
+const UNITS = ['g', 'kg', 'cái', 'bó', 'túi', 'lít', 'ml'];
 
 const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit, item, mode }) => {
   const [category, setCategory] = useState<FoodCategory>(() => {

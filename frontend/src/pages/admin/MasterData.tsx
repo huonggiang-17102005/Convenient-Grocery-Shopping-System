@@ -786,7 +786,7 @@ const MasterDataAdmin: React.FC = () => {
                   value={unitFormData.unit} 
                   onChange={(e) => setUnitFormData({...unitFormData, unit: e.target.value})}
                   className="md-input"
-                  placeholder="Nhập đơn vị (vd: kg, lít, hộp)..."
+                  placeholder="Nhập đơn vị (vd: g, lít)..."
                 />
               </div>
 

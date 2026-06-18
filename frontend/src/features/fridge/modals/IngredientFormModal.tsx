@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trash2, ChevronDown, Camera, Image as ImageIcon } from 'lucide-react';
+import { Trash2, Camera, Image as ImageIcon } from 'lucide-react';
 import type { FoodItem, FoodCategory, StorageType } from '../types';
 import UnitDropdown from '../components/UnitDropdown';
 import type { UnitType } from '../components/UnitDropdown';
@@ -35,13 +35,13 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   
   const DYNAMIC_CATEGORIES = categoriesData.length > 0 ? categoriesData.map(c => c.category as FoodCategory) : ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'] as FoodCategory[];
   
-  const [storageType, setStorageType] = useState<StorageType>('Ngăn mát');
-  const [category, setCategory] = useState<FoodCategory>('Rau củ quả');
+  const [storageType, setStorageType] = useState<StorageType>('' as StorageType);
+  const [category, setCategory] = useState<FoodCategory>('' as FoodCategory);
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState<number>(1);
-  const [unit, setUnit] = useState<UnitType>('Kg');
+  const [unit, setUnit] = useState<UnitType>('' as UnitType);
   const [expiryDate, setExpiryDate] = useState('');
-  const [emoji, setEmoji] = useState('🥕');
+  const [emoji, setEmoji] = useState('📦');
   const [image, setImage] = useState('');
   const [imagePublicId, setImagePublicId] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -51,7 +51,14 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
 
   const activeCategoryData = categoriesData.find(c => c.category === category);
-  const DYNAMIC_UNITS = activeCategoryData?.units && activeCategoryData.units.length > 0 ? activeCategoryData.units : ['Kg', 'g', 'hộp'];
+  const DYNAMIC_UNITS = activeCategoryData?.units && activeCategoryData.units.length > 0 ? activeCategoryData.units : ['g', 'l'];
+
+  // Cập nhật lại unit mặc định nếu unit hiện tại không có trong danh sách của category mới
+  useEffect(() => {
+    if (category && DYNAMIC_UNITS && !DYNAMIC_UNITS.includes(unit)) {
+      setUnit((DYNAMIC_UNITS[0] || '') as UnitType);
+    }
+  }, [category, DYNAMIC_UNITS, unit]);
 
   useEffect(() => {
     if (isOpen) {
@@ -60,7 +67,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         setCategory(item.category);
         setName(item.name);
         setQuantity(item.quantity);
-        setUnit((item.unit as UnitType) || 'Kg');
+        setUnit((item.unit as UnitType) || '');
         setExpiryDate(item.expiryDate ? item.expiryDate.split('T')[0] : '');
         setEmoji(item.emoji);
         setImage(item.image || '');
@@ -70,19 +77,19 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         setCategory(item.category);
         setName(item.name);
         setQuantity(1);
-        setUnit((item.unit as UnitType) || 'Kg');
+        setUnit((item.unit as UnitType) || '');
         setExpiryDate('');
         setEmoji(item.emoji);
         setImage(item.image || '');
         setImagePublicId(item.imagePublicId || '');
       } else {
-        setStorageType('Ngăn mát');
-        setCategory('Rau củ quả');
+        setStorageType('' as StorageType);
+        setCategory('' as FoodCategory);
         setName('');
         setQuantity(1);
-        setUnit('Kg');
+        setUnit('' as UnitType);
         setExpiryDate('');
-        setEmoji('🥕');
+        setEmoji('📦');
         setImage('');
         setImagePublicId('');
       }

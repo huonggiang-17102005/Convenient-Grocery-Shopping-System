@@ -24,7 +24,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
   const [activeStorage, setActiveStorage] = useState<StorageType>('Tất cả');
   const [activeCategory, setActiveCategory] = useState<FoodCategory>('Tất cả');
   
-  const { items, setItems, isLoading: isLoadingData, refreshFridge } = useFridgeContext();
+  const { items, isLoading: isLoadingData, refreshFridge } = useFridgeContext();
   const { user } = useAuth();
   const familyId = user?.family_id;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());

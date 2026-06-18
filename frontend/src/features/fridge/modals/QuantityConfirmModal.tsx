@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
 import type { FoodItem } from '../types';
 
 interface QuantityConfirmModalProps {
@@ -26,7 +25,6 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
   isOpen,
   mode,
   item,
-  totalOtherLotsQuantity,
   onClose,
   onConfirm,
   onDifferentExpiry
