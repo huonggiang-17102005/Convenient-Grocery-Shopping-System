@@ -36,7 +36,8 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       setIsLoading(true);
 
-      const res = await fetch(`http://localhost:5000/api/categories`);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/categories`);
       const result = await res.json();
 
       if (result.success) {
