@@ -3,6 +3,7 @@ import { Trash2, ChevronDown, Camera, Image as ImageIcon } from 'lucide-react';
 import type { FoodItem, FoodCategory, StorageType } from '../types';
 import UnitDropdown from '../components/UnitDropdown';
 import type { UnitType } from '../components/UnitDropdown';
+import { useCategoryContext } from '../../../contexts/CategoryContext';
 import './IngredientFormModal.css';
 
 interface IngredientFormModalProps {
@@ -14,10 +15,9 @@ interface IngredientFormModalProps {
   onDelete?: (id: string) => void;
 }
 
-const CATEGORIES: FoodCategory[] = ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'];
 const STORAGES: StorageType[] = ['Ngăn mát', 'Ngăn đông', 'Khô'];
 
-const EMOJI_MAP: Record<FoodCategory, string> = {
+const EMOJI_MAP: Record<string, string> = {
   'Thịt cá': '🥩',
   'Rau củ quả': '🥕',
   'Trứng': '🥚',
@@ -30,6 +30,9 @@ const EMOJI_MAP: Record<FoodCategory, string> = {
 
 const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode, item, onClose, onSave, onDelete }) => {
   const isReadOnly = mode === 'detail';
+  const { categoriesData } = useCategoryContext();
+  
+  const DYNAMIC_CATEGORIES = categoriesData.length > 0 ? categoriesData.map(c => c.category as FoodCategory) : ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'] as FoodCategory[];
   
   const [storageType, setStorageType] = useState<StorageType>('Ngăn mát');
   const [category, setCategory] = useState<FoodCategory>('Rau củ quả');
@@ -40,6 +43,9 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const [emoji, setEmoji] = useState('🥕');
 
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
+
+  const activeCategoryData = categoriesData.find(c => c.category === category);
+  const DYNAMIC_UNITS = activeCategoryData?.units && activeCategoryData.units.length > 0 ? activeCategoryData.units : ['Kg', 'g', 'hộp'];
 
   useEffect(() => {
     if (isOpen) {
@@ -160,10 +166,17 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
               <select 
                 style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: isReadOnly ? 'default' : 'pointer' }}
                 value={category}
-                onChange={(e) => setCategory(e.target.value as FoodCategory)}
+                onChange={(e) => {
+                  const newCat = e.target.value as FoodCategory;
+                  setCategory(newCat);
+                  const newCatData = categoriesData.find(c => c.category === newCat);
+                  if (newCatData && newCatData.units.length > 0) {
+                    setUnit(newCatData.units[0]);
+                  }
+                }}
                 disabled={isReadOnly}
               >
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {DYNAMIC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
               <div style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>{category}</div>
               <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>▼</div>
@@ -236,6 +249,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                     isOpen={isUnitDropdownOpen} 
                     onClose={() => setIsUnitDropdownOpen(false)} 
                     onSelect={setUnit} 
+                    options={DYNAMIC_UNITS}
                   />
                 </div>
               </div>

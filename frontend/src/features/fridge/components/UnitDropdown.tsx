@@ -1,17 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import './UnitDropdown.css';
 
-export type UnitType = 'Kg' | 'Gram' | 'Lít' | 'ml' | 'Quả';
-
-export const UNIT_OPTIONS: UnitType[] = ['Kg', 'Gram', 'Lít', 'ml', 'Quả'];
+export type UnitType = string;
 
 interface UnitDropdownProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (unit: UnitType) => void;
+  options: string[];
 }
 
-const UnitDropdown: React.FC<UnitDropdownProps> = ({ isOpen, onClose, onSelect }) => {
+const UnitDropdown: React.FC<UnitDropdownProps> = ({ isOpen, onClose, onSelect, options }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,7 +28,7 @@ const UnitDropdown: React.FC<UnitDropdownProps> = ({ isOpen, onClose, onSelect }
 
   return (
     <div className="unit-dropdown-container" ref={dropdownRef}>
-      {UNIT_OPTIONS.map((unit, index) => (
+      {options.map((unit, index) => (
         <React.Fragment key={unit}>
           <button 
             type="button" 
@@ -41,7 +40,7 @@ const UnitDropdown: React.FC<UnitDropdownProps> = ({ isOpen, onClose, onSelect }
           >
             {unit}
           </button>
-          {index < UNIT_OPTIONS.length - 1 && <div className="unit-dropdown-divider" />}
+          {index < options.length - 1 && <div className="unit-dropdown-divider" />}
         </React.Fragment>
       ))}
     </div>
