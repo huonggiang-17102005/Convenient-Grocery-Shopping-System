@@ -147,7 +147,7 @@
 
 .shopping-card__badge--default {
   background: #F5F5F5;
-  color: #1A1A1A;
+  color: #757575;
 }
 
 .shopping-card__badge--rau-cu {
@@ -156,23 +156,33 @@
 }
 
 .shopping-card__badge--thit-ca {
-  background: #FFEBEE;
-  color: #D32F2F;
+  background: #FFCDD2;
+  color: #C62828;
 }
 
 .shopping-card__badge--do-uong {
   background: #E3F2FD;
-  color: #1976D2;
+  color: #1565C0;
 }
 
 .shopping-card__badge--gia-vi {
+  background: #F9FBE7;
+  color: #282401;
+}
+
+.shopping-card__badge--do-kho {
+  background: #F3E5F5;
+  color: #4A148C;
+}
+
+.shopping-card__badge--trung {
   background: #FFF3E0;
   color: #E65100;
 }
 
-.shopping-card__badge--do-kho {
-  background: #efebe9;
-  color: #4e342e;
+.shopping-card__badge--khac {
+  background: #ECEFF1;
+  color: #37474F;
 }
 
 .shopping-card__info {

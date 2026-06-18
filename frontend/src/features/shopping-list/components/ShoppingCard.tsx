@@ -14,7 +14,8 @@ const getCategoryClass = (category: string): string => {
     case 'Chất lỏng': return 'shopping-card__badge--do-uong';
     case 'Gia vị': return 'shopping-card__badge--gia-vi';
     case 'Đồ khô': return 'shopping-card__badge--do-kho';
-    case 'Trứng': return 'shopping-card__badge--default';
+    case 'Trứng': return 'shopping-card__badge--trung';
+    case 'Khác': return 'shopping-card__badge--khac';
     default: return 'shopping-card__badge--default';
   }
 };
