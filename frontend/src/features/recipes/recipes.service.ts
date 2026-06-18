@@ -68,7 +68,7 @@ export const recipesService = {
   },
 
   createRecipe: async (recipe: Omit<Recipe, 'id' | 'isFavorited'>): Promise<Recipe> => {
-    const response = await api.post('/', recipe);
+    const response = await api.post('', recipe);
     return mapBackendToFrontendRecipe(response.data);
   },
 

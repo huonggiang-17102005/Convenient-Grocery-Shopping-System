@@ -28,7 +28,7 @@ export const fridgeService = {
     return response.data;
   },
   addFridgeItem: async (data: any) => {
-    const response = await api.post('/', data);
+    const response = await api.post('', data);
     return response.data;
   },
   updateFridgeItem: async (id: string, data: any) => {

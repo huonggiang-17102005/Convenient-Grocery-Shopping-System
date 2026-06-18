@@ -22,7 +22,7 @@ export const mealPlannerService = {
   },
 
   addMealPlan: async (recipeId: string, date: string, mealType: MealKey, peopleCount: number) => {
-    const response = await api.post('/', { recipeId, date, mealType, peopleCount });
+    const response = await api.post('', { recipeId, date, mealType, peopleCount });
     return response.data;
   },
 
