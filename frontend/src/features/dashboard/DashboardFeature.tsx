@@ -56,32 +56,42 @@ import type { CookIngredient } from './modals/CookConfirmModal';
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
-const EXPIRING_ITEMS: IngredientCardProps[] = [
-  {
-    emoji: '🥛',
-    name: 'Sữa tươi',
-    category: 'Đồ uống',
-    categoryColor: '#BBDEFB',
-    categoryTextColor: '#1565C0',
-    daysLeft: 1,
-  },
-  {
-    emoji: '🥩',
-    name: 'Thịt bò',
-    category: 'Thịt cá',
-    categoryColor: '#FFCDD2',
-    categoryTextColor: '#C62828',
-    daysLeft: 2,
-  },
-  {
-    emoji: '🍓',
-    name: 'Dâu tây',
-    category: 'Trái cây',
-    categoryColor: '#F8BBD0',
-    categoryTextColor: '#C2185B',
-    daysLeft: 3,
-  },
-];
+const EMOJI_MAP: Record<string, string> = {
+  'Thịt cá': '🥩',
+  'Rau củ quả': '🥕',
+  'Trứng': '🥚',
+  'Chất lỏng': '🥛',
+  'Đồ khô': '🌾',
+  'Gia vị': '🧂',
+  'Khác': '📦',
+  'Tất cả': '🛒',
+};
+
+const mapBackendExpiringToCardProps = (item: any): IngredientCardProps => {
+  const expDate = new Date(item.expiration_date || new Date());
+  const diffDays = Math.ceil((expDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  
+  let categoryColor = '#E0E0E0';
+  let categoryTextColor = '#757575';
+  
+  switch(item.category) {
+    case 'Đồ uống': categoryColor = '#BBDEFB'; categoryTextColor = '#1565C0'; break;
+    case 'Thịt cá': categoryColor = '#FFCDD2'; categoryTextColor = '#C62828'; break;
+    case 'Trái cây':
+    case 'Rau củ quả': categoryColor = '#F8BBD0'; categoryTextColor = '#C2185B'; break;
+    default: categoryColor = '#FFF3E0'; categoryTextColor = '#EF6C00'; break;
+  }
+
+  return {
+    emoji: item.emoji || EMOJI_MAP[item.category] || '📦',
+    image: item.image_url || item.image,
+    name: item.name,
+    category: item.category || 'Khác',
+    categoryColor,
+    categoryTextColor,
+    daysLeft: diffDays > 0 ? diffDays : 0,
+  };
+};
 
 // Removed hardcoded TODAY_MEALS
 
@@ -104,6 +114,19 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   const { getTodayPlan } = useMealPlannerContext();
 
   const { todayMeals, todayIngredients } = React.useMemo(() => getTodayPlan(), [getTodayPlan]);
+
+  const [expiringItems, setExpiringItems] = useState<IngredientCardProps[]>([]);
+
+  React.useEffect(() => {
+    if (familyId) {
+      fridgeService.getExpiringItems(familyId).then((result) => {
+        if (result.success && result.data) {
+          const mapped = result.data.map(mapBackendExpiringToCardProps);
+          setExpiringItems(mapped);
+        }
+      }).catch(console.error);
+    }
+  }, [familyId]);
 
   // Selected item for ExpireItemModal
   const [selectedItem, setSelectedItem] = useState<IngredientCardProps | null>(null);
@@ -225,7 +248,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       {/* Expiring Warning - Homemaker only */}
       {role === 'homemaker' && (
         <ExpiringWarningList
-          items={EXPIRING_ITEMS}
+          items={expiringItems}
           onItemClick={handleIngredientClick}
         />
       )}

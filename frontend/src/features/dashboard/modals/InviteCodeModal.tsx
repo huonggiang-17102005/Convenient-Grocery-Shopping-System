@@ -45,11 +45,14 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
           </div>
         </div>
 
-        {/* QR Placeholder */}
+        {/* QR Code */}
         <div className="invite-modal__qr-area">
-          <div className="invite-modal__qr-box">
-            <span className="invite-modal__qr-emoji">📱</span>
-            <span className="invite-modal__qr-text">QR Code</span>
+          <div className="invite-modal__qr-box" style={{ background: 'white', padding: '8px', border: '1px solid #E0E0E0', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(inviteCode)}`} 
+              alt="QR Code Nhóm" 
+              style={{ width: '150px', height: '150px', display: 'block' }} 
+            />
           </div>
         </div>
 

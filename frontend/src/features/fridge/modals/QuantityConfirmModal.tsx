@@ -109,9 +109,6 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
                 <div style={{ color: '#4B5563', fontSize: 13, fontFamily: 'Plus Jakarta Sans', lineHeight: '18px' }}>
                   📌 Sử dụng từ lô <strong>{item.name}</strong> hạn {expiryText}. Lô này sẽ còn lại <strong style={{color: '#FF8A00'}}>{item.quantity - delta} {unit}</strong>.
                 </div>
-                <div style={{ color: '#4B5563', fontSize: 13, fontFamily: 'Plus Jakarta Sans', lineHeight: '18px' }}>
-                  📦 Tổng lượng {item.name} trong tủ lạnh (tất cả các lô) sẽ còn: <strong style={{color: '#FF8A00'}}>{(item.quantity - delta) + totalOtherLotsQuantity} {unit}</strong>.
-                </div>
               </>
             )}
           </div>

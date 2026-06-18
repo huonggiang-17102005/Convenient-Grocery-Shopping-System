@@ -1,10 +1,12 @@
 import React from 'react';
 import '../dashboard.css';
+import ImageWithFallback from '../../../components/common/ImageWithFallback';
 
 export type ExpiryStatus = 'critical' | 'warning' | 'ok';
 
 export interface IngredientCardProps {
   emoji: string;
+  image?: string;
   name: string;
   category: string;
   categoryColor: string;
@@ -21,6 +23,7 @@ function getExpiryStatus(daysLeft: number): ExpiryStatus {
 
 const IngredientCard: React.FC<IngredientCardProps> = ({
   emoji,
+  image,
   name,
   category,
   categoryColor,
@@ -39,7 +42,11 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
         >
           {category}
         </span>
-        <span className="ingredient-card__emoji">{emoji}</span>
+        {image ? (
+          <ImageWithFallback src={image} fallbackType="food" alt={name} className="ingredient-card__img" />
+        ) : (
+          <span className="ingredient-card__emoji">{emoji}</span>
+        )}
       </div>
 
       <p className="ingredient-card__name">{name}</p>

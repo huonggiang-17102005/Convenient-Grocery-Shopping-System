@@ -55,7 +55,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         setName(item.name);
         setQuantity(item.quantity);
         setUnit((item.unit as UnitType) || 'Kg');
-        setExpiryDate(item.expiryDate || '');
+        setExpiryDate(item.expiryDate ? item.expiryDate.split('T')[0] : '');
         setEmoji(item.emoji);
       } else if (item && mode === 'add') {
         setStorageType(item.storageType);
@@ -66,11 +66,11 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         setExpiryDate('');
         setEmoji(item.emoji);
       } else {
-        setStorageType('Ngăn mát');
-        setCategory('Rau củ quả');
+        setStorageType('');
+        setCategory('');
         setName('');
         setQuantity(1);
-        setUnit('Kg');
+        setUnit('');
         setExpiryDate('');
         setEmoji('🥕');
       }
@@ -157,9 +157,10 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                 onChange={(e) => setStorageType(e.target.value as StorageType)}
                 disabled={isReadOnly}
               >
+                <option value="" disabled hidden>Chọn vị trí lưu trữ</option>
                 {STORAGES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
-              <div style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>{storageType}</div>
+              <div style={{ color: storageType ? '#1A1A1A' : '#9E9E9E', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>{storageType || 'Chọn vị trí lưu trữ'}</div>
               <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>▼</div>
             </div>
           </div>
@@ -184,9 +185,10 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                 }}
                 disabled={isReadOnly}
               >
+                <option value="" disabled hidden>Chọn danh mục thực phẩm</option>
                 {DYNAMIC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <div style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>{category}</div>
+              <div style={{ color: category ? '#1A1A1A' : '#9E9E9E', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>{category || 'Chọn danh mục thực phẩm'}</div>
               <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>▼</div>
             </div>
           </div>
@@ -245,7 +247,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                 </button>
                 
                 <div style={{ flex: 1, position: 'relative', height: 48, paddingLeft: 12, paddingRight: 12, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>{unit}</div>
+                  <div style={{ color: unit ? '#1A1A1A' : '#9E9E9E', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>{unit || 'Đơn vị'}</div>
                   <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>▼</div>
                   
                   {/* Click area for unit */}
@@ -269,9 +271,8 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
             <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Hạn sử dụng</label>
             <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', alignItems: 'center' }}>
               <input 
-                type="text" 
+                type="date" 
                 style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
-                placeholder="dd/mm/yyyy"
                 value={expiryDate}
                 onChange={(e) => setExpiryDate(e.target.value)}
                 disabled={isReadOnly}
@@ -289,9 +290,9 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
             <>
               <button 
                 type="button" 
-                style={{ width: '100%', height: 48, background: '#FF8A00', borderRadius: 100, color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: !name.trim() ? 'default' : 'pointer', opacity: !name.trim() ? 0.6 : 1 }}
+                style={{ width: '100%', height: 48, background: '#FF8A00', borderRadius: 100, color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: (!name.trim() || !category || !storageType) ? 'default' : 'pointer', opacity: (!name.trim() || !category || !storageType) ? 0.6 : 1 }}
                 onClick={handleSave}
-                disabled={!name.trim()}
+                disabled={!name.trim() || !category || !storageType}
               >
                 {mode === 'add' ? 'Lưu vào tủ lạnh' : 'Lưu thay đổi'}
               </button>
