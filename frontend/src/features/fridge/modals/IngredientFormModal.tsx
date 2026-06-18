@@ -4,6 +4,7 @@ import type { FoodItem, FoodCategory, StorageType } from '../types';
 import UnitDropdown from '../components/UnitDropdown';
 import type { UnitType } from '../components/UnitDropdown';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
+import { fridgeService } from '../fridge.service';
 import './IngredientFormModal.css';
 
 interface IngredientFormModalProps {
@@ -41,6 +42,11 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const [unit, setUnit] = useState<UnitType>('Kg');
   const [expiryDate, setExpiryDate] = useState('');
   const [emoji, setEmoji] = useState('🥕');
+  const [image, setImage] = useState('');
+  const [imagePublicId, setImagePublicId] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
 
@@ -57,6 +63,8 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         setUnit((item.unit as UnitType) || 'Kg');
         setExpiryDate(item.expiryDate ? item.expiryDate.split('T')[0] : '');
         setEmoji(item.emoji);
+        setImage(item.image || '');
+        setImagePublicId(item.imagePublicId || '');
       } else if (item && mode === 'add') {
         setStorageType(item.storageType);
         setCategory(item.category);
@@ -65,14 +73,18 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         setUnit((item.unit as UnitType) || 'Kg');
         setExpiryDate('');
         setEmoji(item.emoji);
+        setImage(item.image || '');
+        setImagePublicId(item.imagePublicId || '');
       } else {
-        setStorageType('');
-        setCategory('');
+        setStorageType('Ngăn mát');
+        setCategory('Rau củ quả');
         setName('');
         setQuantity(1);
-        setUnit('');
+        setUnit('Kg');
         setExpiryDate('');
         setEmoji('🥕');
+        setImage('');
+        setImagePublicId('');
       }
     }
   }, [isOpen, item, mode]);
@@ -105,6 +117,25 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const data = await fridgeService.uploadImage(file);
+      if (data.imageUrl) {
+        setImage(data.imageUrl);
+        setImagePublicId(data.imagePublicId || '');
+      }
+    } catch (err) {
+      console.error('Lỗi tải ảnh:', err);
+      alert('Không thể tải ảnh lên. Vui lòng thử lại.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleSave = () => {
     // Generate daysRemaining based on expiryDate if needed, else mock it
     const daysRemaining = 5; 
@@ -116,6 +147,8 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
       unit: category === 'Gia vị' ? undefined : unit,
       expiryDate,
       emoji,
+      image,
+      imagePublicId,
       daysRemaining
     });
   };
@@ -211,16 +244,38 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
           {/* Hình ảnh */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
             <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Hình ảnh</label>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button type="button" style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }} disabled={isReadOnly}>
-                <ImageIcon size={20} color="#FF8A00" />
-                <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Chọn ảnh</span>
-              </button>
-              <button type="button" style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }} disabled={isReadOnly}>
-                <Camera size={20} color="#FF8A00" />
-                <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Chụp ảnh</span>
-              </button>
-            </div>
+            
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              onChange={handleFileChange} 
+            />
+
+            {image ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', background: '#F9FAFB', padding: 12, borderRadius: 12, border: '1px solid #E5E7EB' }}>
+                <img src={image} alt="Thực phẩm" style={{ width: 100, height: 100, borderRadius: 12, objectFit: 'cover' }} />
+                {!isReadOnly && (
+                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ background: 'transparent', border: '1px solid #FF8A00', color: '#FF8A00', borderRadius: 100, padding: '6px 16px', fontSize: 13, fontWeight: '500', cursor: 'pointer' }}>
+                    {isUploading ? 'Đang tải...' : 'Đổi ảnh'}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isReadOnly || isUploading} style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
+                  <ImageIcon size={20} color="#FF8A00" />
+                  <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>
+                    {isUploading ? 'Đang tải...' : 'Chọn ảnh'}
+                  </span>
+                </button>
+                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isReadOnly || isUploading} style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
+                  <Camera size={20} color="#FF8A00" />
+                  <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Chụp ảnh</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Số lượng & Đơn vị */}

@@ -81,8 +81,13 @@ export const deductInventory = async (
 };
 
 export const addFridgeItem = async (data: Partial<FridgeItem>) => {
-  if (!data.family_id || !data.name || !data.quantity || !data.unit || !data.expiration_date) {
+  if (!data.family_id || !data.name || data.quantity === undefined || !data.expiration_date) {
     throw new BadRequestError('Thiếu thông tin bắt buộc để thêm vào tủ lạnh.');
+  }
+
+  // Database bắt buộc `unit` không được null. Nếu là 'Gia vị' không có unit thì lưu chuỗi rỗng
+  if (!data.unit) {
+    data.unit = '';
   }
 
   const newItem = await fridgeRepo.addItem(data);
@@ -105,6 +110,11 @@ export const updateFridgeItem = async (id: string, data: Partial<FridgeItem>) =>
   const existingItem = await fridgeRepo.getItemById(id);
   if (!existingItem) {
     throw new NotFoundError('Không tìm thấy nguyên liệu trong tủ lạnh.');
+  }
+
+  // Nếu không truyền unit (ví dụ khi update Gia vị), ép về chuỗi rỗng để không bị NOT NULL của Database chặn
+  if (data.unit === undefined || data.unit === null) {
+    data.unit = '';
   }
 
   if (data.quantity !== undefined && data.quantity <= 0) {

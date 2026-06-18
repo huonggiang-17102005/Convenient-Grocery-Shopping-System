@@ -44,7 +44,7 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
     });
   } catch (error: any) {
     console.error('Lỗi upload ảnh:', error.message);
-    res.status(500).json({ message: 'Đã xảy ra lỗi khi upload ảnh.' });
+    res.status(500).json({ message: 'Đã xảy ra lỗi khi upload ảnh.', error: error.message });
   }
 });
 

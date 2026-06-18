@@ -38,5 +38,16 @@ export const fridgeService = {
   throwAwayFridgeItem: async (id: string) => {
     const response = await api.delete(`/${id}/waste`);
     return response.data;
+  },
+  uploadImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_URL}/upload`, formData, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+    });
+    return response.data;
   }
 };

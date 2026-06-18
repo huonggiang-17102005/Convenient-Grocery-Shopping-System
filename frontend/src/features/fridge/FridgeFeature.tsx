@@ -114,7 +114,8 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
           category: itemData.category,
           expiration_date: itemData.expiryDate || new Date().toISOString(),
           location: itemData.storageType,
-          emoji: itemData.emoji
+          image_url: itemData.image,
+          image_public_id: itemData.imagePublicId
         });
         showToast('Đã thêm thực phẩm vào tủ lạnh!');
       } else if (modalMode === 'edit' && selectedItem) {
@@ -125,7 +126,8 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
           category: itemData.category,
           expiration_date: itemData.expiryDate || new Date().toISOString(),
           location: itemData.storageType,
-          emoji: itemData.emoji
+          image_url: itemData.image,
+          image_public_id: itemData.imagePublicId
         });
         showToast('Đã cập nhật thực phẩm!');
       }
