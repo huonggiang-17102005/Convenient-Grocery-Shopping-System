@@ -67,10 +67,7 @@ const EMOJI_MAP: Record<string, string> = {
   'Tất cả': '🛒',
 };
 
-const mapBackendExpiringToCardProps = (item: any): IngredientCardProps => {
-  const expDate = new Date(item.expiration_date || new Date());
-  const diffDays = Math.ceil((expDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-  
+const mapFoodItemToExpiringCardProps = (item: any): IngredientCardProps => {
   let categoryColor = '#E0E0E0';
   let categoryTextColor = '#757575';
   
@@ -84,12 +81,12 @@ const mapBackendExpiringToCardProps = (item: any): IngredientCardProps => {
 
   return {
     emoji: item.emoji || EMOJI_MAP[item.category] || '📦',
-    image: item.image_url || item.image,
+    image: item.image,
     name: item.name,
     category: item.category || 'Khác',
     categoryColor,
     categoryTextColor,
-    daysLeft: diffDays > 0 ? diffDays : 0,
+    daysLeft: item.daysRemaining || 0,
   };
 };
 
@@ -115,18 +112,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   const { todayMeals, todayIngredients } = React.useMemo(() => getTodayPlan(), [getTodayPlan]);
 
-  const [expiringItems, setExpiringItems] = useState<IngredientCardProps[]>([]);
-
-  React.useEffect(() => {
-    if (familyId) {
-      fridgeService.getExpiringItems(familyId).then((result) => {
-        if (result.success && result.data) {
-          const mapped = result.data.map(mapBackendExpiringToCardProps);
-          setExpiringItems(mapped);
-        }
-      }).catch(console.error);
-    }
-  }, [familyId]);
+  const expiringItems = React.useMemo(() => {
+    return fridgeItems
+      .filter(item => {
+        // daysRemaining is already calculated in FridgeContext
+        return item.daysRemaining !== undefined && item.daysRemaining <= 3;
+      })
+      .map(mapFoodItemToExpiringCardProps);
+  }, [fridgeItems]);
 
   // Selected item for ExpireItemModal
   const [selectedItem, setSelectedItem] = useState<IngredientCardProps | null>(null);
