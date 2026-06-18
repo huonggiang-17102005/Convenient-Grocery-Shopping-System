@@ -183,3 +183,40 @@ export const checkExpiringItems = async (familyId: string) => {
 
   return expiringItems;
 };
+
+// Hàm này được gọi bởi Vercel Cronjob thông qua API
+export const runCronCheck = async () => {
+  console.log('Bắt đầu chạy Cronjob kiểm tra thực phẩm hết hạn...');
+  
+  const expiredItems = await fridgeRepo.getExpiredUnwastedItems();
+  
+  if (expiredItems.length === 0) {
+    console.log('Không có thực phẩm nào hết hạn cần ghi log.');
+    return { processedCount: 0 };
+  }
+
+  const itemIds: string[] = [];
+
+  for (const item of expiredItems) {
+    if (!item.family_id) continue;
+    
+    // Ghi log expire
+    await inventoryLogRepo.insertLog(
+      item.family_id,
+      item.category || 'Khác',
+      'expire',
+      item.quantity,
+      item.unit
+    );
+
+    itemIds.push(item.id);
+  }
+
+  // Đánh dấu đã phạt lãng phí để không bị ghi log đúp vào hôm sau
+  if (itemIds.length > 0) {
+    await fridgeRepo.markItemsAsWasted(itemIds);
+    console.log(`Đã ghi log lãng phí (expire) cho ${itemIds.length} món đồ.`);
+  }
+
+  return { processedCount: itemIds.length };
+};

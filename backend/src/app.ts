@@ -15,15 +15,12 @@ import shoppingListRoute from './routes/shoppingList.route.js';
 import categoryRoute from './routes/category.routes.js';
 import errorMiddleware from './middlewares/error.middleware.js';
 
-import { runFridgeCronJob } from './cron/fridge.cron.js';
 
 dotenv.config();
 
 // Chạy test kết nối
 testDBConnection();
 
-// Khởi chạy các Cronjob ngầm
-runFridgeCronJob();
 
 const app = express();
 app.use(cors());
