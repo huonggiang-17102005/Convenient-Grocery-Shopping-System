@@ -2,7 +2,8 @@
 .refrigerator-page {
   background-color: #F8FAFC;
   min-height: 100vh;
-  padding-bottom: 90px; /* Space for navbar */
+  padding-bottom: 90px;
+  /* Space for navbar */
 }
 
 /* Sticky header wrapping title + search + filters */
@@ -112,6 +113,7 @@
   flex-shrink: 0;
   transition: transform 0.2s ease;
 }
+
 .fridge-custom-dropdown__chevron.rotated {
   transform: rotate(180deg);
 }
@@ -131,8 +133,15 @@
 }
 
 @keyframes dropdownIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .fridge-custom-dropdown__item {
@@ -150,12 +159,15 @@
   transition: background 0.12s;
   border-bottom: 1px solid #F5F5F5;
 }
+
 .fridge-custom-dropdown__item:last-child {
   border-bottom: none;
 }
+
 .fridge-custom-dropdown__item:hover {
   background: #FFF8F0;
 }
+
 .fridge-custom-dropdown__item.active {
   background: var(--primary-bg-opacity);
   color: var(--primary-color);
@@ -171,11 +183,13 @@
   gap: 8px;
   overflow-x: auto;
 }
+
 @supports (scrollbar-width: none) {
   .refrigerator-category-group {
     scrollbar-width: none;
   }
 }
+
 .refrigerator-category-group::-webkit-scrollbar {
   display: none;
 }
@@ -230,7 +244,7 @@
 
 /* Food Card */
 .food-card {
-  padding: 16px;
+  padding: 16px 16px 18px 16px;
   background: white;
   border-radius: 16px;
   border: 1.27px solid #E0E0E0;
@@ -238,6 +252,7 @@
   flex-direction: column;
   align-items: center;
   position: relative;
+  height: 250px;
 }
 
 .food-card.selected {
@@ -258,6 +273,7 @@
   cursor: pointer;
   z-index: 2;
 }
+
 .food-card-checkbox:checked {
   background: var(--primary-color);
   border-color: var(--primary-color);
@@ -276,14 +292,46 @@
   font-size: 10px;
   font-weight: 500;
 }
-.category-bg-rau-cu { background: #E8F5E9; color: #388E3C; }
-.category-bg-thit-ca { background: #FFCDD2; color: #C62828; }
-.category-bg-trung { background: #FFF3E0; color: #E65100; }
-.category-bg-chat-long { background: #E3F2FD; color: #1565C0; }
-.category-bg-do-kho { background: #F3E5F5; color: #4A148C; }
-.category-bg-gia-vi { background: #F9FBE7; color: #282401; }
-.category-bg-khac { background: #ECEFF1; color: #37474F; }
-.category-bg-default { background: #F5F5F5; color: #757575; }
+
+.category-bg-rau-cu {
+  background: #E8F5E9;
+  color: #388E3C;
+}
+
+.category-bg-thit-ca {
+  background: #FFCDD2;
+  color: #C62828;
+}
+
+.category-bg-trung {
+  background: #FFF3E0;
+  color: #E65100;
+}
+
+.category-bg-chat-long {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+
+.category-bg-do-kho {
+  background: #F3E5F5;
+  color: #4A148C;
+}
+
+.category-bg-gia-vi {
+  background: #F9FBE7;
+  color: #282401;
+}
+
+.category-bg-khac {
+  background: #ECEFF1;
+  color: #37474F;
+}
+
+.category-bg-default {
+  background: #F5F5F5;
+  color: #757575;
+}
 
 .food-card-emoji {
   font-size: 40px;
@@ -296,14 +344,21 @@
   height: 60px;
   border-radius: 50%;
   object-fit: cover;
-  margin-top: 16px;
+  margin-top: 30px;
+}
+
+.food-card-name-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .food-card-name {
   font-size: 16px;
   font-weight: 600;
   color: #1A1A1A;
-  margin-top: 8px;
   text-align: center;
 }
 
@@ -313,8 +368,7 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 0;
 }
 
 .qty-btn {
@@ -330,14 +384,17 @@
   font-weight: 500;
   flex-shrink: 0;
 }
+
 .qty-btn.minus {
   background: #F5F5F5;
   color: #1A1A1A;
 }
+
 .qty-btn.plus {
   background: var(--primary-color);
   color: white;
 }
+
 .qty-value {
   min-width: 32px;
   font-size: 16px;
@@ -357,14 +414,24 @@
   width: 100%;
   text-align: center;
 }
-.days-bg-good { background: #388E3C; }
-.days-bg-warning { background: #F57C00; }
-.days-bg-danger { background: #D32F2F; }
+
+.days-bg-good {
+  background: #388E3C;
+}
+
+.days-bg-warning {
+  background: #F57C00;
+}
+
+.days-bg-danger {
+  background: #D32F2F;
+}
 
 /* FAB */
 .fab-button {
   position: fixed;
-  bottom: 100px; /* Above bottom nav */
+  bottom: 100px;
+  /* Above bottom nav */
   right: 16px;
   width: 56px;
   height: 56px;
@@ -413,4 +480,3 @@
   justify-content: center;
   cursor: pointer;
 }
-

@@ -62,7 +62,10 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
       ) : (
         <div className="food-card-emoji">{item.emoji}</div>
       )}
-      <div className="food-card-name">{item.name}</div>
+      
+      <div className="food-card-name-wrapper">
+        <div className="food-card-name">{item.name}</div>
+      </div>
       
       {!isGiaVi && (
         <div className="food-card-quantity-controls" onClick={(e) => e.stopPropagation()}>

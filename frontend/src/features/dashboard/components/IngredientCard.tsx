@@ -49,7 +49,9 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
         )}
       </div>
 
-      <p className="ingredient-card__name">{name}</p>
+      <div className="ingredient-card__name-wrapper">
+        <p className="ingredient-card__name">{name}</p>
+      </div>
 
       <div className={`ingredient-card__expiry ingredient-card__expiry--${status}`}>
         Còn {daysLeft} ngày

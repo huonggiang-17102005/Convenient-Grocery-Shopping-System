@@ -152,6 +152,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  height: 140px; /* Cố định chiều cao như FoodCard */
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -183,6 +184,12 @@
   object-fit: cover;
 }
 
+.ingredient-card__name-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
 .ingredient-card__name {
   font-size: 16px;
   font-weight: 600;
@@ -199,6 +206,7 @@
   padding: 4px 0;
   border-radius: 6px;
   font-family: 'Plus Jakarta Sans', sans-serif;
+  margin-top: 0; /* Bỏ margin-top: auto vì wrapper đã lo việc đẩy */
 }
 
 .ingredient-card__expiry--critical { background: #D32F2F; }
