@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import supabase from '../config/db.config.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_key';
 
@@ -16,14 +17,29 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     return;
   }
 
-  jwt.verify(token, JWT_SECRET, (err: any, decoded: any) => {
+  jwt.verify(token, JWT_SECRET, async (err: any, decoded: any) => {
     if (err) {
       res.status(403).json({ message: 'Token không hợp lệ hoặc đã hết hạn' });
       return;
     }
     
-    // Gắn thông tin user đã giải mã vào request để các hàm phía sau dùng
-    req.user = decoded;
+    try {
+      // Lấy thông tin user mới nhất từ DB để có family_id và role chính xác
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', decoded.id)
+        .single();
+        
+      if (!error && user) {
+        req.user = user;
+      } else {
+        req.user = decoded; // Fallback
+      }
+    } catch (e) {
+      req.user = decoded; // Fallback
+    }
+    
     next();
   });
 };

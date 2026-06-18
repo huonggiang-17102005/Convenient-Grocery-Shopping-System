@@ -1,4 +1,5 @@
 import React from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface InviteCodeModalProps {
   isOpen: boolean;
@@ -45,11 +46,14 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
           </div>
         </div>
 
-        {/* QR Placeholder */}
+        {/* QR Code */}
         <div className="invite-modal__qr-area">
-          <div className="invite-modal__qr-box">
-            <span className="invite-modal__qr-emoji">📱</span>
-            <span className="invite-modal__qr-text">QR Code</span>
+          <div className="invite-modal__qr-box" style={{ background: 'white', padding: '16px', borderRadius: '12px' }}>
+            <QRCodeSVG 
+              value={`http://localhost:5173/join?code=${inviteCode}`} 
+              size={160} 
+              level="H" 
+            />
           </div>
         </div>
 
