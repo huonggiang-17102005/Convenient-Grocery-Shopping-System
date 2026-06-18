@@ -84,7 +84,8 @@ const MasterDataAdmin: React.FC = () => {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:5000/api/admin/master-data/categories');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/master-data/categories`);
       if (res.ok) {
         const data = await res.json();
         setCategories(data);
@@ -99,7 +100,8 @@ const MasterDataAdmin: React.FC = () => {
   const fetchUnits = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:5000/api/admin/master-data/units');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/master-data/units`);
       if (res.ok) {
         const data = await res.json();
         setUnits(data);
@@ -114,7 +116,8 @@ const MasterDataAdmin: React.FC = () => {
   const fetchRecipes = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch('http://localhost:5000/api/admin/master-data/recipes');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/master-data/recipes`);
       if (res.ok) {
         const data = await res.json();
         setRecipes(data);
@@ -252,7 +255,8 @@ const MasterDataAdmin: React.FC = () => {
     if (!deletingCategory) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/master-data/categories/${encodeURIComponent(deletingCategory)}`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/master-data/categories/${encodeURIComponent(deletingCategory)}`, {
         method: 'DELETE'
       });
 
@@ -274,7 +278,8 @@ const MasterDataAdmin: React.FC = () => {
     if (!deletingUnit) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/master-data/units/${encodeURIComponent(deletingUnit)}`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/master-data/units/${encodeURIComponent(deletingUnit)}`, {
         method: 'DELETE'
       });
 
@@ -296,7 +301,8 @@ const MasterDataAdmin: React.FC = () => {
     if (!deletingRecipe) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/master-data/recipes/${deletingRecipe.id}`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/master-data/recipes/${deletingRecipe.id}`, {
         method: 'DELETE'
       });
 
@@ -322,7 +328,8 @@ const MasterDataAdmin: React.FC = () => {
           alert('Vui lòng nhập tên danh mục!');
           return;
         }
-        res = await fetch(`http://localhost:5000/api/admin/master-data/categories`, {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        res = await fetch(`${API_URL}/admin/master-data/categories`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -335,7 +342,8 @@ const MasterDataAdmin: React.FC = () => {
         });
       } else {
         if (!editingCategory) return;
-        res = await fetch(`http://localhost:5000/api/admin/master-data/categories/${encodeURIComponent(editingCategory.category)}`, {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        res = await fetch(`${API_URL}/admin/master-data/categories/${encodeURIComponent(editingCategory.category)}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -369,7 +377,8 @@ const MasterDataAdmin: React.FC = () => {
           alert('Vui lòng nhập đơn vị!');
           return;
         }
-        res = await fetch(`http://localhost:5000/api/admin/master-data/units`, {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        res = await fetch(`${API_URL}/admin/master-data/units`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -381,7 +390,8 @@ const MasterDataAdmin: React.FC = () => {
         });
       } else {
         if (!editingUnit) return;
-        res = await fetch(`http://localhost:5000/api/admin/master-data/units/${encodeURIComponent(editingUnit.unit)}`, {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        res = await fetch(`${API_URL}/admin/master-data/units/${encodeURIComponent(editingUnit.unit)}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -413,9 +423,10 @@ const MasterDataAdmin: React.FC = () => {
         return;
       }
       
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       const url = recipeModalMode === 'add' 
-        ? 'http://localhost:5000/api/admin/master-data/recipes'
-        : `http://localhost:5000/api/admin/master-data/recipes/${recipeFormData.id}`;
+        ? `${API_URL}/admin/master-data/recipes`
+        : `${API_URL}/admin/master-data/recipes/${recipeFormData.id}`;
         
       const method = recipeModalMode === 'add' ? 'POST' : 'PUT';
       

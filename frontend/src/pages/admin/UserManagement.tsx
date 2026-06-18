@@ -26,7 +26,8 @@ const UserManagement: React.FC = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/admin/users');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${API_URL}/admin/users`);
         if (!res.ok) throw new Error('Failed to fetch users');
         const data = await res.json();
         setUsers(data);
@@ -49,7 +50,8 @@ const UserManagement: React.FC = () => {
     if (!userToDelete) return;
     
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${userToDelete.id}`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/users/${userToDelete.id}`, {
         method: 'DELETE'
       });
       
@@ -73,7 +75,8 @@ const UserManagement: React.FC = () => {
     setUsers(users.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${user.id}/status`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/users/${user.id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json'

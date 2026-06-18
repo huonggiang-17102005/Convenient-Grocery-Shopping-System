@@ -42,7 +42,8 @@ const RecipeApprovalAdmin: React.FC = () => {
   const fetchPendingRecipes = async () => {
     try {
       setLoading(true);
-      const res = await fetch('http://localhost:5000/api/admin/recipes/pending', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/recipes/pending`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -61,7 +62,8 @@ const RecipeApprovalAdmin: React.FC = () => {
 
   const handleApprove = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/recipes/${id}/approve`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/recipes/${id}/approve`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -81,7 +83,8 @@ const RecipeApprovalAdmin: React.FC = () => {
 
   const handleReject = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/recipes/${id}/reject`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/recipes/${id}/reject`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

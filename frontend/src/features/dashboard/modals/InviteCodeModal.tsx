@@ -1,4 +1,5 @@
 import React from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface InviteCodeModalProps {
   isOpen: boolean;
@@ -47,11 +48,11 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
 
         {/* QR Code */}
         <div className="invite-modal__qr-area">
-          <div className="invite-modal__qr-box" style={{ background: 'white', padding: '8px', border: '1px solid #E0E0E0', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <img 
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(inviteCode)}`} 
-              alt="QR Code Nhóm" 
-              style={{ width: '150px', height: '150px', display: 'block' }} 
+          <div className="invite-modal__qr-box" style={{ background: 'white', padding: '16px', borderRadius: '12px' }}>
+            <QRCodeSVG 
+              value={`http://localhost:5173/join?code=${inviteCode}`} 
+              size={160} 
+              level="H" 
             />
           </div>
         </div>

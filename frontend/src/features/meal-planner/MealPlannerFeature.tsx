@@ -68,7 +68,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
       const [d, m] = dStr.split('/');
       return `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
     };
-    return `${parseDate(startDateStr)}_${parseDate(endDateStr)}`;
+    return `${parseDate(startDateStr!)}_${parseDate(endDateStr!)}`;
   };
 
   const plan = plansByWeek[getCacheKey()] || {
@@ -89,7 +89,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
       const [d, m] = dStr.split('/');
       return `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
     };
-    fetchWeekPlan(parseDate(startDateStr), parseDate(endDateStr));
+    fetchWeekPlan(parseDate(startDateStr!), parseDate(endDateStr!));
   }, [weekDays, fetchWeekPlan]);
 
   // Bottom sheet state

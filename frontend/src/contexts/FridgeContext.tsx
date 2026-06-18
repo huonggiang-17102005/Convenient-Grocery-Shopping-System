@@ -72,7 +72,8 @@ export const FridgeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       setIsLoading(true);
 
-      const res = await fetch(`http://localhost:5000/api/fridge/family/${familyId}`);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/fridge/family/${familyId}`);
       const result = await res.json();
 
       if (result.success) {
