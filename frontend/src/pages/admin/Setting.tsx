@@ -89,7 +89,8 @@ const SettingAdmin: React.FC = () => {
           }
         }
         
-        const res = await fetch(`http://localhost:5000/api/admin/waste-report?${params.toString()}`);
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${API_URL}/admin/waste-report?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setReportData(data);
@@ -104,7 +105,8 @@ const SettingAdmin: React.FC = () => {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/admin/settings');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${API_URL}/admin/settings`);
         if (res.ok) {
           const data = await res.json();
           setMaxMembers(data.max_family_members || 10);
@@ -125,7 +127,8 @@ const SettingAdmin: React.FC = () => {
 
   const handleApply = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/admin/settings', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/admin/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'

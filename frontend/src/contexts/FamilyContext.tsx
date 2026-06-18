@@ -30,7 +30,8 @@ export const FamilyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       setIsLoading(true);
 
-      const res = await fetch('http://localhost:5000/api/families/members', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/families/members`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();

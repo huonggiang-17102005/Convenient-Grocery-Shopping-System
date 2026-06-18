@@ -74,7 +74,8 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const handleSelectAvatar = async (newAvatar: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/users/avatar', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/users/avatar`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ avatar: newAvatar })
@@ -98,7 +99,8 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const handleUpdateProfile = async (newName: string, newEmail: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/users/profile', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/users/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ full_name: newName, email: newEmail })
@@ -122,7 +124,8 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const handleUpdatePassword = async (currentPass: string, newPass: string) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/users/password', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/users/password`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ current_password: currentPass, new_password: newPass })
@@ -179,7 +182,8 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
       const token = localStorage.getItem('token');
 
       if (confirmVariant === 'transfer' && selectedMember) {
-        const res = await fetch('http://localhost:5000/api/families/transfer-homemaker', {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${API_URL}/families/transfer-homemaker`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ newHomemakerId: selectedMember.id })
@@ -190,7 +194,8 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
         triggerToast('Đang xử lý nhường quyền...');
 
       } else if (confirmVariant === 'delete' && selectedMember) {
-        const res = await fetch(`http://localhost:5000/api/families/members/${selectedMember.id}`, {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${API_URL}/families/members/${selectedMember.id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -212,7 +217,8 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
         triggerToast(`Xuất báo cáo gia đình định dạng ${format} thành công!`);
 
       } else if (confirmVariant === 'leave') {
-        const res = await fetch('http://localhost:5000/api/families/leave', {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${API_URL}/families/leave`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
