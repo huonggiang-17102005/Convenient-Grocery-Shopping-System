@@ -133,6 +133,12 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
               >
                 Khác hạn (Tạo thẻ mới)
               </button>
+              <button 
+                onClick={onClose}
+                style={{ alignSelf: 'stretch', height: 48, background: 'white', borderRadius: 100, border: '1.27px solid #E0E0E0', color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', cursor: 'pointer' }}
+              >
+                Hủy
+              </button>              
             </>
           ) : (
             <>

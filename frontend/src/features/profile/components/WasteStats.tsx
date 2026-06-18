@@ -1,51 +1,101 @@
-import React from 'react';
+import React, { useState } from 'react';
+
+export interface CategoryStat {
+  name: string;
+  total: number;
+  unit: string;
+  consumed: number;
+  consumedPercent: number;
+  wasted: number;
+  wastedPercent: number;
+  color: string;
+}
 
 interface WasteStatsProps {
-  consumedPercent: number;
-  wastedPercent: number;
+  categories: CategoryStat[];
   onExportReport: () => void;
 }
 
-const WasteStats: React.FC<WasteStatsProps> = ({
-  consumedPercent,
-  wastedPercent,
-  onExportReport,
-}) => {
+const CategoryStatRow: React.FC<{ stat: CategoryStat }> = ({ stat }) => {
+  return (
+    <div style={{ width: '100%', paddingTop: 16, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
+      <div style={{ alignSelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
+        <div style={{ justifyContent: 'flex-start', alignItems: 'center', gap: 6, display: 'flex' }}>
+          <div style={{ width: 8, height: 8, position: 'relative', background: stat.color, borderRadius: 42770700 }} />
+          <div style={{ position: 'relative', color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '19.50px', wordWrap: 'break-word' }}>
+            {stat.name}
+          </div>
+        </div>
+        <div style={{ position: 'relative', color: '#757575', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', lineHeight: '16.50px', wordWrap: 'break-word' }}>
+          Tổng: {stat.total} {stat.unit}
+        </div>
+      </div>
+      
+      <div style={{ alignSelf: 'stretch', paddingTop: 6, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
+        <div style={{ width: '100%', height: 10, background: '#E0E0E0', overflow: 'hidden', borderRadius: 42770700, justifyContent: 'flex-start', alignItems: 'flex-start', display: 'inline-flex' }}>
+          <div style={{ width: `${stat.consumedPercent}%`, height: 10, position: 'relative', background: '#2E7D32' }} />
+          <div style={{ width: `${stat.wastedPercent}%`, height: 10, position: 'relative', background: '#D32F2F' }} />
+        </div>
+      </div>
+      
+      <div style={{ width: '100%', paddingTop: 4, justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
+        <div style={{ position: 'relative', color: '#2E7D32', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '16.50px', wordWrap: 'break-word' }}>
+          Tiêu thụ: {stat.consumed} {stat.unit} ({stat.consumedPercent}%)
+        </div>
+        <div style={{ position: 'relative', color: '#D32F2F', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '16.50px', wordWrap: 'break-word' }}>
+          Lãng phí: {stat.wasted} {stat.unit} ({stat.wastedPercent}%)
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const WasteStats: React.FC<WasteStatsProps> = ({ categories, onExportReport }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const INITIAL_COUNT = 3;
+  const visibleCategories = isExpanded ? categories : categories.slice(0, INITIAL_COUNT);
+  const remainingCount = categories.length - INITIAL_COUNT;
+
   return (
     <div className="profile-section">
       <h2 className="profile-section-title">Thống kê lãng phí</h2>
-      <div className="profile-waste-card">
-        {/* Progress bar */}
-        <div className="profile-progress-bar" role="progressbar" aria-label="Thống kê tiêu thụ và lãng phí">
-          <div
-            className="profile-progress-consumed"
-            style={{ width: `${consumedPercent}%` }}
-          />
-          <div
-            className="profile-progress-wasted"
-            style={{ width: `${wastedPercent}%` }}
-          />
+      <div style={{ alignSelf: 'stretch', padding: 16, background: 'white', borderRadius: 16, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
+        <div style={{ width: '100%', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
+          {visibleCategories.map((stat, index) => (
+            <div key={index} style={{ width: '100%', marginTop: index === 0 ? -16 : 0 }}>
+              <CategoryStatRow stat={stat} />
+            </div>
+          ))}
         </div>
+        
+        {categories.length > INITIAL_COUNT && (
+          <div style={{ width: '100%', paddingTop: 16, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', display: 'flex' }}>
+            <div 
+              onClick={() => setIsExpanded(!isExpanded)}
+              style={{ width: '100%', height: 36, background: '#FAFAFA', borderRadius: 100, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', justifyContent: 'center', alignItems: 'center', display: 'inline-flex', cursor: 'pointer' }}
+            >
+              <div style={{ textAlign: 'center', color: '#FF8A00', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '18px', wordWrap: 'break-word' }}>
+                {isExpanded ? 'Thu gọn ▲' : `Xem thêm ${remainingCount} danh mục ▼`}
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Labels */}
-        <div className="profile-waste-labels">
-          <p className="profile-waste-label--consumed">Tiêu thụ: {consumedPercent}%</p>
-          <p className="profile-waste-label--wasted">Lãng phí: {wastedPercent}%</p>
+        <div style={{ width: '100%', paddingTop: 12, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
+          <button 
+            onClick={onExportReport}
+            style={{ width: '100%', height: 44, background: '#FF8A00', borderRadius: 100, border: 'none', outline: 'none', justifyContent: 'center', alignItems: 'center', gap: 8, display: 'inline-flex', cursor: 'pointer' }}
+          >
+            <div style={{ width: 20, height: 20, position: 'relative', overflow: 'hidden' }}>
+              <div style={{ width: 13.33, height: 16.66, left: 3.33, top: 1.67, position: 'absolute', outline: '1.67px white solid', outlineOffset: '-0.83px' }} />
+              <div style={{ width: 5, height: 5, left: 11.66, top: 1.67, position: 'absolute', outline: '1.67px white solid', outlineOffset: '-0.83px' }} />
+              <div style={{ width: 5, height: 2.50, left: 7.50, top: 12.50, position: 'absolute', outline: '1.67px white solid', outlineOffset: '-0.83px' }} />
+            </div>
+            <div style={{ textAlign: 'center', color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px', wordWrap: 'break-word' }}>
+              Xuất báo cáo gia đình
+            </div>
+          </button>
         </div>
-
-        {/* Export button */}
-        <button
-          id="profile-export-report-btn"
-          className="profile-export-btn"
-          onClick={onExportReport}
-        >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3.33" y="1.67" width="13.33" height="16.66" rx="1" stroke="white" strokeWidth="1.67" fill="none"/>
-            <rect x="11.66" y="1.67" width="5" height="5" rx="0.5" stroke="white" strokeWidth="1.67" fill="none"/>
-            <rect x="7.5" y="12.5" width="5" height="2.5" rx="0.5" stroke="white" strokeWidth="1.67" fill="none"/>
-          </svg>
-          <span>Xuất báo cáo gia đình</span>
-        </button>
       </div>
     </div>
   );
