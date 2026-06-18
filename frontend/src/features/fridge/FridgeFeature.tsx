@@ -7,6 +7,7 @@ import StorageFilter from './components/StorageFilter';
 import CategoryFilter from './components/CategoryFilter';
 import FoodCard from './components/FoodCard';
 import IngredientFormModal from './modals/IngredientFormModal';
+import QuantityConfirmModal from './modals/QuantityConfirmModal';
 import RecipeActionBar from './components/RecipeActionBar';
 import Toast from '@/components/shared/Toast';
 
@@ -15,19 +16,28 @@ export interface FridgeFeatureProps {
 }
 
 import { useFridgeContext } from '../../contexts/FridgeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { fridgeService } from './fridge.service';
 
 export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker' }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStorage, setActiveStorage] = useState<StorageType>('Tất cả');
   const [activeCategory, setActiveCategory] = useState<FoodCategory>('Tất cả');
   
-  const { items, setItems, isLoading: isLoadingData } = useFridgeContext();
+  const { items, setItems, isLoading: isLoadingData, refreshFridge } = useFridgeContext();
+  const { user } = useAuth();
+  const familyId = user?.family_id;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit' | 'detail'>('add');
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
+
+  // Quantity Confirm Modal states
+  const [isQtyModalOpen, setIsQtyModalOpen] = useState(false);
+  const [qtyModalMode, setQtyModalMode] = useState<'add' | 'subtract'>('add');
+  const [qtyModalItem, setQtyModalItem] = useState<FoodItem | null>(null);
 
   // Toast
   const [toastMsg, setToastMsg] = useState('');
@@ -39,14 +49,36 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
   };
 
   const handleUpdateQuantity = (id: string, delta: number) => {
-    const updatedItems = items.map(item => {
-      if (item.id === id) {
-        const newQuantity = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQuantity };
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    setQtyModalItem(item);
+    setQtyModalMode(delta > 0 ? 'add' : 'subtract');
+    setIsQtyModalOpen(true);
+  };
+
+  const handleConfirmQty = async (delta: number) => {
+    if (!qtyModalItem) return;
+    try {
+      const newQuantity = Math.max(0, qtyModalItem.quantity + delta);
+      await fridgeService.updateFridgeItem(qtyModalItem.id, { quantity: newQuantity });
+      
+      if (newQuantity <= 0) {
+        showToast('Đã lấy hết & xóa thẻ thực phẩm!');
+      } else {
+        showToast('Đã cập nhật số lượng!');
       }
-      return item;
-    });
-    setItems(updatedItems);
+      await refreshFridge();
+    } catch (err) {
+      console.error(err);
+      showToast('Có lỗi xảy ra khi cập nhật số lượng!');
+    }
+  };
+
+  const handleDifferentExpiry = () => {
+    if (!qtyModalItem) return;
+    setSelectedItem(qtyModalItem);
+    setModalMode('add');
+    setIsModalOpen(true);
   };
 
   const handleSelect = (id: string, selected: boolean) => {
@@ -71,27 +103,51 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
     setIsModalOpen(true);
   };
 
-  const handleSaveModal = (itemData: Omit<FoodItem, 'id'>) => {
-    if (modalMode === 'add') {
-      const newItem: FoodItem = {
-        ...itemData,
-        id: 'fridge_' + Date.now() + Math.random().toString(36).substr(2, 4)
-      };
-      const updated = [...items, newItem];
-      setItems(updated);
-      showToast('Đã thêm thực phẩm vào tủ lạnh!');
-    } else if (modalMode === 'edit' && selectedItem) {
-      const updated = items.map(i => i.id === selectedItem.id ? { ...itemData, id: selectedItem.id } : i);
-      setItems(updated);
-      showToast('Đã cập nhật thực phẩm!');
+  const handleSaveModal = async (itemData: Omit<FoodItem, 'id'>) => {
+    try {
+      if (modalMode === 'add') {
+        await fridgeService.addFridgeItem({
+          family_id: familyId,
+          name: itemData.name,
+          quantity: itemData.quantity,
+          unit: itemData.unit,
+          category: itemData.category,
+          expiration_date: itemData.expiryDate || new Date().toISOString(),
+          location: itemData.storageType,
+          image_url: itemData.image,
+          image_public_id: itemData.imagePublicId
+        });
+        showToast('Đã thêm thực phẩm vào tủ lạnh!');
+      } else if (modalMode === 'edit' && selectedItem) {
+        await fridgeService.updateFridgeItem(selectedItem.id, {
+          name: itemData.name,
+          quantity: itemData.quantity,
+          unit: itemData.unit,
+          category: itemData.category,
+          expiration_date: itemData.expiryDate || new Date().toISOString(),
+          location: itemData.storageType,
+          image_url: itemData.image,
+          image_public_id: itemData.imagePublicId
+        });
+        showToast('Đã cập nhật thực phẩm!');
+      }
+      await refreshFridge();
+    } catch (err) {
+      console.error(err);
+      showToast('Có lỗi xảy ra!');
     }
     setIsModalOpen(false);
   };
 
-  const handleDeleteModal = (id: string) => {
-    const updated = items.filter(i => i.id !== id);
-    setItems(updated);
-    showToast('Đã xóa thực phẩm!');
+  const handleDeleteModal = async (id: string) => {
+    try {
+      await fridgeService.throwAwayFridgeItem(id);
+      showToast('Đã xóa thực phẩm!');
+      await refreshFridge();
+    } catch (err) {
+      console.error(err);
+      showToast('Có lỗi xảy ra khi xóa!');
+    }
     setIsModalOpen(false);
     
     // Remove from selection if deleted
@@ -110,6 +166,12 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
   });
 
   const selectedNames = items.filter(i => selectedIds.has(i.id)).map(i => i.name);
+
+  const totalOtherLotsQuantity = qtyModalItem 
+    ? items
+        .filter(i => i.id !== qtyModalItem.id && i.name === qtyModalItem.name && i.category === qtyModalItem.category)
+        .reduce((sum, i) => sum + i.quantity, 0)
+    : 0;
 
   return (
     <div className="refrigerator-page">
@@ -171,6 +233,16 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveModal}
         onDelete={handleDeleteModal}
+      />
+
+      <QuantityConfirmModal
+        isOpen={isQtyModalOpen}
+        mode={qtyModalMode}
+        item={qtyModalItem}
+        totalOtherLotsQuantity={totalOtherLotsQuantity}
+        onClose={() => setIsQtyModalOpen(false)}
+        onConfirm={handleConfirmQty}
+        onDifferentExpiry={handleDifferentExpiry}
       />
     </div>
   );

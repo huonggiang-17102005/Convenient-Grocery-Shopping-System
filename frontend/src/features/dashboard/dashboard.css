@@ -176,6 +176,13 @@
 
 .ingredient-card__emoji { font-size: 22px; line-height: 1; }
 
+.ingredient-card__img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .ingredient-card__name {
   font-size: 16px;
   font-weight: 600;

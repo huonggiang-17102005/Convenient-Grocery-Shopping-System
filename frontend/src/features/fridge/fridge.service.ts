@@ -22,5 +22,32 @@ export const fridgeService = {
   deductInventory: async (familyId: string, ingredients: { name: string; category: string; amountValue: string; amountUnit: string }[]) => {
     const response = await api.post('/deduct', { familyId, ingredients });
     return response.data;
+  },
+  getExpiringItems: async (familyId: string) => {
+    const response = await api.get(`/family/${familyId}/expiring`);
+    return response.data;
+  },
+  addFridgeItem: async (data: any) => {
+    const response = await api.post('/', data);
+    return response.data;
+  },
+  updateFridgeItem: async (id: string, data: any) => {
+    const response = await api.put(`/${id}`, data);
+    return response.data;
+  },
+  throwAwayFridgeItem: async (id: string) => {
+    const response = await api.delete(`/${id}/waste`);
+    return response.data;
+  },
+  uploadImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_URL}/upload`, formData, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+    });
+    return response.data;
   }
 };

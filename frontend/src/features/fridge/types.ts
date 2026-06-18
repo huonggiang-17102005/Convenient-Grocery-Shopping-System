@@ -12,4 +12,5 @@ export interface FoodItem {
   storageType: StorageType;
   expiryDate?: string;
   image?: string;
+  imagePublicId?: string;
 }
