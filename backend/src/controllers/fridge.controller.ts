@@ -58,3 +58,12 @@ export const getExpiring = async (req: Request, res: Response) => {
     data: items
   });
 };
+
+export const runCron = async (req: Request, res: Response) => {
+  const result = await fridgeService.runCronCheck();
+  return res.status(200).json({
+    success: true,
+    message: 'Cronjob executed successfully',
+    data: result
+  });
+};

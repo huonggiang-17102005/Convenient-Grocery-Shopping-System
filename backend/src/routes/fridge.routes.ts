@@ -21,4 +21,7 @@ router.delete('/:id/waste', fridgeController.wasteItem);
 // Trừ nguyên liệu từ tủ lạnh
 router.post('/deduct', fridgeController.deduct);
 
+// Gọi bởi Vercel Cronjob (GET để tương thích Vercel)
+router.get('/cron/check-expired', fridgeController.runCron);
+
 export default router;
