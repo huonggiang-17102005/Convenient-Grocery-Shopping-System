@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import TimeFilterTabs from './components/TimeFilterTabs';
 import CategoryGroup from './components/CategoryGroup';

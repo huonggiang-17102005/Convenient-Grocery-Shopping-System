@@ -1,28 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { X } from 'lucide-react';
 
-interface FridgeItem {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-  category?: string;
-}
 
-interface MealPlanPayload {
-  meal_type?: string;
-  people_count?: number;
-  recipes?: {
-    name?: string;
-    servings?: number;
-    ingredients?: {
-      name: string;
-      quantity: string;
-      unit: string;
-      category?: string;
-    }[];
-  };
-}
 import './dashboard.css';
 
 // Color theme per role
