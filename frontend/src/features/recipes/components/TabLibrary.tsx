@@ -8,6 +8,7 @@ import RecipeCard from './RecipeCard';
 interface TabLibraryProps {
   recipes: Recipe[];
   selectedIngredients: FilterIngredient[];
+  availableIngredients: string[];
   onChangeIngredients: (ingredients: FilterIngredient[]) => void;
   onRecipeClick: (recipe: Recipe) => void;
   onToggleFavorite: (recipeId: string) => void;
@@ -16,6 +17,7 @@ interface TabLibraryProps {
 const TabLibrary: React.FC<TabLibraryProps> = ({
   recipes,
   selectedIngredients,
+  availableIngredients,
   onChangeIngredients,
   onRecipeClick,
   onToggleFavorite,
@@ -27,7 +29,7 @@ const TabLibrary: React.FC<TabLibraryProps> = ({
       : recipes.filter((r) =>
           r.ingredients.some((ing) =>
             selectedIngredients.some((sel) =>
-              ing.name.toLowerCase().includes(sel.toLowerCase())
+              typeof ing.name === 'string' && typeof sel === 'string' && ing.name.toLowerCase().includes(sel.toLowerCase())
             )
           )
         );
@@ -37,6 +39,7 @@ const TabLibrary: React.FC<TabLibraryProps> = ({
       {/* Ingredient filter dropdown */}
       <SearchAndFilter
         selectedIngredients={selectedIngredients}
+        availableIngredients={availableIngredients}
         onChangeIngredients={onChangeIngredients}
       />
 

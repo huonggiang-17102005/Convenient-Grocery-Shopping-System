@@ -61,19 +61,4 @@ export interface RecipesFeatureProps {
   role: 'homemaker' | 'member';
 }
 
-// Các nguyên liệu có thể lọc
-export const FILTER_INGREDIENTS = [
-  'Tất cả',
-  'Thịt bò',
-  'Gà',
-  'Tôm',
-  'Cá',
-  'Trứng',
-  'Cà chua',
-  'Hành tây',
-  'Cà rốt',
-  'Bông cải',
-  'Khoai tây',
-] as const;
-
-export type FilterIngredient = typeof FILTER_INGREDIENTS[number];
+export type FilterIngredient = string;

@@ -21,15 +21,14 @@ const RecipeActionBar: React.FC<RecipeActionBarProps> = ({ selectedCount, role, 
   const colors = ROLE_COLORS[role];
 
   const handleSearchRecipes = () => {
-    const query = encodeURIComponent(selectedItems.join(','));
-    navigate(`/${role}/recipes?ingredients=${query}`);
+    navigate(`/${role}/recipes`, { state: { suggestIngredients: selectedItems } });
   };
 
   return (
     <div className="recipe-action-bar-container">
       <div className="recipe-action-bar" style={{ background: colors.bg }}>
         <span className="recipe-action-text" style={{ color: colors.text }}>
-          Tìm thấy công thức từ {selectedCount} nguyên liệu đã chọn
+          Tìm công thức từ {selectedCount} nguyên liệu đã chọn
         </span>
         <button
           className="recipe-action-btn"

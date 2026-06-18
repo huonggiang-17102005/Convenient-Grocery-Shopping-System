@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 
 import './dashboard.css';
@@ -75,6 +76,7 @@ const mapFoodItemToExpiringCardProps = (item: any): IngredientCardProps => {
 
 export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   const primaryColor = ROLE_COLORS[role];
+  const navigate = useNavigate();
 
   // Modal open states
   const [isInviteOpen, setIsInviteOpen] = useState(false);
@@ -245,8 +247,8 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
         onClose={() => setIsExpireOpen(false)}
         item={selectedItem}
         onSuggestRecipe={(item) => {
-          console.log('Gợi ý công thức cho:', item.name);
-          // TODO: Navigate to recipe page with item filter
+          navigate(`/${role}/recipes`, { state: { suggestIngredient: item.name } });
+          setIsExpireOpen(false);
         }}
       />
 

@@ -1,7 +1,9 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import type { Recipe, CommunityPost, FilterIngredient, RecipesFeatureProps, PendingPost } from './types';
 import { recipesService } from './recipes.service';
 import { useRecipesContext } from '../../contexts/RecipesContext';
+import { useFridgeContext } from '../../contexts/FridgeContext';
 
 import RecipeTabs from './components/RecipeTabs';
 import TabLibrary from './components/TabLibrary';
@@ -30,6 +32,10 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('library');
   const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<FilterIngredient[]>([]);
+  const location = useLocation();
+
+  const { items: fridgeItems } = useFridgeContext();
+  const availableIngredients = Array.from(new Set((fridgeItems || []).map(item => item.name).filter(Boolean)));
 
   // ── Modal state ──────────────────────────────────────────────
   const [detailRecipe, setDetailRecipe] = useState<Recipe | null>(null);
@@ -56,6 +62,31 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       }
     };
   }, []);
+
+  // ── Handle suggestion from dashboard/fridge ──────────────────────────
+  useEffect(() => {
+    const suggestIngredient = location.state?.suggestIngredient;
+    const suggestIngredients = location.state?.suggestIngredients;
+
+    let toAdd: string[] = [];
+    if (suggestIngredient && typeof suggestIngredient === 'string') {
+      toAdd.push(suggestIngredient);
+    }
+    if (Array.isArray(suggestIngredients)) {
+      const validStrings = suggestIngredients.filter(ing => typeof ing === 'string');
+      toAdd = [...toAdd, ...validStrings];
+    }
+
+    if (toAdd.length > 0) {
+      setSelectedIngredients((prev) => {
+        const newSet = new Set(prev);
+        toAdd.forEach(ing => newSet.add(ing));
+        return Array.from(newSet);
+      });
+      // Xóa state để tránh tự thêm lại khi người dùng navigate
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // ── Handlers ─────────────────────────────────────────────────
 
@@ -231,6 +262,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
           <TabLibrary
             recipes={recipes}
             selectedIngredients={selectedIngredients}
+            availableIngredients={availableIngredients}
             onChangeIngredients={setSelectedIngredients}
             onRecipeClick={handleRecipeClick}
             onToggleFavorite={handleToggleFavorite}

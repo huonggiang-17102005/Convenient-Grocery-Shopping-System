@@ -1,15 +1,17 @@
 // src/features/recipes/components/SearchAndFilter.tsx
 
 import React, { useState, useRef, useEffect } from 'react';
-import { FILTER_INGREDIENTS, type FilterIngredient } from '../types';
+import { type FilterIngredient } from '../types';
 
 interface SearchAndFilterProps {
   selectedIngredients: FilterIngredient[];
+  availableIngredients: string[];
   onChangeIngredients: (ingredients: FilterIngredient[]) => void;
 }
 
 const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   selectedIngredients,
+  availableIngredients,
   onChangeIngredients,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,8 +29,11 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  const filtered = FILTER_INGREDIENTS.filter(
-    (ing) => ing !== 'Tất cả' && ing.toLowerCase().includes(search.toLowerCase())
+  // Unique list combining static and selected options
+  const allOptions = Array.from(new Set([...(availableIngredients || []), ...(selectedIngredients || [])])).filter(Boolean);
+  
+  const filtered = allOptions.filter(
+    (ing) => typeof ing === 'string' && ing.toLowerCase().includes(search.toLowerCase())
   );
 
   const toggleIngredient = (ing: FilterIngredient) => {
@@ -96,7 +101,7 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
             </label>
 
             {/* Other ingredients */}
-            {(search ? filtered : FILTER_INGREDIENTS.filter((i) => i !== 'Tất cả')).map((ing) => {
+            {(search ? filtered : allOptions).map((ing) => {
               const isChecked = selectedIngredients.includes(ing as FilterIngredient);
               return (
                 <label key={ing} className="recipe-filter-item">
