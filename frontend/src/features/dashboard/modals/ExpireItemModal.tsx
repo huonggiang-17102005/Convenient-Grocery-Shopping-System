@@ -1,5 +1,6 @@
 import React from 'react';
 import type { IngredientCardProps } from '../components/IngredientCard';
+import { useCategoryContext } from '../../../contexts/CategoryContext';
 
 interface ExpireItemModalProps {
   isOpen: boolean;
@@ -7,15 +8,6 @@ interface ExpireItemModalProps {
   item: IngredientCardProps | null;
   onSuggestRecipe?: (item: IngredientCardProps) => void;
 }
-
-const preservationTips: Record<string, string> = {
-  'Sữa tươi':
-    'Để sữa tươi được lâu hơn, bạn nên để ngăn mát nhiệt độ 1–4°C và tránh để gần cửa tủ lạnh. Nên bảo quản ở vị trí sâu trong ngăn mát.',
-  'Thịt bò':
-    'Bảo quản thịt bò trong ngăn đông (-18°C) nếu không dùng trong 1–2 ngày. Rã đông trong ngăn lạnh, không để ngoài nhiệt độ phòng.',
-  'Dâu tây':
-    'Không rửa trước khi bảo quản. Để trên đĩa có lót giấy thấm, bảo quản ngăn lạnh 0–4°C. Dùng trong 2–3 ngày để giữ độ tươi.',
-};
 
 const defaultTip = 'Nên sử dụng hoặc cấp đông ngay để tránh lãng phí thực phẩm. Kiểm tra bao bì sản phẩm để biết thêm hướng dẫn bảo quản.';
 
@@ -25,9 +17,12 @@ const ExpireItemModal: React.FC<ExpireItemModalProps> = ({
   item,
   onSuggestRecipe,
 }) => {
+  const { categoriesData } = useCategoryContext();
+
   if (!isOpen || !item) return null;
 
-  const tip = preservationTips[item.name] ?? defaultTip;
+  const categoryData = categoriesData.find(c => c.category === item.category);
+  const tip = categoryData?.default_storage_tip || defaultTip;
 
   return (
     <div className="modal-overlay" role="dialog" aria-modal="true" aria-label={`Chi tiết ${item.name}`}>
