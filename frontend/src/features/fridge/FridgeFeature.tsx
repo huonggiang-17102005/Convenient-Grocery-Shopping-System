@@ -7,6 +7,7 @@ import StorageFilter from './components/StorageFilter';
 import CategoryFilter from './components/CategoryFilter';
 import FoodCard from './components/FoodCard';
 import IngredientFormModal from './modals/IngredientFormModal';
+import QuantityConfirmModal from './modals/QuantityConfirmModal';
 import RecipeActionBar from './components/RecipeActionBar';
 import Toast from '@/components/shared/Toast';
 
@@ -29,6 +30,11 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
   const [modalMode, setModalMode] = useState<'add' | 'edit' | 'detail'>('add');
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
 
+  // Quantity Confirm Modal states
+  const [isQtyModalOpen, setIsQtyModalOpen] = useState(false);
+  const [qtyModalMode, setQtyModalMode] = useState<'add' | 'subtract'>('add');
+  const [qtyModalItem, setQtyModalItem] = useState<FoodItem | null>(null);
+
   // Toast
   const [toastMsg, setToastMsg] = useState('');
   const [toastTrigger, setToastTrigger] = useState(0);
@@ -39,14 +45,39 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
   };
 
   const handleUpdateQuantity = (id: string, delta: number) => {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+    setQtyModalItem(item);
+    setQtyModalMode(delta > 0 ? 'add' : 'subtract');
+    setIsQtyModalOpen(true);
+  };
+
+  const handleConfirmQty = (delta: number) => {
+    if (!qtyModalItem) return;
     const updatedItems = items.map(item => {
-      if (item.id === id) {
-        const newQuantity = Math.max(1, item.quantity + delta);
+      if (item.id === qtyModalItem.id) {
+        const newQuantity = Math.max(0, item.quantity + delta);
         return { ...item, quantity: newQuantity };
       }
       return item;
     });
-    setItems(updatedItems);
+    
+    // Remove if quantity <= 0
+    const filtered = updatedItems.filter(i => i.quantity > 0);
+    setItems(filtered);
+    
+    if (filtered.length < updatedItems.length) {
+      showToast('Đã lấy hết & xóa thẻ thực phẩm!');
+    } else {
+      showToast('Đã cập nhật số lượng!');
+    }
+  };
+
+  const handleDifferentExpiry = () => {
+    if (!qtyModalItem) return;
+    setSelectedItem(qtyModalItem);
+    setModalMode('add');
+    setIsModalOpen(true);
   };
 
   const handleSelect = (id: string, selected: boolean) => {
@@ -111,6 +142,12 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
 
   const selectedNames = items.filter(i => selectedIds.has(i.id)).map(i => i.name);
 
+  const totalOtherLotsQuantity = qtyModalItem 
+    ? items
+        .filter(i => i.id !== qtyModalItem.id && i.name === qtyModalItem.name && i.category === qtyModalItem.category)
+        .reduce((sum, i) => sum + i.quantity, 0)
+    : 0;
+
   return (
     <div className="refrigerator-page">
       <Toast message={toastMsg} trigger={toastTrigger} onHide={() => {}} />
@@ -171,6 +208,16 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveModal}
         onDelete={handleDeleteModal}
+      />
+
+      <QuantityConfirmModal
+        isOpen={isQtyModalOpen}
+        mode={qtyModalMode}
+        item={qtyModalItem}
+        totalOtherLotsQuantity={totalOtherLotsQuantity}
+        onClose={() => setIsQtyModalOpen(false)}
+        onConfirm={handleConfirmQty}
+        onDifferentExpiry={handleDifferentExpiry}
       />
     </div>
   );

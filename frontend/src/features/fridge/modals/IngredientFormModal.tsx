@@ -57,6 +57,14 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         setUnit((item.unit as UnitType) || 'Kg');
         setExpiryDate(item.expiryDate || '');
         setEmoji(item.emoji);
+      } else if (item && mode === 'add') {
+        setStorageType(item.storageType);
+        setCategory(item.category);
+        setName(item.name);
+        setQuantity(1);
+        setUnit((item.unit as UnitType) || 'Kg');
+        setExpiryDate('');
+        setEmoji(item.emoji);
       } else {
         setStorageType('Ngăn mát');
         setCategory('Rau củ quả');
