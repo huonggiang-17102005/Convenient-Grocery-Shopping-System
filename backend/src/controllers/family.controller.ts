@@ -176,3 +176,16 @@ export const transferHomemaker = async (req: AuthRequest, res: Response) => {
   await familyService.transferHomemaker(currentUserId, newHomemakerId, familyId);
   return res.status(200).json({ success: true, message: 'Nhường quyền Homemaker thành công' });
 };
+
+export const getWasteStats = async (req: AuthRequest, res: Response) => {
+  const familyId = req.user?.family_id as string;
+  const month = parseInt(req.query.month as string) || new Date().getMonth() + 1;
+  const year = parseInt(req.query.year as string) || new Date().getFullYear();
+
+  if (!familyId) {
+    return res.status(400).json({ success: false, message: 'Thiếu thông tin gia đình' });
+  }
+
+  const stats = await familyService.getWasteStatistics(familyId, month, year);
+  return res.status(200).json({ success: true, data: stats });
+};

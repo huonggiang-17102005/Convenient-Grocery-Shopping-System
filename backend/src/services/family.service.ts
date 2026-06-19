@@ -1,5 +1,6 @@
 import * as familyRepo from '../repo/family.repo.js';
 import * as userRepo from '../repo/user.repo.js';
+import * as inventoryLogRepo from '../repo/inventoryLog.repo.js';
 import { BadRequestError, ForbiddenError, NotFoundError } from '../errors/CommonError.js';
 
 export const getMembers = async (familyId: string) => {
@@ -68,4 +69,66 @@ export const transferHomemaker = async (currentUserId: string, targetUserId: str
 
   const updatedTargetUser = await familyRepo.transferHomemakerRole(currentUserId, targetUserId);
   return updatedTargetUser;
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'Thịt cá': '#EF5350',
+  'Rau củ': '#66BB6A',
+  'Đồ uống': '#42A5F5',
+  'Trứng': '#FFA726',
+  'Đồ khô': '#8D6E63',
+  'Gia vị': '#AB47BC',
+};
+
+export const getWasteStatistics = async (familyId: string, month: number, year: number) => {
+  if (!familyId) throw new BadRequestError('Thiếu family_id');
+  
+  const logs = await inventoryLogRepo.getLogsByFamilyAndMonth(familyId, month, year);
+  
+  const statsMap: Record<string, { total: number, consumed: number, wasted: number, unit: string }> = {};
+  
+  for (const log of logs) {
+    const cat = log.category || 'Khác';
+    if (!statsMap[cat]) {
+      statsMap[cat] = { total: 0, consumed: 0, wasted: 0, unit: log.unit || '' };
+    }
+    
+    if (log.action_type === 'add') {
+      statsMap[cat].total += log.amount;
+    } else if (log.action_type === 'consume') {
+      statsMap[cat].consumed += log.amount;
+    } else if (log.action_type === 'waste' || log.action_type === 'expire') {
+      statsMap[cat].wasted += log.amount;
+    }
+    
+    if (!statsMap[cat].unit && log.unit) {
+      statsMap[cat].unit = log.unit;
+    }
+  }
+  
+  const result = [];
+  for (const [name, data] of Object.entries(statsMap)) {
+    const actualTotal = Math.max(data.total, data.consumed + data.wasted);
+    
+    let consumedPercent = 0;
+    let wastedPercent = 0;
+    
+    if (actualTotal > 0) {
+      consumedPercent = Math.round((data.consumed / actualTotal) * 100);
+      wastedPercent = Math.round((data.wasted / actualTotal) * 100);
+    }
+    
+    result.push({
+      name,
+      total: actualTotal,
+      unit: data.unit,
+      consumed: data.consumed,
+      consumedPercent,
+      wasted: data.wasted,
+      wastedPercent,
+      color: CATEGORY_COLORS[name] || '#9E9E9E'
+    });
+  }
+  
+  return result.sort((a, b) => b.wastedPercent - a.wastedPercent);
 };

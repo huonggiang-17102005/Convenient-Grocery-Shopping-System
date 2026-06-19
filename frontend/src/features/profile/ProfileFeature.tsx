@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './profile.css';
 export interface ProfileFeatureProps {
@@ -56,6 +56,30 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
     { name: 'Đồ khô', total: 450, unit: 'g', consumed: 400, consumedPercent: 89, wasted: 50, wastedPercent: 11, color: '#8D6E63' },
     { name: 'Gia vị', total: 130, unit: 'g', consumed: 120, consumedPercent: 92, wasted: 10, wastedPercent: 8, color: '#AB47BC' }
   ];
+
+  const [categoriesStats, setCategoriesStats] = useState(MOCK_CATEGORIES_STATS);
+
+  useEffect(() => {
+    const fetchWasteStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${API_URL}/families/waste-stats`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.data.length > 0) {
+          setCategoriesStats(data.data);
+        }
+      } catch (err) {
+        console.error('Lỗi tải thống kê lãng phí:', err);
+      }
+    };
+
+    if (role === 'homemaker') {
+      fetchWasteStats();
+    }
+  }, [role]);
 
   // Modal open states
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
@@ -265,7 +289,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
           {/* Waste Progress and Stats */}
           {role === 'homemaker' && (
             <WasteStats
-              categories={MOCK_CATEGORIES_STATS}
+              categories={categoriesStats}
               onExportReport={handleOpenExport}
             />
           )}
