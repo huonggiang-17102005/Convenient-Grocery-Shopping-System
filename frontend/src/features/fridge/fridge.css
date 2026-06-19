@@ -447,6 +447,11 @@
   z-index: 100;
 }
 
+.ai-fab {
+  bottom: 170px;
+  background: linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%);
+}
+
 /* Recipe Action Bar */
 .recipe-action-bar-container {
   padding: 0 16px 16px 16px;

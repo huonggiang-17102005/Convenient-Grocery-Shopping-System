@@ -317,7 +317,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       />
 
       <RecipeFormModal
-        key={isFormOpen ? (formRecipe?.id ?? 'new') : 'closed'}
+        key={isFormOpen ? `recipe-form-${formRecipe?.id ?? 'new'}` : 'recipe-form-closed'}
         isOpen={isFormOpen}
         mode={formMode}
         recipe={formRecipe}
@@ -326,7 +326,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       />
 
       <ShareCommunityModal
-        key={isShareOpen ? 'open' : 'closed'}
+        key={isShareOpen ? 'share-modal-open' : 'share-modal-closed'}
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
         onSubmit={handleShareSubmit}

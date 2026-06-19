@@ -14,6 +14,7 @@ import mealPlannerRoute from './routes/mealPlanner.routes.js';
 import shoppingListRoute from './routes/shoppingList.route.js';
 import categoryRoute from './routes/category.routes.js';
 import errorMiddleware from './middlewares/error.middleware.js';
+import aiRoute from './routes/ai.route.js';
 
 
 dotenv.config();
@@ -36,6 +37,7 @@ app.use('/api/meal-planner', mealPlannerRoute);
 app.use('/api/shopping-list', shoppingListRoute);
 app.use('/api/admin', adminRoute);
 app.use('/api/categories', categoryRoute);
+app.use('/api/ai', aiRoute);
 const PORT = process.env.PORT || 5000;
 
 app.get('/', (req: Request, res: Response) => {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Sparkles } from 'lucide-react';
 import './fridge.css';
 import type { FoodItem, StorageType, FoodCategory } from './types';
 import RefrigeratorHeader from './components/RefrigeratorHeader';
@@ -11,6 +11,7 @@ import QuantityConfirmModal from './modals/QuantityConfirmModal';
 import ConsumeConfirmModal from './modals/ConsumeConfirmModal';
 import RecipeActionBar from './components/RecipeActionBar';
 import Toast from '@/components/shared/Toast';
+import AiRecipeModal from './modals/AiRecipeModal';
 
 export interface FridgeFeatureProps {
   role?: 'homemaker' | 'member';
@@ -34,6 +35,8 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit' | 'detail'>('add');
   const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
+
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   // Quantity Confirm Modal states
   const [isQtyModalOpen, setIsQtyModalOpen] = useState(false);
@@ -241,15 +244,30 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
       </div>
       
       {role === 'homemaker' && (
-        <button 
-          className="fab-button" 
-          aria-label="Thêm thực phẩm" 
-          title="Thêm thực phẩm"
-          onClick={handleOpenAdd}
-        >
-          <Plus size={24} />
-        </button>
+        <>
+          <button 
+            className="fab-button ai-fab" 
+            aria-label="AI Gợi ý nấu ăn" 
+            title="AI Gợi ý nấu ăn"
+            onClick={() => setIsAiModalOpen(true)}
+          >
+            <Sparkles size={24} />
+          </button>
+          <button 
+            className="fab-button" 
+            aria-label="Thêm thực phẩm" 
+            title="Thêm thực phẩm"
+            onClick={handleOpenAdd}
+          >
+            <Plus size={24} />
+          </button>
+        </>
       )}
+
+      <AiRecipeModal 
+        isOpen={isAiModalOpen} 
+        onClose={() => setIsAiModalOpen(false)} 
+      />
 
       <IngredientFormModal 
         isOpen={isModalOpen}
