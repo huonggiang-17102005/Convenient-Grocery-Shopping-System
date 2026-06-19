@@ -16,4 +16,7 @@ router.patch('/items/:id', authenticateToken, shoppingListController.updateShopp
 // Xóa mặt hàng mua sắm
 router.delete('/items/:id', authenticateToken, shoppingListController.deleteShoppingItem);
 
+// Gọi bởi Vercel Cronjob (GET để tương thích Vercel)
+router.get('/cron/check-tasks', shoppingListController.checkOverdueTasks);
+
 export default router;

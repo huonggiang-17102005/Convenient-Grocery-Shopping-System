@@ -1,0 +1,211 @@
+.notif-bell-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.bell-container {
+  position: relative;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bell-container:hover {
+  background-color: #f0f0f0;
+}
+
+.notification-badge {
+  position: absolute;
+  /* Ghim tâm của badge vào đúng góc trên bên phải của icon cái chuông */
+  top: 8px;
+  right: 8px;
+  transform: translate(50%, -50%);
+  
+  background-color: #D32F2F;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  padding: 0 5px; /* Khoảng không gian hai bên để text không bị chạm viền */
+  border-radius: 20px; /* Bo cong nhiều để luôn thành hình viên thuốc (pill) */
+  border: 2px solid white;
+  
+  min-width: 18px; /* Nếu 1 số thì sẽ thành hình tròn hoàn hảo */
+  height: 18px; /* Cố định chiều cao thay vì dùng min-height */
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: -10px;
+  width: 360px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid #eaeaea;
+  z-index: 1000;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 480px;
+  animation: slideDownFade 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideDownFade {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #fff;
+  z-index: 2;
+}
+
+.notif-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.notif-mark-all {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Homemaker colors */
+.notif-bell-wrapper.role-homemaker .notif-mark-all {
+  color: #FF8A00;
+}
+
+.notif-bell-wrapper.role-homemaker .notif-item.unread {
+  background-color: #FFF4E5;
+}
+
+.notif-bell-wrapper.role-homemaker .notif-item.unread:hover {
+  background-color: #FFE8CC;
+}
+
+.notif-bell-wrapper.role-homemaker .unread-dot {
+  background-color: #FF8A00;
+}
+
+/* Member colors */
+.notif-bell-wrapper.role-member .notif-mark-all {
+  color: #2563EB;
+}
+
+.notif-bell-wrapper.role-member .notif-item.unread {
+  background-color: #F0F8FF;
+}
+
+.notif-bell-wrapper.role-member .notif-item.unread:hover {
+  background-color: #E6F3FF;
+}
+
+.notif-bell-wrapper.role-member .unread-dot {
+  background-color: #2563EB;
+}
+
+.notif-mark-all:hover {
+  text-decoration: underline;
+}
+
+.notif-list {
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.notif-empty {
+  padding: 30px;
+  text-align: center;
+  color: #8e8e93;
+  font-size: 14px;
+  margin: 0;
+}
+
+.notif-item {
+  display: flex;
+  padding: 16px;
+  border-bottom: 1px solid #f5f5f5;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.notif-item:hover {
+  background-color: #f9f9f9;
+}
+
+
+.notif-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.notif-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-text {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.notif-text strong {
+  color: #111;
+}
+
+.notif-time {
+  font-size: 12px;
+  color: #8e8e93;
+}
+
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: absolute;
+  top: 20px;
+  right: 16px;
+}
+
+.notif-loading {
+  text-align: center;
+  padding: 15px;
+  font-size: 13px;
+  color: #8e8e93;
+  margin: 0;
+}

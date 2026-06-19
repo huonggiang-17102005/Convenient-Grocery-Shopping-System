@@ -18,12 +18,12 @@ export const deduct = async (req: Request, res: Response) => {
     throw new BadRequestError('Invalid payload');
   }
 
-  const result = await fridgeService.deductInventory(familyId, ingredients);
+  const result = await fridgeService.deductInventory(familyId, ingredients, (req as any).user);
   return res.status(200).json({ success: true, data: result });
 };
 
 export const addItem = async (req: Request, res: Response) => {
-  const newItem = await fridgeService.addFridgeItem(req.body);
+  const newItem = await fridgeService.addFridgeItem(req.body, (req as any).user);
   return res.status(201).json({
     success: true,
     message: 'Đã thêm nguyên liệu vào tủ lạnh',
@@ -33,7 +33,7 @@ export const addItem = async (req: Request, res: Response) => {
 
 export const updateItem = async (req: Request, res: Response) => {
   const { id } = req.params as { id: string };
-  const result = await fridgeService.updateFridgeItem(id, req.body);
+  const result = await fridgeService.updateFridgeItem(id, req.body, (req as any).user);
   return res.status(200).json({
     success: true,
     message: result.deleted ? 'Đã dùng hết nguyên liệu' : 'Cập nhật thành công',
@@ -43,7 +43,7 @@ export const updateItem = async (req: Request, res: Response) => {
 
 export const wasteItem = async (req: Request, res: Response) => {
   const { id } = req.params as { id: string };
-  const result = await fridgeService.throwAwayFridgeItem(id);
+  const result = await fridgeService.throwAwayFridgeItem(id, (req as any).user);
   return res.status(200).json({
     success: true,
     message: result.message

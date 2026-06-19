@@ -130,3 +130,36 @@ export const deleteItem = async (id: string) => {
     throw new InternalServerError('Không thể xóa mặt hàng mua sắm.');
   }
 };
+
+export const getListById = async (listId: string) => {
+  const { data, error } = await supabase
+    .from('shopping_lists')
+    .select('id, family_id, status')
+    .eq('id', listId)
+    .single();
+
+  if (error) {
+    console.error('Error fetching shopping list:', error);
+    throw new InternalServerError('Không thể lấy danh sách mua sắm.');
+  }
+
+  return data;
+};
+
+export const getOverdueUnboughtItems = async (todayDateStr: string) => {
+  const { data, error } = await supabase
+    .from('shopping_list_items')
+    .select(`
+      id, name, deadline_date, is_bought, assignee_id,
+      shopping_lists(family_id)
+    `)
+    .eq('is_bought', false)
+    .lt('deadline_date', todayDateStr);
+
+  if (error) {
+    console.error('Error checking overdue tasks:', error);
+    throw new InternalServerError('Lỗi khi kiểm tra nhiệm vụ trễ hạn');
+  }
+
+  return data;
+};

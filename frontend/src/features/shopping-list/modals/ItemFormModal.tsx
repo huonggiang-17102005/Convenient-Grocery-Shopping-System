@@ -7,29 +7,30 @@ interface ItemFormModalProps {
   onClose: () => void;
   onSubmit: (itemData: Omit<ShoppingItem, 'id' | 'isBought' | 'assigneeId'>) => void;
   item: ShoppingItem | null;
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'view';
+  readOnly?: boolean;
 }
 
-const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit, item, mode }) => {
+const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit, item, mode, readOnly = false }) => {
   const { categoriesData } = useCategoryContext();
 
   const [category, setCategory] = useState<FoodCategory>(() => {
-    if (mode === 'edit' && item) return item.category;
+    if ((mode === 'edit' || mode === 'view') && item) return item.category;
     return '';
   });
 
   const [name, setName] = useState(() => {
-    if (mode === 'edit' && item) return item.name;
+    if ((mode === 'edit' || mode === 'view') && item) return item.name;
     return '';
   });
 
   const [quantity, setQuantity] = useState<number>(() => {
-    if (mode === 'edit' && item) return item.quantity;
+    if ((mode === 'edit' || mode === 'view') && item) return item.quantity;
     return 1;
   });
 
   const [unit, setUnit] = useState(() => {
-    if (mode === 'edit' && item) return item.unit;
+    if ((mode === 'edit' || mode === 'view') && item) return item.unit;
     return '';
   });
 
@@ -49,12 +50,12 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
   }, [category, isOpen, mode, categoriesData]);
 
   const [deadlineDate, setDeadlineDate] = useState(() => {
-    if (mode === 'edit' && item) return item.deadlineDate;
+    if ((mode === 'edit' || mode === 'view') && item) return item.deadlineDate;
     return '';
   });
 
   const [deadlineTime, setDeadlineTime] = useState(() => {
-    if (mode === 'edit' && item) return item.deadlineTime;
+    if ((mode === 'edit' || mode === 'view') && item) return item.deadlineTime;
     return '';
   });
 
@@ -107,7 +108,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-card">
         <h2 className="bottom-sheet__title" style={{ paddingBottom: '16px' }}>
-          {mode === 'create' ? 'Thêm mặt hàng mới' : 'Chỉnh sửa mặt hàng'}
+          {readOnly ? 'Xem chi tiết nhiệm vụ' : mode === 'create' ? 'Thêm mặt hàng mới' : 'Chỉnh sửa mặt hàng'}
         </h2>
 
         <form onSubmit={handleSave} className="form-modal-container">
@@ -119,6 +120,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
               className="form-select"
               value={category}
               onChange={(e) => setCategory(e.target.value as FoodCategory)}
+              disabled={readOnly}
             >
               <option value="" disabled hidden>- Chọn -</option>
               {availableCategories.map(cat => (
@@ -137,6 +139,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ví dụ: Cà chua, Thịt bò..."
+              disabled={readOnly}
             />
           </div>
 
@@ -145,36 +148,38 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
               <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Số lượng & Đơn vị</label>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <button type="button" onClick={handleDecrease} style={{ width: 48, height: 48, background: '#F5F5F5', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: 'pointer' }}>
+                <button type="button" onClick={handleDecrease} disabled={readOnly} style={{ width: 48, height: 48, background: '#F5F5F5', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: readOnly ? 'not-allowed' : 'pointer' }}>
                   <span style={{ color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>−</span>
                 </button>
 
                 <div style={{ flex: 1, height: 48, borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-                  <input
-                    type="number"
-                    style={{ width: '100%', height: '100%', textAlign: 'center', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
-                    value={quantity}
-                    onChange={handleQuantityChange}
+                <input
+                  type="number"
+                  style={{ width: '100%', height: '100%', textAlign: 'center', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
+                  value={quantity}
+                  onChange={handleQuantityChange}
+                  disabled={readOnly}
                   />
                 </div>
 
-                <button type="button" onClick={handleIncrease} style={{ width: 48, height: 48, background: '#FF8A00', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: 'pointer' }}>
-                  <span style={{ color: 'white', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>+</span>
+                <button type="button" onClick={handleIncrease} disabled={readOnly} style={{ width: 48, height: 48, background: readOnly ? '#F5F5F5' : '#FF8A00', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: readOnly ? 'not-allowed' : 'pointer' }}>
+                  <span style={{ color: readOnly ? '#9E9E9E' : 'white', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>+</span>
                 </button>
 
                 <div style={{ width: 76, position: 'relative', height: 48, paddingLeft: 12, paddingRight: 12, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ color: unit ? '#1A1A1A' : '#9E9E9E', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>{unit || '-'}</div>
                   <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>▼</div>
-                  <select
-                    style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value)}
-                  >
+                <select
+                  style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: readOnly ? 'not-allowed' : 'pointer' }}
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  disabled={readOnly}
+                >
                     <option value="" disabled hidden>-</option>
-                    {availableUnits.map(u => (
-                      <option key={u} value={u}>{u}</option>
-                    ))}
-                  </select>
+                  {availableUnits.map(u => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
                 </div>
               </div>
             </div>
@@ -190,6 +195,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
                 style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
                 value={deadlineDate}
                 onChange={(e) => setDeadlineDate(e.target.value)}
+                disabled={readOnly}
               />
             </div>
           </div>
@@ -204,21 +210,25 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
                 style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
                 value={deadlineTime}
                 onChange={(e) => setDeadlineTime(e.target.value)}
+                disabled={readOnly}
               />
             </div>
           </div>
 
           {/* Actions */}
           <div className="bottom-sheet__actions" style={{ paddingTop: '8px' }}>
-            <button type="submit" className="modal-btn modal-btn--primary">
-              {mode === 'create' ? 'Thêm mặt hàng' : 'Lưu thay đổi'}
-            </button>
+            {!readOnly && (
+              <button type="submit" className="modal-btn modal-btn--primary">
+                {mode === 'create' ? 'Thêm mặt hàng' : 'Lưu thay đổi'}
+              </button>
+            )}
             <button
               type="button"
-              className="modal-btn modal-btn--outline"
+              className={readOnly ? "modal-btn modal-btn--primary" : "modal-btn modal-btn--outline"}
               onClick={onClose}
+              style={readOnly ? { width: '100%' } : {}}
             >
-              Hủy
+              {readOnly ? 'Đóng' : 'Hủy'}
             </button>
           </div>
         </form>

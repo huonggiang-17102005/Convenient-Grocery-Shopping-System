@@ -1,7 +1,46 @@
 import * as familyRepo from '../repo/family.repo.js';
 import * as userRepo from '../repo/user.repo.js';
 import * as inventoryLogRepo from '../repo/inventoryLog.repo.js';
-import { BadRequestError, ForbiddenError, NotFoundError } from '../errors/CommonError.js';
+import * as notificationService from './notification.service.js';
+import supabase from '../config/db.config.js';
+import { BadRequestError, ForbiddenError, NotFoundError, InternalServerError } from '../errors/CommonError.js';
+
+export const joinFamily = async (userId: string, code: string) => {
+  if (!code) throw new BadRequestError('Vui lòng cung cấp mã nhóm');
+  
+  const { data: family, error: findFamilyError } = await supabase
+    .from('families')
+    .select('id, name')
+    .eq('invite_code', code)
+    .single();
+
+  if (findFamilyError || !family) {
+    throw new NotFoundError('Mã nhóm không hợp lệ hoặc không tồn tại');
+  }
+
+  const { error: updateUserError } = await supabase
+    .from('users')
+    .update({ family_id: family.id })
+    .eq('id', userId);
+
+  if (updateUserError) {
+    throw new InternalServerError('Lỗi khi tham gia nhóm');
+  }
+
+  const user = await userRepo.findById(userId);
+  if (user) {
+    const actorName = user.full_name || user.email || 'Thành viên mới';
+    await notificationService.createNotification(
+      family.id,
+      'FAMILY_JOIN',
+      'Thành viên mới',
+      `${actorName} đã tham gia gia đình.`,
+      { user_id: userId, full_name: user.full_name }
+    );
+  }
+
+  return family;
+};
 
 export const getMembers = async (familyId: string) => {
   if (!familyId) throw new BadRequestError('Thiếu family_id');
@@ -24,6 +63,16 @@ export const leaveFamily = async (userId: string, familyId: string) => {
   }
 
   const updatedUser = await familyRepo.removeUserFromFamily(userId);
+
+  const actorName = currentUser.full_name || currentUser.email || 'Thành viên';
+  await notificationService.createNotification(
+    familyId,
+    'FAMILY_LEAVE',
+    'Thành viên rời nhóm',
+    `${actorName} đã rời khỏi gia đình.`,
+    { user_id: userId, full_name: currentUser.full_name }
+  );
+
   return updatedUser;
 };
 
@@ -46,6 +95,16 @@ export const removeMember = async (currentUserId: string, targetUserId: string, 
   }
 
   const updatedUser = await familyRepo.removeUserFromFamily(targetUserId);
+
+  const actorName = targetUser.full_name || targetUser.email || 'Thành viên';
+  await notificationService.createNotification(
+    familyId,
+    'FAMILY_LEAVE',
+    'Thành viên rời nhóm',
+    `${actorName} đã bị xóa khỏi gia đình.`,
+    { user_id: targetUserId, full_name: targetUser.full_name }
+  );
+
   return updatedUser;
 };
 
@@ -68,6 +127,18 @@ export const transferHomemaker = async (currentUserId: string, targetUserId: str
   }
 
   const updatedTargetUser = await familyRepo.transferHomemakerRole(currentUserId, targetUserId);
+
+  const oldHomemakerName = currentUser.full_name || currentUser.email || 'Người nội trợ cũ';
+  const newHomemakerName = targetUser.full_name || targetUser.email || 'Người nội trợ mới';
+
+  await notificationService.createNotification(
+    familyId,
+    'FAMILY_ROLE',
+    'Thay đổi vai trò',
+    `${oldHomemakerName} đã nhường quyền Người nội trợ cho ${newHomemakerName}.`,
+    { old_homemaker_id: currentUserId, new_homemaker_id: targetUserId }
+  );
+
   return updatedTargetUser;
 };
 
