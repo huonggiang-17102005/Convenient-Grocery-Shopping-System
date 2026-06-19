@@ -116,7 +116,7 @@ const CreateGroup: React.FC = () => {
               <div className="qr-placeholder" style={{ background: 'white' }}>
                 <div className="qr-icon-text">
                   <QRCodeSVG 
-                    value={`http://localhost:5173/join?code=${groupCode}`} 
+                    value={`${window.location.origin}/member/join-group?code=${groupCode}`} 
                     size={160} 
                     level="H" 
                   />

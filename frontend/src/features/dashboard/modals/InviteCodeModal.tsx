@@ -50,7 +50,7 @@ const InviteCodeModal: React.FC<InviteCodeModalProps> = ({
         <div className="invite-modal__qr-area">
           <div className="invite-modal__qr-box" style={{ background: 'white', padding: '16px', borderRadius: '12px' }}>
             <QRCodeSVG 
-              value={`http://localhost:5173/join?code=${inviteCode}`} 
+              value={`${window.location.origin}/member/join-group?code=${inviteCode}`} 
               size={160} 
               level="H" 
             />

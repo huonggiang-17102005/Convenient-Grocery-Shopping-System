@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './Jointhegroup.css';
 
 const Jointhegroup: React.FC = () => {
   const navigate = useNavigate();
-  const [groupCode, setGroupCode] = useState('');
+  const [searchParams] = useSearchParams();
+  const initialCode = searchParams.get('code') || '';
+  const [groupCode, setGroupCode] = useState(initialCode);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const { refreshUser } = useAuth();
