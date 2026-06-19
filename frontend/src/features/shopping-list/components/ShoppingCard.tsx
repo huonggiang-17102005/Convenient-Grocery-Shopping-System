@@ -5,6 +5,7 @@ interface ShoppingCardProps {
   item: ShoppingItem;
   onToggleCheck: (id: string, e: React.MouseEvent) => void;
   onClickCard: (item: ShoppingItem) => void;
+  disabledCheck?: boolean;
 }
 
 const getCategoryClass = (category: string): string => {
@@ -42,7 +43,7 @@ const isItemOverdue = (item: ShoppingItem): boolean => {
   return false;
 };
 
-const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClickCard }) => {
+const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClickCard, disabledCheck = false }) => {
   const overdue = isItemOverdue(item);
   const checked = item.isBought;
 
@@ -50,13 +51,16 @@ const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClic
     <div
       className={`shopping-card ${checked ? 'shopping-card--checked' : ''}`}
       onClick={() => onClickCard(item)}
+      style={disabledCheck ? { opacity: 0.6, pointerEvents: 'none' } : {}}
     >
       {/* Checkbox */}
       <div
         className={`shopping-card__checkbox ${
           checked ? 'shopping-card__checkbox--checked' : 'shopping-card__checkbox--unchecked'
         }`}
-        onClick={(e) => onToggleCheck(item.id, e)}
+        onClick={(e) => {
+          onToggleCheck(item.id, e);
+        }}
         title={checked ? 'Đánh dấu chưa mua' : 'Đánh dấu đã mua'}
       >
         {checked && '✓'}

@@ -10,6 +10,7 @@ import type { ShoppingItem, FoodCategory } from './types';
 import { shoppingService } from './shopping-list.service';
 import Toast from '@/components/shared/Toast';
 import { useShoppingListContext } from '../../contexts/ShoppingListContext';
+import { useAuth } from '../../contexts/AuthContext';
 import './shopping-list.css';
 
 // Color theme per role
@@ -24,6 +25,7 @@ export interface ShoppingListFeatureProps {
 
 export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }) => {
   const primaryColor = ROLE_COLORS[role];
+  const { user } = useAuth();
   const { items, setItems, isLoading: loading } = useShoppingListContext();
   const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
 
@@ -124,10 +126,16 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
     }
   };
 
-  // Card click -> open bottom sheet
+  // Card click -> open bottom sheet or view modal
   const handleCardClick = (item: ShoppingItem) => {
     setSelectedItem(item);
-    setIsBottomSheetOpen(true);
+    if (role === 'member') {
+      // Member only views the item details directly
+      setFormMode('view' as any);
+      setIsFormModalOpen(true);
+    } else {
+      setIsBottomSheetOpen(true);
+    }
   };
 
   // Open create form
@@ -213,31 +221,37 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
             if (!catItems) return null;
             return (
               <CategoryGroup key={cat} title={cat}>
-                {catItems.map(item => (
-                  <ShoppingCard
-                    key={item.id}
-                    item={item}
-                    onToggleCheck={handleToggleCheck}
-                    onClickCard={handleCardClick}
-                  />
-                ))}
+                {catItems.map(item => {
+                  const disabledCheck = role === 'member' && item.assigneeId !== user?.id;
+                  return (
+                    <ShoppingCard
+                      key={item.id}
+                      item={item}
+                      onToggleCheck={handleToggleCheck}
+                      onClickCard={handleCardClick}
+                      disabledCheck={disabledCheck}
+                    />
+                  );
+                })}
               </CategoryGroup>
             );
           })
         )}
       </div>
 
-      {/* FAB to add new item */}
-      <button
-        type="button"
-        className="fab-button"
-        style={{ background: primaryColor }}
-        onClick={handleOpenCreateForm}
-        title="Thêm mặt hàng mới"
-        aria-label="Thêm mặt hàng mới"
-      >
-        <Plus size={24} />
-      </button>
+      {/* FAB to add new item - Only Homemaker can add */}
+      {role === 'homemaker' && (
+        <button
+          type="button"
+          className="fab-button"
+          style={{ background: primaryColor }}
+          onClick={handleOpenCreateForm}
+          title="Thêm mặt hàng mới"
+          aria-label="Thêm mặt hàng mới"
+        >
+          <Plus size={24} />
+        </button>
+      )}
 
       {/* Modals */}
       <ActionBottomSheet
@@ -255,7 +269,8 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
         onClose={() => setIsFormModalOpen(false)}
         onSubmit={handleFormSubmit}
         item={selectedItem}
-        mode={formMode}
+        mode={formMode as any}
+        readOnly={role === 'member'}
       />
 
       <DeleteConfirmModal
