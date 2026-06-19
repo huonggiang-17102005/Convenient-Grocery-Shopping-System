@@ -29,7 +29,7 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
   onConfirm,
   onDifferentExpiry
 }) => {
-  const [delta, setDelta] = useState(1);
+  const [delta, setDelta] = useState<number | ''>(1);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,7 +43,7 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
   const expiryText = formatDate(item.expiryDate);
 
   const handleConfirm = () => {
-    onConfirm(mode === 'add' ? delta : -delta);
+    onConfirm(mode === 'add' ? (Number(delta) || 1) : -(Number(delta) || 1));
     onClose();
   };
 
@@ -75,20 +75,39 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
 
           <div style={{ alignSelf: 'stretch', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16 }}>
             <button 
-              onClick={() => setDelta(Math.max(1, delta - 1))}
+              onClick={() => setDelta(Math.max(1, Number(delta) - 1))}
               style={{ width: 48, height: 48, background: '#F5F5F5', borderRadius: 12, border: 'none', fontSize: 24, color: '#1A1A1A', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
               −
             </button>
-            <div style={{ width: 100, height: 48, background: 'white', borderRadius: 12, border: '1.27px solid #E0E0E0', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '600' }}>
-              {delta} <span style={{ fontSize: 14, fontWeight: '400', marginLeft: 4, color: '#757575' }}>{unit}</span>
+            <div style={{ width: 120, height: 48, background: 'white', borderRadius: 12, border: '1.27px solid #E0E0E0', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', overflow: 'hidden' }}>
+              <input
+                type="number"
+                style={{ flex: 1, height: '100%', textAlign: 'center', border: 'none', background: 'transparent', outline: 'none', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', color: '#1A1A1A', minWidth: 0, paddingRight: 0, paddingLeft: 12 }}
+                value={delta}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '') setDelta('');
+                  else {
+                    let d = parseInt(val, 10);
+                    if (!isNaN(d)) {
+                      if (mode === 'subtract') d = Math.min(item.quantity, d);
+                      setDelta(d);
+                    }
+                  }
+                }}
+                onBlur={() => {
+                  if (delta === '' || delta < 1) setDelta(1);
+                }}
+              />
+              <span style={{ fontSize: 14, fontWeight: '400', paddingRight: 12, color: '#757575', whiteSpace: 'nowrap' }}>{unit}</span>
             </div>
             <button 
               onClick={() => {
                 if (mode === 'subtract') {
-                  setDelta(Math.min(item.quantity, delta + 1));
+                  setDelta(Math.min(item.quantity, Number(delta) + 1));
                 } else {
-                  setDelta(delta + 1);
+                  setDelta(Number(delta) + 1);
                 }
               }}
               style={{ width: 48, height: 48, background: '#FF8A00', borderRadius: 12, border: 'none', fontSize: 24, color: 'white', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
@@ -100,12 +119,12 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
           <div style={{ alignSelf: 'stretch', padding: 12, background: '#F9FAFB', borderRadius: 8, border: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {mode === 'add' ? (
               <div style={{ color: '#4B5563', fontSize: 13, fontFamily: 'Plus Jakarta Sans', lineHeight: '18px' }}>
-                💡 Nếu thêm vào <strong>{delta} {unit}</strong>, lô {item.name} hạn {expiryText} sẽ có tổng cộng là <strong style={{color: '#FF8A00'}}>{item.quantity + delta} {unit}</strong>.
+                💡 Nếu thêm vào <strong>{delta} {unit}</strong>, lô {item.name} hạn {expiryText} sẽ có tổng cộng là <strong style={{color: '#FF8A00'}}>{item.quantity + Number(delta)} {unit}</strong>.
               </div>
             ) : (
               <>
                 <div style={{ color: '#4B5563', fontSize: 13, fontFamily: 'Plus Jakarta Sans', lineHeight: '18px' }}>
-                  📌 Sử dụng từ lô <strong>{item.name}</strong> hạn {expiryText}. Lô này sẽ còn lại <strong style={{color: '#FF8A00'}}>{item.quantity - delta} {unit}</strong>.
+                  📌 Sử dụng từ lô <strong>{item.name}</strong> hạn {expiryText}. Lô này sẽ còn lại <strong style={{color: '#FF8A00'}}>{item.quantity - Number(delta)} {unit}</strong>.
                 </div>
               </>
             )}
@@ -144,7 +163,7 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
                 onClick={handleConfirm}
                 style={{ alignSelf: 'stretch', height: 48, background: '#FF8A00', borderRadius: 100, border: 'none', color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', cursor: 'pointer' }}
               >
-                {delta === item.quantity ? 'Dùng hết & Xóa thẻ' : 'Xác nhận dùng'}
+                {Number(delta) === item.quantity ? 'Dùng hết & Xóa thẻ' : 'Xác nhận dùng'}
               </button>
               <button 
                 onClick={onClose}
