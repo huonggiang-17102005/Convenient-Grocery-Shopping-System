@@ -1,0 +1,36 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as notificationRepo from '../../repo/notification.repo.js';
+import { getFamilyNotifications, createNotification } from '../notification.service.js';
+
+vi.mock('../../repo/notification.repo.js', () => ({
+  insertNotification: vi.fn(),
+  fetchNotifications: vi.fn(),
+}));
+
+describe('Notification Service - Chức năng Thông báo', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('Nên lấy thông báo của gia đình thành công', async () => {
+    const mockNotifs = [{ id: '1', title: 'Thông báo', family_id: 'fam1', user_id: 'user1' }];
+    (notificationRepo.fetchNotifications as any).mockResolvedValue(mockNotifs);
+
+    const result = await getFamilyNotifications('fam1', 'user1', 20, 0);
+    expect(result).toEqual(mockNotifs);
+    expect(notificationRepo.fetchNotifications).toHaveBeenCalledWith('fam1', 'user1', 20, 0);
+  });
+
+  it('Nên báo lỗi nếu gọi lấy thông báo mà thiếu familyId', async () => {
+    await expect(getFamilyNotifications('', 'user1')).rejects.toThrow('Thiếu thông tin gia đình (familyId)');
+  });
+
+  it('Nên tạo thông báo thành công', async () => {
+    const mockNotif = { id: '1', title: 'Test' };
+    (notificationRepo.insertNotification as any).mockResolvedValue(mockNotif);
+
+    const result = await createNotification('fam1', 'TEST', 'Test', 'Test msg');
+    expect(result).toEqual(mockNotif);
+    expect(notificationRepo.insertNotification).toHaveBeenCalled();
+  });
+});
