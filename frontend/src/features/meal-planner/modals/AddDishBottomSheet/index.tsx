@@ -76,12 +76,17 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
     [availableRecipes, selectedIds]
   );
 
+  const newlySelectedRecipes = useMemo(
+    () => selectedRecipes.filter(r => !existingDishes.some(d => d.id === r.id)),
+    [selectedRecipes, existingDishes]
+  );
+
   const handleNextStep = () => {
     setServingsModalOpen(true);
   };
 
   const handleFinalConfirm = () => {
-    onConfirm(selectedRecipes, peopleCount);
+    onConfirm(newlySelectedRecipes, peopleCount);
     setServingsModalOpen(false);
     onClose();
   };
@@ -99,7 +104,7 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
 
   if (!isOpen) return null;
 
-  const count = selectedIds.size;
+  const count = newlySelectedRecipes.length;
 
   if (servingsModalOpen) {
     return (
@@ -175,14 +180,18 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
               <p>Không tìm thấy công thức nào</p>
             </div>
           ) : (
-            filtered.map((recipe) => (
-              <RecipeSelectCard
-                key={recipe.id}
-                recipe={recipe}
-                isSelected={selectedIds.has(recipe.id)}
-                onToggle={toggle}
-              />
-            ))
+            filtered.map((recipe) => {
+              const isAlreadyAdded = existingDishes.some(d => d.id === recipe.id);
+              return (
+                <RecipeSelectCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  isSelected={selectedIds.has(recipe.id)}
+                  isAlreadyAdded={isAlreadyAdded}
+                  onToggle={toggle}
+                />
+              );
+            })
           )}
         </div>
 
