@@ -9,8 +9,7 @@ export interface IngredientCardProps {
   image?: string;
   name: string;
   category: string;
-  categoryColor: string;
-  categoryTextColor: string;
+  categoryClass?: string;
   daysLeft: number;
   onClick?: () => void;
 }
@@ -26,8 +25,7 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
   image,
   name,
   category,
-  categoryColor,
-  categoryTextColor,
+  categoryClass,
   daysLeft,
   onClick,
 }) => {
@@ -37,8 +35,7 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
     <div className="ingredient-card" onClick={onClick} role="button" tabIndex={0}>
       <div className="ingredient-card__header">
         <span
-          className="ingredient-card__category-badge"
-          style={{ background: categoryColor, color: categoryTextColor }}
+          className={`ingredient-card__category-badge ${categoryClass || ''}`}
         >
           {category}
         </span>

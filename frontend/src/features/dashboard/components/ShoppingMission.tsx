@@ -30,6 +30,8 @@ const isItemOverdue = (item: ShoppingItem): boolean => {
   return false;
 };
 
+import { getCategoryBgClass } from '../../../utils/categoryHelper';
+
 export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, currentUserId, onToggleCheck }) => {
   const myItems = items.filter(item => item.assigneeId === currentUserId);
 
@@ -62,7 +64,7 @@ export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, current
             </button>
 
             {/* Category badge */}
-            <div className="shopping-mission__badge">
+            <div className={`shopping-mission__badge ${getCategoryBgClass(item.category)}`}>
               {item.category}
             </div>
 

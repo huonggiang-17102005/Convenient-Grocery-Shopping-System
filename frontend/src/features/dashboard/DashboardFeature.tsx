@@ -35,6 +35,7 @@ import CookConfirmModal from './modals/CookConfirmModal';
 import type { CookIngredient } from './modals/CookConfirmModal';
 import IngredientFormModal from '../fridge/modals/IngredientFormModal';
 import type { ShoppingItem } from '../shopping-list/types';
+import { getCategoryBgClass } from '../../utils/categoryHelper';
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -50,24 +51,12 @@ const EMOJI_MAP: Record<string, string> = {
 };
 
 const mapFoodItemToExpiringCardProps = (item: any): IngredientCardProps => {
-  let categoryColor = '#E0E0E0';
-  let categoryTextColor = '#757575';
-  
-  switch(item.category) {
-    case 'Đồ uống': categoryColor = '#BBDEFB'; categoryTextColor = '#1565C0'; break;
-    case 'Thịt cá': categoryColor = '#FFCDD2'; categoryTextColor = '#C62828'; break;
-    case 'Trái cây':
-    case 'Rau củ quả': categoryColor = '#F8BBD0'; categoryTextColor = '#C2185B'; break;
-    default: categoryColor = '#FFF3E0'; categoryTextColor = '#EF6C00'; break;
-  }
-
   return {
     emoji: item.emoji || EMOJI_MAP[item.category] || '📦',
     image: item.image,
     name: item.name,
     category: item.category || 'Khác',
-    categoryColor,
-    categoryTextColor,
+    categoryClass: getCategoryBgClass(item.category),
     daysLeft: item.daysRemaining || 0,
   };
 };
