@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 import './profile.css';
 export interface ProfileFeatureProps {
   role: 'homemaker' | 'member';
@@ -240,8 +242,27 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
         }, 800);
 
       } else if (confirmVariant === 'export') {
-        const format = data === 'pdf' ? 'PDF' : 'Excel';
-        triggerToast(`Xuất báo cáo gia đình định dạng ${format} thành công!`);
+        triggerToast(`Đang chuẩn bị xuất báo cáo...`);
+        const element = document.getElementById('waste-stats-report');
+        
+        if (element) {
+          const opt = {
+            margin:       10,
+            filename:     `Thong-ke-lang-phi-${new Date().toISOString().slice(0, 10)}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, ignoreElements: (node: Element) => node.classList?.contains('no-print') },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+          
+          html2pdf().set(opt).from(element).save().then(() => {
+            triggerToast('Xuất báo cáo PDF thành công!');
+          }).catch((err: any) => {
+            console.error('Lỗi xuất PDF:', err);
+            triggerToast('Lỗi khi xuất file PDF');
+          });
+        } else {
+          triggerToast('Không tìm thấy dữ liệu báo cáo');
+        }
 
       } else if (confirmVariant === 'leave') {
         const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';

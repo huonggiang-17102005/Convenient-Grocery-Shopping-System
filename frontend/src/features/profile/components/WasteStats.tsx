@@ -57,8 +57,8 @@ const WasteStats: React.FC<WasteStatsProps> = ({ categories, onExportReport }) =
   const remainingCount = categories.length - INITIAL_COUNT;
 
   return (
-    <div className="profile-section">
-      <h2 className="profile-section-title">Thống kê lãng phí</h2>
+    <div className="profile-section" id="waste-stats-report">
+      <h2 className="profile-section-title">Thống kê lãng phí tháng {new Date().getMonth() + 1}</h2>
       <div style={{ alignSelf: 'stretch', padding: 16, background: 'white', borderRadius: 16, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
         <div style={{ width: '100%', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
           {visibleCategories.map((stat, index) => (
@@ -69,7 +69,7 @@ const WasteStats: React.FC<WasteStatsProps> = ({ categories, onExportReport }) =
         </div>
         
         {categories.length > INITIAL_COUNT && (
-          <div style={{ width: '100%', paddingTop: 16, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', display: 'flex' }}>
+          <div className="no-print" style={{ width: '100%', paddingTop: 16, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center', display: 'flex' }}>
             <div 
               onClick={() => setIsExpanded(!isExpanded)}
               style={{ width: '100%', height: 36, background: '#FAFAFA', borderRadius: 100, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', justifyContent: 'center', alignItems: 'center', display: 'inline-flex', cursor: 'pointer' }}
@@ -81,7 +81,7 @@ const WasteStats: React.FC<WasteStatsProps> = ({ categories, onExportReport }) =
           </div>
         )}
 
-        <div style={{ width: '100%', paddingTop: 12, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
+        <div className="no-print" style={{ width: '100%', paddingTop: 12, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
           <button 
             onClick={onExportReport}
             style={{ width: '100%', height: 44, background: '#FF8A00', borderRadius: 100, border: 'none', outline: 'none', justifyContent: 'center', alignItems: 'center', gap: 8, display: 'inline-flex', cursor: 'pointer' }}
