@@ -63,6 +63,8 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
     // We no longer set a default category/unit to force users to choose
   }, [categoriesData, mode]);
 
+  const isGiaVi = category === 'Gia vị';
+
   if (!isOpen) return null;
 
   const handleDecrease = () => {
@@ -82,15 +84,19 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !category || !unit) {
-      alert('Vui lòng điền đầy đủ Tên, Phân loại và Đơn vị!');
+    if (!name.trim() || !category) {
+      alert('Vui lòng điền đầy đủ Tên và Phân loại!');
+      return;
+    }
+    if (!isGiaVi && !unit) {
+      alert('Vui lòng điền Đơn vị!');
       return;
     }
     onSubmit({
       name: name.trim(),
       category,
-      quantity,
-      unit,
+      quantity: isGiaVi ? 0 : quantity,
+      unit: isGiaVi ? '' : unit,
       deadlineDate,
       deadlineTime,
     });
@@ -134,48 +140,45 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
             />
           </div>
 
-          {/* Quantity & Unit */}
-          <div className="form-group">
-            <label htmlFor="quantity-input" className="form-label">Số lượng & Đơn vị</label>
-            <div className="form-qty-row">
-              <button
-                type="button"
-                className="form-qty-btn form-qty-btn--minus"
-                onClick={handleDecrease}
-                aria-label="Giảm số lượng"
-              >
-                −
-              </button>
-              <input
-                id="quantity-input"
-                type="number"
-                className="form-qty-value"
-                value={quantity}
-                onChange={handleQuantityChange}
-                min="1"
-              />
-              <button
-                type="button"
-                className="form-qty-btn form-qty-btn--plus"
-                onClick={handleIncrease}
-                aria-label="Tăng số lượng"
-              >
-                +
-              </button>
-              <select
-                id="unit-select"
-                className="form-unit-select"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                aria-label="Đơn vị đo lường"
-              >
-                <option value="" disabled hidden>-</option>
-                {availableUnits.map(u => (
-                  <option key={u} value={u}>{u}</option>
-                ))}
-              </select>
+          {/* Số lượng & Đơn vị */}
+          {!isGiaVi && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
+              <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Số lượng & Đơn vị</label>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <button type="button" onClick={handleDecrease} style={{ width: 48, height: 48, background: '#F5F5F5', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: 'pointer' }}>
+                  <span style={{ color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>−</span>
+                </button>
+
+                <div style={{ flex: 1, height: 48, borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
+                  <input
+                    type="number"
+                    style={{ width: '100%', height: '100%', textAlign: 'center', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
+                    value={quantity}
+                    onChange={handleQuantityChange}
+                  />
+                </div>
+
+                <button type="button" onClick={handleIncrease} style={{ width: 48, height: 48, background: '#FF8A00', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: 'pointer' }}>
+                  <span style={{ color: 'white', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>+</span>
+                </button>
+
+                <div style={{ width: 76, position: 'relative', height: 48, paddingLeft: 12, paddingRight: 12, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ color: unit ? '#1A1A1A' : '#9E9E9E', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>{unit || '-'}</div>
+                  <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>▼</div>
+                  <select
+                    style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                  >
+                    <option value="" disabled hidden>-</option>
+                    {availableUnits.map(u => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Deadline Date */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>

@@ -70,7 +70,7 @@ const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClic
       {/* Item Info */}
       <div className="shopping-card__info">
         <span className={`shopping-card__name ${checked ? 'shopping-card__name--checked' : ''}`}>
-          {item.name} - {item.quantity} {item.unit}
+          {item.category === 'Gia vị' ? item.name : `${item.name} - ${item.quantity} ${item.unit}`}
         </span>
       </div>
 
