@@ -54,9 +54,10 @@ const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClic
           checked ? 'shopping-card__checkbox--checked' : 'shopping-card__checkbox--unchecked'
         }`}
         onClick={(e) => {
-          onToggleCheck(item.id, e);
+          if (!checked) onToggleCheck(item.id, e);
         }}
-        title={checked ? 'Đánh dấu chưa mua' : 'Đánh dấu đã mua'}
+        style={checked ? { cursor: 'default' } : undefined}
+        title={checked ? 'Đã mua' : 'Đánh dấu đã mua'}
       >
         {checked && '✓'}
       </div>

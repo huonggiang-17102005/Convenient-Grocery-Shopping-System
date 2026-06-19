@@ -33,6 +33,8 @@ import InviteCodeModal from './modals/InviteCodeModal';
 import ExpireItemModal from './modals/ExpireItemModal';
 import CookConfirmModal from './modals/CookConfirmModal';
 import type { CookIngredient } from './modals/CookConfirmModal';
+import IngredientFormModal from '../fridge/modals/IngredientFormModal';
+import type { ShoppingItem } from '../shopping-list/types';
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -105,6 +107,10 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   // Selected item for ExpireItemModal
   const [selectedItem, setSelectedItem] = useState<IngredientCardProps | null>(null);
 
+  // Fridge Modal state for checked items
+  const [itemToSaveFridge, setItemToSaveFridge] = useState<ShoppingItem | null>(null);
+  const [isFridgeModalOpen, setIsFridgeModalOpen] = useState(false);
+
   // Toast state
   const [toastMsg,     setToastMsg]     = useState('');
   const [toastTrigger, setToastTrigger] = useState(0);
@@ -150,23 +156,61 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   const handleToggleShoppingItem = async (id: string) => {
     const item = shoppingItems.find(i => i.id === id);
-    if (!item) return;
+    if (!item || item.isBought) return;
 
-    const nextBought = !item.isBought;
+    setItemToSaveFridge(item);
+    setIsFridgeModalOpen(true);
+  };
 
+  const handleSaveToFridge = async (itemData: any) => {
+    if (!itemToSaveFridge || !familyId) return;
     try {
-      await shoppingService.updateShoppingItem(id, { isBought: nextBought });
+      // 1. Lưu vào tủ lạnh
+      await fridgeService.addFridgeItem({
+        family_id: familyId,
+        name: itemData.name,
+        quantity: itemData.quantity,
+        unit: itemData.unit,
+        category: itemData.category,
+        expiration_date: itemData.expiryDate || new Date().toISOString(),
+        location: itemData.storageType,
+        image_url: itemData.image,
+        image_public_id: itemData.imagePublicId
+      });
       
-      setShoppingItems(prev => prev.map(i => i.id === id ? { ...i, isBought: nextBought } : i));
+      // 2. Đánh dấu đã mua
+      await shoppingService.updateShoppingItem(itemToSaveFridge.id, { isBought: true });
+      
+      setShoppingItems(prev => prev.map(i => i.id === itemToSaveFridge.id ? { ...i, isBought: true } : i));
 
-      if (nextBought) {
-        showToast('Đã mua thành công!');
-      }
+      showToast('Đã mua xong và lưu vào tủ lạnh!');
+      setIsFridgeModalOpen(false);
+      setItemToSaveFridge(null);
     } catch (err) {
       console.error(err);
-      showToast('Có lỗi xảy ra khi cập nhật mua sắm!');
+      showToast('Có lỗi xảy ra khi lưu vào tủ lạnh!');
     }
   };
+
+  // Tính toán nhiệm vụ mua sắm trong tuần cho Member
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  const localDate = new Date(now.getTime() - (offset * 60 * 1000));
+  const day = localDate.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const monday = new Date(localDate);
+  monday.setDate(localDate.getDate() + diffToMonday);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const startOfWeekStr = monday.toISOString().split('T')[0];
+  const endOfWeekStr = sunday.toISOString().split('T')[0];
+
+  const thisWeekMissions = shoppingItems.filter(item => {
+    if (item.deadlineDate) {
+      return item.deadlineDate >= startOfWeekStr && item.deadlineDate <= endOfWeekStr;
+    }
+    return false; // Không hiển thị item không có deadline
+  });
 
   return (
     <>
@@ -214,7 +258,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       {/* Shopping Mission - Member only */}
       {role === 'member' && (
         <ShoppingMission
-          items={shoppingItems}
+          items={thisWeekMissions}
           currentUserId={user?.id || ''}
           onToggleCheck={handleToggleShoppingItem}
         />
@@ -262,6 +306,18 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
           fridgeItems={fridgeItems}
         />
       )}
+
+      <IngredientFormModal
+        isOpen={isFridgeModalOpen}
+        mode="add"
+        item={itemToSaveFridge as any}
+        role={role}
+        onClose={() => {
+          setIsFridgeModalOpen(false);
+          setItemToSaveFridge(null);
+        }}
+        onSave={handleSaveToFridge}
+      />
     </>
   );
 };

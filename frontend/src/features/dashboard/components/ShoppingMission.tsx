@@ -7,6 +7,29 @@ interface ShoppingMissionProps {
   onToggleCheck: (id: string) => void;
 }
 
+const isItemOverdue = (item: ShoppingItem): boolean => {
+  if (item.isBought) return false;
+  if (!item.deadlineDate || !item.deadlineTime) return false;
+  
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  const localDate = new Date(now.getTime() - (offset * 60 * 1000));
+  const todayStr = localDate.toISOString().split('T')[0];
+
+  if (item.deadlineDate < todayStr) {
+    return true;
+  }
+  if (item.deadlineDate === todayStr) {
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const [dlHour, dlMin] = item.deadlineTime.split(':').map(Number);
+    if (currentHour > dlHour || (currentHour === dlHour && currentMinute >= dlMin)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, currentUserId, onToggleCheck }) => {
   const myItems = items.filter(item => item.assigneeId === currentUserId);
 
@@ -31,8 +54,9 @@ export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, current
             <button
               type="button"
               className={`shopping-mission__checkbox ${item.isBought ? 'shopping-mission__checkbox--checked' : ''}`}
-              onClick={() => onToggleCheck(item.id)}
-              aria-label={item.isBought ? `Đánh dấu chưa mua ${item.name}` : `Đánh dấu đã mua ${item.name}`}
+              onClick={() => { if (!item.isBought) onToggleCheck(item.id); }}
+              aria-label={item.isBought ? `Đã mua ${item.name}` : `Đánh dấu đã mua ${item.name}`}
+              style={item.isBought ? { cursor: 'default' } : undefined}
             >
               {item.isBought && <span className="shopping-mission__check-icon">✓</span>}
             </button>
@@ -46,6 +70,11 @@ export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, current
             <div className={`shopping-mission__name ${item.isBought ? 'shopping-mission__name--checked' : ''}`}>
               {item.name} - {item.quantity} {item.unit}
             </div>
+            
+            {/* Overdue badge */}
+            {isItemOverdue(item) && (
+              <div className="shopping-card__tag-overdue" style={{ marginLeft: '8px' }}>Trễ hạn</div>
+            )}
           </div>
         ))}
       </div>

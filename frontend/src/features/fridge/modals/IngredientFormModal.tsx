@@ -11,6 +11,7 @@ interface IngredientFormModalProps {
   isOpen: boolean;
   mode: 'add' | 'edit' | 'detail';
   item: FoodItem | null;
+  role?: 'homemaker' | 'member';
   onClose: () => void;
   onSave: (itemData: Omit<FoodItem, 'id'>) => void;
   onDelete?: (id: string) => void;
@@ -29,7 +30,8 @@ const EMOJI_MAP: Record<string, string> = {
   'Tất cả': '🛒',
 };
 
-const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode, item, onClose, onSave, onDelete }) => {
+const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode, item, role = 'homemaker', onClose, onSave, onDelete }) => {
+  const primaryColor = role === 'member' ? '#1E88E5' : '#FF8A00';
   const isReadOnly = mode === 'detail';
   const { categoriesData } = useCategoryContext();
 
@@ -77,7 +79,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         setStorageType(item.storageType);
         setCategory(item.category);
         setName(item.name);
-        setQuantity(1);
+        setQuantity(item.quantity || 1);
         setUnit((item.unit as UnitType) || '');
         setExpiryDate('');
         setEmoji(item.emoji);
@@ -265,7 +267,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', background: '#F9FAFB', padding: 12, borderRadius: 12, border: '1px solid #E5E7EB' }}>
                 <img src={image} alt="Thực phẩm" style={{ width: 100, height: 100, borderRadius: 12, objectFit: 'cover' }} />
                 {!isReadOnly && (
-                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ background: 'transparent', border: '1px solid #FF8A00', color: '#FF8A00', borderRadius: 100, padding: '6px 16px', fontSize: 13, fontWeight: '500', cursor: 'pointer' }}>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ background: 'transparent', border: `1px solid ${primaryColor}`, color: primaryColor, borderRadius: 100, padding: '6px 16px', fontSize: 13, fontWeight: '500', cursor: 'pointer' }}>
                     {isUploading ? 'Đang tải...' : 'Đổi ảnh'}
                   </button>
                 )}
@@ -273,13 +275,13 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
             ) : (
               <div style={{ display: 'flex', gap: 12 }}>
                 <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isReadOnly || isUploading} style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
-                  <ImageIcon size={20} color="#FF8A00" />
+                  <ImageIcon size={20} color={primaryColor} />
                   <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>
                     {isUploading ? 'Đang tải...' : 'Chọn ảnh'}
                   </span>
                 </button>
                 <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isReadOnly || isUploading} style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
-                  <Camera size={20} color="#FF8A00" />
+                  <Camera size={20} color={primaryColor} />
                   <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Chụp ảnh</span>
                 </button>
               </div>
@@ -318,7 +320,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                   />
                 </div>
 
-                <button type="button" onClick={() => setQuantity((typeof quantity === 'number' ? quantity : 0) + 1)} disabled={isReadOnly} style={{ width: 48, height: 48, background: '#FF8A00', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
+                <button type="button" onClick={() => setQuantity((typeof quantity === 'number' ? quantity : 0) + 1)} disabled={isReadOnly} style={{ width: 48, height: 48, background: primaryColor, borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
                   <span style={{ color: 'white', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>+</span>
                 </button>
 
@@ -366,7 +368,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
             <>
               <button
                 type="button"
-                style={{ width: '100%', height: 48, background: '#FF8A00', borderRadius: 100, color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: (!name.trim() || !category || !storageType) ? 'default' : 'pointer', opacity: (!name.trim() || !category || !storageType) ? 0.6 : 1 }}
+                style={{ width: '100%', height: 48, background: primaryColor, borderRadius: 100, color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: (!name.trim() || !category || !storageType) ? 'default' : 'pointer', opacity: (!name.trim() || !category || !storageType) ? 0.6 : 1 }}
                 onClick={handleSave}
                 disabled={!name.trim() || !category || !storageType}
               >
