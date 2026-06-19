@@ -215,6 +215,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       {role === 'member' && (
         <ShoppingMission
           items={shoppingItems}
+          currentUserId={user?.id || ''}
           onToggleCheck={handleToggleShoppingItem}
         />
       )}

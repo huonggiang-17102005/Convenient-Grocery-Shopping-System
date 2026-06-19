@@ -3,13 +3,14 @@ import type { ShoppingItem } from '../../shopping-list/types';
 
 interface ShoppingMissionProps {
   items: ShoppingItem[];
+  currentUserId: string;
   onToggleCheck: (id: string) => void;
 }
 
-export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, onToggleCheck }) => {
-  const shinItems = items.filter(item => item.assigneeId === 'Shin');
+export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, currentUserId, onToggleCheck }) => {
+  const myItems = items.filter(item => item.assigneeId === currentUserId);
 
-  if (shinItems.length === 0) {
+  if (myItems.length === 0) {
     return (
       <section className="shopping-mission">
         <h2 className="shopping-mission__title">Nhiệm vụ mua sắm của bạn</h2>
@@ -24,7 +25,7 @@ export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, onToggl
     <section className="shopping-mission">
       <h2 className="shopping-mission__title">Nhiệm vụ mua sắm của bạn</h2>
       <div className="shopping-mission__list">
-        {shinItems.map(item => (
+        {myItems.map(item => (
           <div key={item.id} className="shopping-mission__item-row">
             {/* Checkbox */}
             <button
