@@ -1,11 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Bell, Check, Trash2, Edit2, Heart, Info, Clock } from 'lucide-react';
-import { useNotifications } from '../contexts/NotificationContext';
+import { useNotifications } from '../../contexts/NotificationContext';
+import { useAuth } from '../../contexts/AuthContext';
 import './NotificationBell.css';
 
 export const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { notifications, unreadCount, loadMoreNotifications, markAsRead, markAllAsRead, hasMore, isLoading } = useNotifications();
+  const { user } = useAuth();
+  const role = user?.role?.toLowerCase() || 'member';
   const dropdownRef = useRef<HTMLDivElement>(null);
   const observerTarget = useRef<HTMLDivElement>(null);
 
@@ -41,17 +44,19 @@ export const NotificationBell: React.FC = () => {
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   const getIcon = (type: string) => {
+    const roleColor = role === 'homemaker' ? '#FF8A00' : '#2563EB';
+    
     switch(type) {
       case 'ADD': return <Check size={18} color="#4CAF50" />;
       case 'CONSUME': return <Info size={18} color="#FF9800" />;
       case 'WASTE': return <Trash2 size={18} color="#F44336" />;
-      case 'UPDATE': return <Edit2 size={18} color="#2196F3" />;
+      case 'UPDATE': return <Edit2 size={18} color={roleColor} />;
       case 'EXPIRE': return <Clock size={18} color="#F44336" />;
       case 'LIKE': return <Heart size={18} color="#E91E63" />;
       case 'JOINED':
       case 'ROLE_CHANGED':
       case 'REMOVED':
-        return <Info size={18} color="#2196F3" />;
+        return <Info size={18} color={roleColor} />;
       default: return <Bell size={18} color="#757575" />;
     }
   };
@@ -66,7 +71,7 @@ export const NotificationBell: React.FC = () => {
   };
 
   return (
-    <div className="notif-bell-wrapper" ref={dropdownRef}>
+    <div className={`notif-bell-wrapper role-${role}`} ref={dropdownRef}>
       <div className="bell-container" onClick={toggleDropdown}>
         <Bell size={24} />
         {unreadCount > 0 && <span className="notification-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>}

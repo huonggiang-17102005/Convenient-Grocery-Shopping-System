@@ -85,11 +85,44 @@
 .notif-mark-all {
   background: none;
   border: none;
-  color: #007aff;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   padding: 0;
+}
+
+/* Homemaker colors */
+.notif-bell-wrapper.role-homemaker .notif-mark-all {
+  color: #FF8A00;
+}
+
+.notif-bell-wrapper.role-homemaker .notif-item.unread {
+  background-color: #FFF4E5;
+}
+
+.notif-bell-wrapper.role-homemaker .notif-item.unread:hover {
+  background-color: #FFE8CC;
+}
+
+.notif-bell-wrapper.role-homemaker .unread-dot {
+  background-color: #FF8A00;
+}
+
+/* Member colors */
+.notif-bell-wrapper.role-member .notif-mark-all {
+  color: #2563EB;
+}
+
+.notif-bell-wrapper.role-member .notif-item.unread {
+  background-color: #F0F8FF;
+}
+
+.notif-bell-wrapper.role-member .notif-item.unread:hover {
+  background-color: #E6F3FF;
+}
+
+.notif-bell-wrapper.role-member .unread-dot {
+  background-color: #2563EB;
 }
 
 .notif-mark-all:hover {
@@ -124,13 +157,6 @@
   background-color: #f9f9f9;
 }
 
-.notif-item.unread {
-  background-color: #f0f8ff;
-}
-
-.notif-item.unread:hover {
-  background-color: #e6f3ff;
-}
 
 .notif-icon-wrapper {
   width: 36px;
@@ -170,7 +196,6 @@
 .unread-dot {
   width: 8px;
   height: 8px;
-  background-color: #007aff;
   border-radius: 50%;
   position: absolute;
   top: 20px;

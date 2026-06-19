@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { NotificationBell } from '../NotificationBell';
+import { NotificationBell } from '../common/NotificationBell';
 import './MemberLayout.css';
 
 const MemberHeader: React.FC = () => {
