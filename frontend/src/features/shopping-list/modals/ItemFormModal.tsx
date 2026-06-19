@@ -12,7 +12,7 @@ interface ItemFormModalProps {
 
 const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit, item, mode }) => {
   const { categoriesData } = useCategoryContext();
-  
+
   const [category, setCategory] = useState<FoodCategory>(() => {
     if (mode === 'edit' && item) return item.category;
     return '';
@@ -50,15 +50,12 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
   const [deadlineDate, setDeadlineDate] = useState(() => {
     if (mode === 'edit' && item) return item.deadlineDate;
-    const today = new Date();
-    const offset = today.getTimezoneOffset();
-    const localDate = new Date(today.getTime() - (offset * 60 * 1000));
-    return localDate.toISOString().split('T')[0];
+    return '';
   });
 
   const [deadlineTime, setDeadlineTime] = useState(() => {
     if (mode === 'edit' && item) return item.deadlineTime;
-    return '18:00';
+    return '';
   });
 
   // Cập nhật lại mặc định khi load xong API categories

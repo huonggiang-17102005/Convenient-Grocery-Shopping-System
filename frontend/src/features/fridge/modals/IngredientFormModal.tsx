@@ -32,9 +32,9 @@ const EMOJI_MAP: Record<string, string> = {
 const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode, item, onClose, onSave, onDelete }) => {
   const isReadOnly = mode === 'detail';
   const { categoriesData } = useCategoryContext();
-  
-  const DYNAMIC_CATEGORIES = categoriesData.map(c => c.category as FoodCategory);
-  
+
+  const DYNAMIC_CATEGORIES = categoriesData.length > 0 ? categoriesData.map(c => c.category as FoodCategory) : ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'] as FoodCategory[];
+
   const [storageType, setStorageType] = useState<StorageType>('' as StorageType);
   const [category, setCategory] = useState<FoodCategory>('' as FoodCategory);
   const [name, setName] = useState('');
@@ -51,11 +51,11 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
 
   const activeCategoryData = categoriesData.find(c => c.category === category);
-  const DYNAMIC_UNITS = activeCategoryData?.units || [];
+  const DYNAMIC_UNITS = activeCategoryData?.units && activeCategoryData.units.length > 0 ? activeCategoryData.units : ['g', 'l'];
 
   // Cập nhật lại unit mặc định nếu unit hiện tại không có trong danh sách của category mới
   useEffect(() => {
-    if (category && DYNAMIC_UNITS.length > 0 && !DYNAMIC_UNITS.includes(unit)) {
+    if (category && DYNAMIC_UNITS && !DYNAMIC_UNITS.includes(unit)) {
       setUnit((DYNAMIC_UNITS[0] || '') as UnitType);
     }
   }, [category, DYNAMIC_UNITS, unit]);
@@ -145,7 +145,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
 
   const handleSave = () => {
     // Generate daysRemaining based on expiryDate if needed, else mock it
-    const daysRemaining = 5; 
+    const daysRemaining = 5;
     onSave({
       storageType,
       category,
@@ -167,7 +167,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   return (
     <div className="fridge-modal-overlay" onClick={handleOverlayClick} aria-modal="true" role="dialog">
       <div className="fridge-bottom-sheet" ref={sheetRef}>
-        
+
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingBottom: 4 }}>
           <div style={{ width: 40, height: 4, background: '#E0E0E0', borderRadius: 4 }} />
         </div>
@@ -177,7 +177,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
             {mode === 'add' ? 'Thêm thực phẩm' : mode === 'edit' ? 'Chỉnh sửa thực phẩm' : 'Chi tiết thực phẩm'}
           </div>
           {mode === 'edit' && item && onDelete && (
-            <div 
+            <div
               style={{ width: 40, height: 40, background: '#FFEBEE', borderRadius: 8, display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
               onClick={() => onDelete(item.id)}
             >
@@ -191,7 +191,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
             <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Vị trí lưu trữ</label>
             <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <select 
+              <select
                 style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: isReadOnly ? 'default' : 'pointer' }}
                 value={storageType}
                 onChange={(e) => setStorageType(e.target.value as StorageType)}
@@ -212,7 +212,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
               <span style={{ color: '#D32F2F', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px', marginLeft: 4 }}>*</span>
             </div>
             <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <select 
+              <select
                 style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: isReadOnly ? 'default' : 'pointer' }}
                 value={category}
                 onChange={(e) => {
@@ -237,8 +237,8 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
             <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Tên thực phẩm</label>
             <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', alignItems: 'center' }}>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '400' }}
                 placeholder="VD: Cà rốt"
                 value={name}
@@ -251,13 +251,13 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
           {/* Hình ảnh */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
             <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Hình ảnh</label>
-            
-            <input 
-              type="file" 
-              accept="image/*" 
-              ref={fileInputRef} 
-              style={{ display: 'none' }} 
-              onChange={handleFileChange} 
+
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
             />
 
             {image ? (
@@ -293,34 +293,34 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                 <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={isReadOnly} style={{ width: 48, height: 48, background: '#F5F5F5', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
                   <span style={{ color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>−</span>
                 </button>
-                
+
                 <div style={{ flex: 1, height: 48, borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     style={{ width: '100%', height: '100%', textAlign: 'center', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
                     value={quantity}
                     onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                     disabled={isReadOnly}
                   />
                 </div>
-                
+
                 <button type="button" onClick={() => setQuantity(quantity + 1)} disabled={isReadOnly} style={{ width: 48, height: 48, background: '#FF8A00', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
                   <span style={{ color: 'white', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>+</span>
                 </button>
-                
+
                 <div style={{ width: 100, position: 'relative', height: 48, paddingLeft: 12, paddingRight: 12, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ color: unit ? '#1A1A1A' : '#9E9E9E', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>{unit || 'Đơn vị'}</div>
                   <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>▼</div>
-                  
+
                   {/* Click area for unit */}
-                  <div 
+                  <div
                     style={{ position: 'absolute', inset: 0, cursor: isReadOnly ? 'default' : 'pointer' }}
                     onClick={() => !isReadOnly && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
                   />
-                  <UnitDropdown 
-                    isOpen={isUnitDropdownOpen} 
-                    onClose={() => setIsUnitDropdownOpen(false)} 
-                    onSelect={setUnit} 
+                  <UnitDropdown
+                    isOpen={isUnitDropdownOpen}
+                    onClose={() => setIsUnitDropdownOpen(false)}
+                    onSelect={setUnit}
                     options={DYNAMIC_UNITS}
                   />
                 </div>
@@ -332,8 +332,8 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
             <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Hạn sử dụng</label>
             <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', alignItems: 'center' }}>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
                 value={expiryDate}
                 onChange={(e) => setExpiryDate(e.target.value)}
@@ -350,8 +350,8 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
             </button>
           ) : (
             <>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 style={{ width: '100%', height: 48, background: '#FF8A00', borderRadius: 100, color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: (!name.trim() || !category || !storageType) ? 'default' : 'pointer', opacity: (!name.trim() || !category || !storageType) ? 0.6 : 1 }}
                 onClick={handleSave}
                 disabled={!name.trim() || !category || !storageType}
