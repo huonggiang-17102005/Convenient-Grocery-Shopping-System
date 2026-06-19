@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import * as fridgeController from '../controllers/fridge.controller.js';
+import { authenticateToken } from '../middlewares/auth.middleware.js';
 
 const router = Router();
+
+// Áp dụng middleware kiểm tra token cho tất cả route bên dưới
+router.use(authenticateToken);
 
 // Lấy danh sách đồ trong tủ lạnh của một gia đình
 router.get('/family/:familyId', fridgeController.getByFamilyId);

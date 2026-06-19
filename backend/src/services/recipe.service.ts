@@ -1,6 +1,7 @@
 import * as RecipeRepo from '../repo/recipe.repo.js';
 import type { Recipe } from '../models/Recipe.js';
 import { NotFoundError, ForbiddenError, InternalServerError } from '../errors/CommonError.js';
+import * as notificationService from './notification.service.js';
 import supabase from '../config/db.config.js';
 
 /**
@@ -150,8 +151,26 @@ export const toggleFavorite = async (userId: string, recipeId: string) => {
 /**
  * Toggle like for a community post
  */
-export const toggleLike = async (userId: string, recipeId: string) => {
+export const toggleLike = async (recipeId: string, user: any) => {
   const newLikes = await RecipeRepo.updateRecipeLikes(recipeId, true);
+  
+  // Create notification for the author
+  const recipe = await RecipeRepo.getRecipeById(recipeId);
+  if (recipe && recipe.author_id && recipe.author_id !== user.id) {
+    // Get author's family_id
+    const { data: author } = await supabase.from('users').select('family_id').eq('id', recipe.author_id).single();
+    if (author && author.family_id) {
+      const actorName = user.full_name || user.email || 'Một thành viên';
+      await notificationService.createNotification(
+        author.family_id,
+        'LIKE',
+        'Thích công thức',
+        `${actorName} đã thích công thức ${recipe.name} của bạn.`,
+        { user_id: user.id, actor_name: actorName, item_name: recipe.name, recipe_id: recipe.id }
+      );
+    }
+  }
+
   return { likes: newLikes, isLiked: true };
 };
 
