@@ -178,27 +178,31 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
           </div>
 
           {/* Deadline Date */}
-          <div className="form-group">
-            <label htmlFor="deadline-date-input" className="form-label">Hạn chót mua</label>
-            <input
-              id="deadline-date-input"
-              type="date"
-              className="form-input"
-              value={deadlineDate}
-              onChange={(e) => setDeadlineDate(e.target.value)}
-            />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
+            <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Hạn chót mua</label>
+            <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', alignItems: 'center' }}>
+              <input
+                id="deadline-date-input"
+                type="date"
+                style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
+                value={deadlineDate}
+                onChange={(e) => setDeadlineDate(e.target.value)}
+              />
+            </div>
           </div>
 
           {/* Deadline Time */}
-          <div className="form-group">
-            <label htmlFor="deadline-time-input" className="form-label">Giờ chót mua</label>
-            <input
-              id="deadline-time-input"
-              type="time"
-              className="form-input"
-              value={deadlineTime}
-              onChange={(e) => setDeadlineTime(e.target.value)}
-            />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
+            <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Giờ chót mua</label>
+            <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', alignItems: 'center' }}>
+              <input
+                id="deadline-time-input"
+                type="time"
+                style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
+                value={deadlineTime}
+                onChange={(e) => setDeadlineTime(e.target.value)}
+              />
+            </div>
           </div>
 
           {/* Actions */}
