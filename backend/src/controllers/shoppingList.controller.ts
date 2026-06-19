@@ -1,11 +1,12 @@
 import type { Response } from 'express';
 import type { AuthRequest } from '../middlewares/auth.middleware.js';
 import * as shoppingListService from '../services/shoppingList.service.js';
+import { UnauthorizedError } from '../errors/CommonError.js';
 
 export const getShoppingItems = async (req: AuthRequest, res: Response) => {
   const familyId = req.user?.family_id;
   if (!familyId) {
-    return res.status(403).json({ error: 'Không tìm thấy ID gia đình của người dùng.' });
+    throw new UnauthorizedError('Không tìm thấy ID gia đình của người dùng.');
   }
 
   const items = await shoppingListService.getShoppingItems(familyId);
@@ -16,7 +17,7 @@ export const createShoppingItem = async (req: AuthRequest, res: Response) => {
   const familyId = req.user?.family_id;
   const userId = req.user?.id;
   if (!familyId || !userId) {
-    return res.status(403).json({ error: 'Không tìm thấy thông tin người dùng.' });
+    throw new UnauthorizedError('Không tìm thấy thông tin người dùng.');
   }
 
   const item = await shoppingListService.createShoppingItem(familyId, userId, req.body);
@@ -27,7 +28,7 @@ export const updateShoppingItem = async (req: AuthRequest, res: Response) => {
   const familyId = req.user?.family_id;
   const userId = req.user?.id;
   if (!familyId || !userId) {
-    return res.status(403).json({ error: 'Không tìm thấy thông tin người dùng.' });
+    throw new UnauthorizedError('Không tìm thấy thông tin người dùng.');
   }
 
   const id = req.params.id as string;
@@ -39,7 +40,7 @@ export const deleteShoppingItem = async (req: AuthRequest, res: Response) => {
   const familyId = req.user?.family_id;
   const userId = req.user?.id;
   if (!familyId || !userId) {
-    return res.status(403).json({ error: 'Không tìm thấy thông tin người dùng.' });
+    throw new UnauthorizedError('Không tìm thấy thông tin người dùng.');
   }
 
   const id = req.params.id as string;

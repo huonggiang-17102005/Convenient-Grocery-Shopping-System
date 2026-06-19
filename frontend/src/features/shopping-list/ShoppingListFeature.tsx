@@ -10,6 +10,7 @@ import type { ShoppingItem, FoodCategory } from './types';
 import { shoppingService } from './shopping-list.service';
 import Toast from '@/components/shared/Toast';
 import { useShoppingListContext } from '../../contexts/ShoppingListContext';
+import { useFamilyContext } from '../../contexts/FamilyContext';
 import { useAuth } from '../../contexts/AuthContext';
 import './shopping-list.css';
 
@@ -27,6 +28,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   const primaryColor = ROLE_COLORS[role];
   const { user } = useAuth();
   const { items, setItems, isLoading: loading } = useShoppingListContext();
+  const { familyMembers } = useFamilyContext();
   const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
 
   // Modal states
@@ -91,12 +93,13 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   };
 
   // Assign member
-  const handleAssignMember = async (itemId: string, assigneeId: 'Kat' | 'Shin' | null) => {
+  const handleAssignMember = async (itemId: string, assigneeId: string | null) => {
     try {
       const updatedItem = await shoppingService.updateShoppingItem(itemId, { assigneeId });
       setItems(prev => prev.map(i => i.id === itemId ? updatedItem : i));
       if (assigneeId) {
-        showToast(`Đã giao cho ${assigneeId}`);
+        const assignedMember = familyMembers.find(m => m.id === assigneeId);
+        showToast(`Đã giao cho ${assignedMember?.name || assigneeId}`);
       } else {
         showToast('Đã hủy giao việc thành công!');
       }

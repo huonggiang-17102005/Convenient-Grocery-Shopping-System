@@ -1,12 +1,13 @@
 import React from 'react';
 import { Trash2 } from 'lucide-react';
 import type { ShoppingItem } from '../types';
+import { useFamilyContext } from '../../../contexts/FamilyContext';
 
 interface ActionBottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
   item: ShoppingItem | null;
-  onAssign: (itemId: string, assigneeId: 'Kat' | 'Shin' | null) => void;
+  onAssign: (itemId: string, assigneeId: string | null) => void;
   onEdit: (item: ShoppingItem) => void;
   onDelete: (item: ShoppingItem) => void;
 }
@@ -19,6 +20,8 @@ const ActionBottomSheet: React.FC<ActionBottomSheetProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { familyMembers } = useFamilyContext();
+
   if (!isOpen || !item) return null;
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -40,43 +43,25 @@ const ActionBottomSheet: React.FC<ActionBottomSheetProps> = ({
         <div className="bottom-sheet__section">
           <p className="bottom-sheet__section-title">Giao việc mua hộ</p>
           <div className="bottom-sheet__members">
-            {/* Kat */}
-            <div className="bottom-sheet__member-row">
-              <div className="bottom-sheet__member-left">
-                <div className="bottom-sheet__member-avatar" style={{ backgroundColor: '#FFE0B2', color: '#FF8A00' }}>
-                  K
+            {familyMembers.map((member) => (
+              <div key={member.id} className="bottom-sheet__member-row">
+                <div className="bottom-sheet__member-left">
+                  <div className="bottom-sheet__member-avatar" style={{ backgroundColor: member.role === 'homemaker' ? '#FFE0B2' : '#E1BEE7', color: member.role === 'homemaker' ? '#FF8A00' : '#8E24AA' }}>
+                    {member.avatar && member.avatar !== '👤' ? member.avatar : (member.name ? member.name[0].toUpperCase() : 'M')}
+                  </div>
+                  <span className="bottom-sheet__member-name">{member.name} {member.isCurrentUser ? '(Bạn)' : ''}</span>
                 </div>
-                <span className="bottom-sheet__member-name">Kat</span>
+                <button
+                  type="button"
+                  className={`bottom-sheet__assign-btn ${
+                    item.assigneeId === member.id ? 'bottom-sheet__assign-btn--active' : ''
+                  }`}
+                  onClick={() => onAssign(item.id, item.assigneeId === member.id ? null : member.id)}
+                >
+                  {item.assigneeId === member.id ? 'Hủy giao' : 'Giao việc'}
+                </button>
               </div>
-              <button
-                type="button"
-                className={`bottom-sheet__assign-btn ${
-                  item.assigneeId === 'Kat' ? 'bottom-sheet__assign-btn--active' : ''
-                }`}
-                onClick={() => onAssign(item.id, item.assigneeId === 'Kat' ? null : 'Kat')}
-              >
-                {item.assigneeId === 'Kat' ? 'Hủy giao' : 'Giao việc'}
-              </button>
-            </div>
-
-            {/* Shin */}
-            <div className="bottom-sheet__member-row">
-              <div className="bottom-sheet__member-left">
-                <div className="bottom-sheet__member-avatar" style={{ backgroundColor: '#E1BEE7', color: '#8E24AA' }}>
-                  S
-                </div>
-                <span className="bottom-sheet__member-name">Shin</span>
-              </div>
-              <button
-                type="button"
-                className={`bottom-sheet__assign-btn ${
-                  item.assigneeId === 'Shin' ? 'bottom-sheet__assign-btn--active' : ''
-                }`}
-                onClick={() => onAssign(item.id, item.assigneeId === 'Shin' ? null : 'Shin')}
-              >
-                {item.assigneeId === 'Shin' ? 'Hủy giao' : 'Giao việc'}
-              </button>
-            </div>
+            ))}
           </div>
         </div>
 

@@ -15,17 +15,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// UUID Mapping to frontend names 'Shin' & 'Kat' (Hima in db)
-const UUID_TO_NAME: Record<string, string> = {
-  'd1fd2b6f-7778-4419-99a4-8eafc2ba0619': 'Shin',
-  '5b7e60c4-28e5-48a8-92c5-6b5f9349c7ca': 'Kat'
-};
-
-const NAME_TO_UUID: Record<string, string> = {
-  'Shin': 'd1fd2b6f-7778-4419-99a4-8eafc2ba0619',
-  'Kat': '5b7e60c4-28e5-48a8-92c5-6b5f9349c7ca'
-};
-
 const mapBackendToFrontend = (item: any): ShoppingItem => {
   return {
     id: item.id,
@@ -34,7 +23,7 @@ const mapBackendToFrontend = (item: any): ShoppingItem => {
     quantity: Number(item.quantity),
     unit: item.unit,
     isBought: item.isBought,
-    assigneeId: item.assigneeId ? (UUID_TO_NAME[item.assigneeId] || null) : null,
+    assigneeId: item.assigneeId || null,
     deadlineDate: item.deadlineDate,
     deadlineTime: item.deadlineTime,
     imageUrl: item.imageUrl,
@@ -44,9 +33,7 @@ const mapBackendToFrontend = (item: any): ShoppingItem => {
 
 const mapFrontendToBackend = (itemData: any) => {
   const mapped: any = { ...itemData };
-  if (itemData.assigneeId !== undefined) {
-    mapped.assigneeId = itemData.assigneeId ? (NAME_TO_UUID[itemData.assigneeId] || null) : null;
-  }
+  // assigneeId is now a real string (UUID) or null, pass it exactly as is
   return mapped;
 };
 

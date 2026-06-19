@@ -17,11 +17,12 @@ export const insertNotification = async (notificationData: Omit<Notification, 'i
   return data;
 };
 
-export const fetchNotifications = async (familyId: string, limit: number = 20, offset: number = 0) => {
+export const fetchNotifications = async (familyId: string, userId: string, limit: number = 20, offset: number = 0) => {
   const { data, error } = await supabase
     .from('notifications')
     .select('*')
     .eq('family_id', familyId)
+    .or(`user_id.is.null,user_id.eq.${userId}`)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 

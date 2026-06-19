@@ -19,7 +19,10 @@ const FamilyContext = createContext<FamilyContextType>({
 export const useFamilyContext = () => useContext(FamilyContext);
 
 export const FamilyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(() => {
+    const cached = localStorage.getItem('cached_family_members');
+    return cached ? JSON.parse(cached) : [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
@@ -57,6 +60,11 @@ export const FamilyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     refreshMembers();
   }, [refreshMembers]);
+
+  // Cập nhật localStorage mỗi khi familyMembers thay đổi
+  useEffect(() => {
+    localStorage.setItem('cached_family_members', JSON.stringify(familyMembers));
+  }, [familyMembers]);
 
   return (
     <FamilyContext.Provider value={{ familyMembers, setFamilyMembers, refreshMembers, isLoading }}>

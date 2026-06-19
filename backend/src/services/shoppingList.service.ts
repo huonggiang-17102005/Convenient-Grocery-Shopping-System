@@ -4,7 +4,7 @@ import * as notificationService from './notification.service.js';
 import * as userRepo from '../repo/user.repo.js';
 import * as familyRepo from '../repo/family.repo.js';
 import supabase from '../config/db.config.js';
-import { ForbiddenError, InternalServerError } from '../errors/CommonError.js';
+import { ForbiddenError, InternalServerError, BadRequestError } from '../errors/CommonError.js';
 
 // Format item to shape expected by the frontend
 const mapDbToFrontendItem = (item: any) => {
@@ -56,7 +56,8 @@ export const createShoppingItem = async (familyId: string, currentUserId: string
         'TASK_ASSIGN',
         'Nhiệm vụ mới',
         `Bạn đã được giao nhiệm vụ mua: ${data.name}.`,
-        { task_id: created.id, assignee_id: data.assigneeId }
+        { task_id: created.id, assignee_id: data.assigneeId },
+        data.assigneeId
       );
     }
   }
@@ -68,13 +69,9 @@ export const updateShoppingItem = async (familyId: string, itemId: string, curre
   const existing = await shoppingListRepo.getItemById(itemId);
 
   // Verify that the item belongs to a list owned by this family
-  const { data: list, error: listErr } = await supabase
-    .from('shopping_lists')
-    .select('family_id')
-    .eq('id', existing.list_id)
-    .single();
+  const list = await shoppingListRepo.getListById(existing.list_id);
 
-  if (listErr || !list || list.family_id !== familyId) {
+  if (!list || list.family_id !== familyId) {
     throw new ForbiddenError('Bạn không có quyền sửa mặt hàng này.');
   }
 
@@ -100,7 +97,8 @@ export const updateShoppingItem = async (familyId: string, itemId: string, curre
         'TASK_UNASSIGN',
         'Hủy nhiệm vụ',
         `Bạn đã được gỡ khỏi nhiệm vụ: ${existing.name}.`,
-        { task_id: existing.id, assignee_id: existing.assignee_id }
+        { task_id: existing.id, assignee_id: existing.assignee_id },
+        existing.assignee_id
       );
     }
     if (data.assigneeId && data.assigneeId !== currentUserId) {
@@ -109,7 +107,8 @@ export const updateShoppingItem = async (familyId: string, itemId: string, curre
         'TASK_ASSIGN',
         'Nhiệm vụ mới',
         `Bạn đã được giao nhiệm vụ mua: ${existing.name}.`,
-        { task_id: existing.id, assignee_id: data.assigneeId }
+        { task_id: existing.id, assignee_id: data.assigneeId },
+        data.assigneeId
       );
     }
   }
@@ -118,20 +117,16 @@ export const updateShoppingItem = async (familyId: string, itemId: string, curre
   if (updateData.is_bought && !existing.is_bought) {
     await syncItemToFridge(familyId, updated);
 
-    // Báo cho Homemaker
-    const members = await familyRepo.getFamilyMembers(familyId);
-    const homemaker = members.find(m => m.role === 'Homemaker');
-    if (homemaker && homemaker.id !== currentUserId) {
-      const currentUser = await userRepo.findById(currentUserId);
-      const actorName = currentUser?.full_name || currentUser?.email || 'Một thành viên';
-      await notificationService.createNotification(
-        familyId,
-        'TASK_COMPLETE',
-        'Hoàn thành nhiệm vụ',
-        `${actorName} đã hoàn thành nhiệm vụ mua: ${existing.name}.`,
-        { task_id: existing.id, user_id: currentUserId, homemaker_id: homemaker.id }
-      );
-    }
+    // Báo cho toàn gia đình
+    const currentUser = await userRepo.findById(currentUserId);
+    const actorName = currentUser?.full_name || currentUser?.email || 'Một thành viên';
+    await notificationService.createNotification(
+      familyId,
+      'TASK_COMPLETE',
+      'Hoàn thành nhiệm vụ',
+      `${actorName} đã hoàn thành nhiệm vụ mua: ${existing.name}.`,
+      { task_id: existing.id, user_id: currentUserId }
+    );
   }
 
   return mapDbToFrontendItem(updated);
@@ -140,13 +135,9 @@ export const updateShoppingItem = async (familyId: string, itemId: string, curre
 export const deleteShoppingItem = async (familyId: string, itemId: string, currentUserId: string) => {
   const existing = await shoppingListRepo.getItemById(itemId);
 
-  const { data: list, error: listErr } = await supabase
-    .from('shopping_lists')
-    .select('family_id')
-    .eq('id', existing.list_id)
-    .single();
+  const list = await shoppingListRepo.getListById(existing.list_id);
 
-  if (listErr || !list || list.family_id !== familyId) {
+  if (!list || list.family_id !== familyId) {
     throw new ForbiddenError('Bạn không có quyền xóa mặt hàng này.');
   }
 
@@ -158,7 +149,8 @@ export const deleteShoppingItem = async (familyId: string, itemId: string, curre
       'TASK_DELETE',
       'Xóa nhiệm vụ',
       `Nhiệm vụ "${existing.name}" đã bị hủy.`,
-      { task_id: existing.id, assignee_id: existing.assignee_id }
+      { task_id: existing.id, assignee_id: existing.assignee_id },
+      existing.assignee_id
     );
   }
 };
@@ -191,18 +183,11 @@ async function syncItemToFridge(familyId: string, item: any) {
         image_url: item.image_url || null,
         image_public_id: item.image_public_id || null,
         location: item.category === 'Thịt cá' ? 'Ngăn đông' : 'Ngăn mát',
-        expiration_date: expiry.toISOString().split('T')[0],
+        expiration_date: expiry.toISOString().split('T')[0] as string,
         is_wasted: false
       };
 
-      const { error } = await supabase
-        .from('fridge_items')
-        .insert([newFridgeItem]);
-
-      if (error) {
-        console.error('Error syncing bought item to fridge:', error);
-        throw error;
-      }
+      await fridgeRepo.addItem(newFridgeItem);
     }
   } catch (error) {
     console.error('Failed to sync item to fridge:', error);
@@ -211,21 +196,9 @@ async function syncItemToFridge(familyId: string, item: any) {
 }
 
 export const checkOverdueTasks = async () => {
-  const today = new Date().toISOString().split('T')[0];
+  const today = (new Date().toISOString().split('T')[0]) as string;
 
-  const { data: overdueItems, error } = await supabase
-    .from('shopping_list_items')
-    .select(`
-      id, name, deadline_date, is_bought, assignee_id,
-      shopping_lists(family_id)
-    `)
-    .eq('is_bought', false)
-    .lt('deadline_date', today);
-
-  if (error) {
-    console.error('Error checking overdue tasks:', error);
-    throw new InternalServerError('Lỗi khi kiểm tra nhiệm vụ trễ hạn');
-  }
+  const overdueItems = await shoppingListRepo.getOverdueUnboughtItems(today);
 
   if (!overdueItems || overdueItems.length === 0) return 0;
 
@@ -245,7 +218,8 @@ export const checkOverdueTasks = async () => {
         'TASK_OVERDUE',
         'Nhiệm vụ trễ hạn',
         `Nhiệm vụ "${item.name}" đã quá hạn!`,
-        { task_id: item.id, assignee_id: item.assignee_id }
+        { task_id: item.id, assignee_id: item.assignee_id },
+        item.assignee_id
       );
       
       // Báo cho homemaker nếu assignee_id khác homemaker
@@ -257,7 +231,8 @@ export const checkOverdueTasks = async () => {
           'TASK_OVERDUE',
           'Nhiệm vụ trễ hạn',
           `Nhiệm vụ "${item.name}" giao cho ${assigneeName} đã quá hạn!`,
-          { task_id: item.id, homemaker_id: homemaker.id, assignee_id: item.assignee_id }
+          { task_id: item.id, homemaker_id: homemaker.id, assignee_id: item.assignee_id },
+          homemaker.id
         );
       }
     } else {
@@ -268,7 +243,8 @@ export const checkOverdueTasks = async () => {
           'TASK_OVERDUE',
           'Nhiệm vụ trễ hạn',
           `Nhiệm vụ chưa giao "${item.name}" đã quá hạn!`,
-          { task_id: item.id, homemaker_id: homemaker.id }
+          { task_id: item.id, homemaker_id: homemaker.id },
+          homemaker.id
         );
       }
     }
