@@ -23,7 +23,8 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
     let pendingRecipes = 0;
     const { count: recipesCount, error: errRecipes } = await supabase
       .from('recipes')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .ilike('visibility', 'pending');
     if (!errRecipes) pendingRecipes = recipesCount || 0;
 
     // 4. System waste rate (Calculated based on inventory_logs amounts)
@@ -794,7 +795,7 @@ export const getPendingRecipes = async (req: Request, res: Response): Promise<vo
     const { data: recipes, error } = await supabase
       .from('recipes')
       .select('*')
-      .eq('visibility', 'Pending')
+      .ilike('visibility', 'pending')
       .order('created_at', { ascending: false });
 
     if (error) {
