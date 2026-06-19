@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
+import type { FoodCategory } from '../../fridge/types';
+import { useCategoryContext } from '../../../contexts/CategoryContext';
 
 export interface CookIngredient {
   name: string;
@@ -22,16 +24,6 @@ interface CookConfirmModalProps {
   fridgeItems?: FridgeItem[];
 }
 
-const CATEGORIES = [
-  'Thịt cá',
-  'Rau củ quả',
-  'Trứng',
-  'Chất lỏng',
-  'Đồ khô',
-  'Gia vị',
-  'Khác'
-];
-
 const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
   isOpen,
   onClose,
@@ -39,11 +31,21 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
   initialIngredients = [],
   fridgeItems = []
 }) => {
-  const [ingredients, setIngredients] = useState<CookIngredient[]>(
+  const { categoriesData } = useCategoryContext();
+  const availableCategories = categoriesData.map(c => c.category as FoodCategory);
+
+  const [ingredients, setIngredients] = useState<CookIngredient[]>(() =>
     initialIngredients.length > 0 
       ? initialIngredients 
-      : [{ name: '', category: 'Khác', amountValue: '', amountUnit: 'g' }]
+      : [{ name: '', category: availableCategories[0] || '', amountValue: '', amountUnit: categoriesData[0]?.units?.[0] || '' }]
   );
+
+  // Update initial ingredient category if we load categories after state init
+  useEffect(() => {
+    if (ingredients.length === 1 && ingredients[0].category === '' && availableCategories.length > 0) {
+      setIngredients([{ name: '', category: availableCategories[0], amountValue: '', amountUnit: categoriesData[0]?.units?.[0] || '' }]);
+    }
+  }, [availableCategories, ingredients.length, categoriesData]);
 
   const updateField = (index: number, field: keyof CookIngredient, value: string) => {
     setIngredients((prev) =>
@@ -56,7 +58,7 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
   };
 
   const addIngredient = () => {
-    setIngredients((prev) => [...prev, { name: '', category: 'Khác', amountValue: '', amountUnit: 'g' }]);
+    setIngredients((prev) => [...prev, { name: '', category: availableCategories[0] || '', amountValue: '', amountUnit: categoriesData[0]?.units?.[0] || '' }]);
   };
 
   const handleConfirm = () => {
@@ -140,7 +142,7 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
                         onChange={(e) => updateField(index, 'category', e.target.value)}
                         title="Chọn danh mục"
                       >
-                        {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        {availableCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                       </select>
                       <div style={{ width: '100%', height: '100%', paddingLeft: 8, paddingRight: 8, justifyContent: 'space-between', alignItems: 'center', display: 'flex', pointerEvents: 'none' }}>
                         <div style={{ color: '#FF8A00', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '16px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

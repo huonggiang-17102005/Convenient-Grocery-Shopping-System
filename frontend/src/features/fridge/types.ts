@@ -1,5 +1,6 @@
 export type StorageType = 'Tất cả' | 'Ngăn mát' | 'Ngăn đông' | 'Khô';
-export type FoodCategory = 'Tất cả' | 'Thịt cá' | 'Rau củ quả' | 'Trứng' | 'Chất lỏng' | 'Đồ khô' | 'Gia vị' | 'Khác';
+// Allow any string but keep autocomplete
+export type FoodCategory = string & {};
 
 export interface FoodItem {
   id: string;

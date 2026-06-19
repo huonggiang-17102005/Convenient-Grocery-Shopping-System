@@ -1,4 +1,5 @@
-export type FoodCategory = 'Thịt cá' | 'Rau củ quả' | 'Trứng' | 'Chất lỏng' | 'Đồ khô' | 'Gia vị' | 'Khác';
+// Allow any string but keep autocomplete for some common ones
+export type FoodCategory = string & {};
 
 export interface ShoppingItem {
   id: string;

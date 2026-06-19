@@ -1,9 +1,10 @@
 // src/features/recipes/modals/RecipeFormModal.tsx
 // Shared form for both Add and Edit personal recipe
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
 import ImageWithFallback from '../../../components/common/ImageWithFallback';
+import { useCategoryContext } from '../../../contexts/CategoryContext';
 
 interface RecipeFormModalProps {
   isOpen: boolean;
@@ -14,23 +15,28 @@ interface RecipeFormModalProps {
 }
 
 const DIFFICULTIES: DifficultyLevel[] = ['Dễ', 'Trung bình', 'Khó'];
-const INGREDIENT_CATEGORIES = ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'];
 
-const emptyIngredient = (): Ingredient => ({
-  id: 'ing_' + Date.now() + Math.random(),
-  category: 'Thịt cá',
-  name: '',
-  amount: 0,
-  unit: 'g',
-});
+// Helper function to create an empty ingredient, injected with dynamic categories
+const createEmptyIngredient = (categoriesData: any[]): Ingredient => {
+  return {
+    id: 'ing_' + Date.now() + Math.random(),
+    category: '',
+    name: '',
+    amount: 0,
+    unit: '',
+  };
+};
 
-const emptySpice = (): Ingredient => ({
-  id: 'spice_' + Date.now() + Math.random(),
-  category: 'Gia vị',
-  name: '',
-  amount: 0,
-  unit: '',
-});
+const createEmptySpice = (categoriesData: any[]): Ingredient => {
+  const spiceCategory = categoriesData.find(c => c.category === 'Gia vị');
+  return {
+    id: 'spice_' + Date.now() + Math.random(),
+    category: spiceCategory?.category || 'Gia vị',
+    name: '',
+    amount: 0,
+    unit: spiceCategory?.units?.[0] || '',
+  };
+};
 
 const emptyStep = (): CookingStep => ({
   id: 'step_' + Date.now() + Math.random(),
@@ -60,27 +66,29 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  const { categoriesData } = useCategoryContext();
+
   const [name, setName] = useState(() => (mode === 'edit' && recipe ? recipe.name : ''));
-  const [cookTime, setCookTime] = useState(() => (mode === 'edit' && recipe ? recipe.cookTimeMinutes : 30));
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>(() => (mode === 'edit' && recipe ? recipe.difficulty : 'Dễ'));
-  const [servings, setServings] = useState<number>(() => (mode === 'edit' && recipe ? recipe.servings : 4));
+  const [cookTime, setCookTime] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.cookTimeMinutes : ''));
+  const [difficulty, setDifficulty] = useState<DifficultyLevel | ''>(() => (mode === 'edit' && recipe ? recipe.difficulty : ''));
+  const [servings, setServings] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.servings : ''));
   const [emoji] = useState(() => (mode === 'edit' && recipe ? recipe.emoji : '🍽️'));
   const [imageUrl, setImageUrl] = useState(() => (mode === 'edit' && recipe ? recipe.imageUrl || '' : ''));
   
   const [ingredients, setIngredients] = useState<Ingredient[]>(() => {
     if (mode === 'edit' && recipe && recipe.ingredients.length > 0) {
       const filtered = recipe.ingredients.filter((i) => i.category !== 'Gia vị');
-      return filtered.length > 0 ? filtered : [emptyIngredient()];
+      return filtered.length > 0 ? filtered : [];
     }
-    return [emptyIngredient()];
+    return [];
   });
 
   const [spices, setSpices] = useState<Ingredient[]>(() => {
     if (mode === 'edit' && recipe && recipe.ingredients.length > 0) {
       const filtered = recipe.ingredients.filter((i) => i.category === 'Gia vị');
-      return filtered.length > 0 ? filtered : [emptySpice()];
+      return filtered.length > 0 ? filtered : [];
     }
-    return [emptySpice()];
+    return [];
   });
 
   const [steps, setSteps] = useState<CookingStep[]>(() =>
@@ -89,11 +97,42 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
       : [emptyStep()]
   );
 
+  const availableCategories = categoriesData.map(c => c.category);
+
+  const getAvailableUnits = (category: string) => {
+    const data = categoriesData.find(c => c.category === category);
+    return data?.units || [];
+  };
+
+  const getSpiceUnits = () => {
+    const data = categoriesData.find(c => c.category === 'Gia vị');
+    return data?.units || [];
+  };
+
+  // Tự động set mặc định khi có data nếu form đang rỗng
+  useEffect(() => {
+    if (mode === 'create' && categoriesData.length > 0) {
+      if (ingredients.length === 0) setIngredients([createEmptyIngredient(categoriesData)]);
+      if (spices.length === 0) setSpices([createEmptySpice(categoriesData)]);
+    }
+  }, [categoriesData, mode, ingredients.length, spices.length]);
+
   if (!isOpen) return null;
 
   const handleIngredientChange = (id: string, field: keyof Ingredient, value: string | number) => {
     setIngredients((prev) =>
-      prev.map((ing) => (ing.id === id ? { ...ing, [field]: value } : ing))
+      prev.map((ing) => {
+        if (ing.id !== id) return ing;
+        const newIng = { ...ing, [field]: value };
+        // Auto update unit when category changes
+        if (field === 'category') {
+          const newUnits = getAvailableUnits(value as string);
+          if (newUnits.length > 0 && !newUnits.includes(newIng.unit)) {
+            newIng.unit = newUnits[0];
+          }
+        }
+        return newIng;
+      })
     );
   };
 
@@ -122,11 +161,18 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   };
 
   const handleSubmit = () => {
-    const validIngredients = ingredients.filter((i) => i.name.trim());
+    const validIngredients = ingredients.filter((i) => i.name.trim() || i.amount > 0 || i.category);
+    const hasIncompleteIngredient = validIngredients.some(i => !i.name.trim() || !i.category || !i.unit);
+    
     const validSteps = steps.filter((s) => s.description.trim());
 
-    if (!name.trim() || !servings || validIngredients.length === 0 || validSteps.length === 0) {
+    if (!name.trim() || !servings || validIngredients.length === 0 || validSteps.length === 0 || !cookTime || !difficulty) {
       alert('Vui lòng điền đầy đủ các thông tin bắt buộc (*)');
+      return;
+    }
+
+    if (hasIncompleteIngredient) {
+      alert('Vui lòng điền đầy đủ Tên, Phân loại và Đơn vị cho các nguyên liệu đã nhập!');
       return;
     }
 
@@ -139,9 +185,9 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
       name: name.trim(),
       emoji,
       imageUrl: imageUrl.trim() || undefined,
-      cookTimeMinutes: cookTime,
-      difficulty,
-      servings,
+      cookTimeMinutes: Number(cookTime),
+      difficulty: difficulty as DifficultyLevel,
+      servings: Number(servings),
       ingredients: finalIngredients,
       steps: validSteps,
     });
@@ -189,7 +235,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
           {/* Cook time & difficulty */}
           <div className="form-row">
             <div className="form-group form-group--half">
-              <label className="form-label" htmlFor="recipe-form-time">Thời gian nấu</label>
+              <label className="form-label" htmlFor="recipe-form-time">Thời gian nấu <span className="form-required">*</span></label>
               <input
                 id="recipe-form-time"
                 type="number"
@@ -197,17 +243,18 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                 placeholder="25 phút"
                 value={cookTime}
                 min={1}
-                onChange={(e) => setCookTime(Number(e.target.value))}
+                onChange={(e) => setCookTime(e.target.value === '' ? '' : Number(e.target.value))}
               />
             </div>
             <div className="form-group form-group--half">
-              <label className="form-label" htmlFor="recipe-form-difficulty">Độ khó</label>
+              <label className="form-label" htmlFor="recipe-form-difficulty">Độ khó <span className="form-required">*</span></label>
               <select
                 id="recipe-form-difficulty"
                 className="form-input"
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
               >
+                <option value="">- Chọn -</option>
                 {DIFFICULTIES.map((d) => (
                   <option key={d} value={d}>{d}</option>
                 ))}
@@ -262,17 +309,18 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                 {/* Bottom part: Category, Amount, Unit */}
                 <div className="figma-ingredient-card-bottom">
                   <div className="figma-category-select-wrapper">
-                    <select
-                      title="Phân loại"
-                      className="figma-category-select"
-                      value={ing.category}
-                      onChange={(e) => handleIngredientChange(ing.id, 'category', e.target.value)}
-                      style={{ paddingRight: '18px' }}
-                    >
-                      {INGREDIENT_CATEGORIES.filter(c => c !== 'Gia vị').map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
+                      <select
+                        title="Phân loại"
+                        className="figma-category-select"
+                        value={ing.category}
+                        onChange={(e) => handleIngredientChange(ing.id, 'category', e.target.value)}
+                        style={{ paddingRight: '18px' }}
+                      >
+                        <option value="" disabled hidden>- Chọn -</option>
+                        {availableCategories.filter(c => c !== 'Gia vị').map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
                     <span style={{
                       marginLeft: '-14px',
                       pointerEvents: 'none',
@@ -295,14 +343,26 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                   
                   <div className="figma-card-v-divider" />
                   
-                  <input
-                    type="text"
-                    className="figma-ingredient-card-input-unit"
-                    placeholder="g"
-                    title="Đơn vị"
-                    value={ing.unit}
-                    onChange={(e) => handleIngredientChange(ing.id, 'unit', e.target.value)}
-                  />
+                  <div className="figma-category-select-wrapper">
+                      <select
+                        title="Đơn vị"
+                        className="figma-category-select"
+                        style={{ paddingRight: '18px', width: '60px' }}
+                        value={ing.unit}
+                        onChange={(e) => handleIngredientChange(ing.id, 'unit', e.target.value)}
+                      >
+                        <option value="" disabled hidden>-</option>
+                        {getAvailableUnits(ing.category).map((u) => (
+                          <option key={u} value={u}>{u}</option>
+                        ))}
+                      </select>
+                    <span style={{
+                      marginLeft: '-14px',
+                      pointerEvents: 'none',
+                      fontSize: '7px',
+                      color: 'var(--primary-color)'
+                    }}>▼</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -311,7 +371,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
               id="recipe-form-add-ingredient-btn"
               type="button"
               className="form-add-btn"
-              onClick={() => setIngredients((p) => [...p, emptyIngredient()])}
+              onClick={() => setIngredients((p) => [...p, createEmptyIngredient(categoriesData)])}
             >
               + Thêm nguyên liệu
             </button>
@@ -346,7 +406,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
               id="recipe-form-add-spice-btn"
               type="button"
               className="form-add-btn"
-              onClick={() => setSpices((p) => [...p, emptySpice()])}
+              onClick={() => setSpices((p) => [...p, createEmptySpice(categoriesData)])}
             >
               + Thêm gia vị
             </button>

@@ -33,7 +33,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const isReadOnly = mode === 'detail';
   const { categoriesData } = useCategoryContext();
   
-  const DYNAMIC_CATEGORIES = categoriesData.length > 0 ? categoriesData.map(c => c.category as FoodCategory) : ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'] as FoodCategory[];
+  const DYNAMIC_CATEGORIES = categoriesData.map(c => c.category as FoodCategory);
   
   const [storageType, setStorageType] = useState<StorageType>('' as StorageType);
   const [category, setCategory] = useState<FoodCategory>('' as FoodCategory);
@@ -51,11 +51,11 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
 
   const activeCategoryData = categoriesData.find(c => c.category === category);
-  const DYNAMIC_UNITS = activeCategoryData?.units && activeCategoryData.units.length > 0 ? activeCategoryData.units : ['g', 'l'];
+  const DYNAMIC_UNITS = activeCategoryData?.units || [];
 
   // Cập nhật lại unit mặc định nếu unit hiện tại không có trong danh sách của category mới
   useEffect(() => {
-    if (category && DYNAMIC_UNITS && !DYNAMIC_UNITS.includes(unit)) {
+    if (category && DYNAMIC_UNITS.length > 0 && !DYNAMIC_UNITS.includes(unit)) {
       setUnit((DYNAMIC_UNITS[0] || '') as UnitType);
     }
   }, [category, DYNAMIC_UNITS, unit]);

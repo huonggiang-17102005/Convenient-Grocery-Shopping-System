@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ShoppingItem, FoodCategory } from '../types';
+import { useCategoryContext } from '../../../contexts/CategoryContext';
 
 interface ItemFormModalProps {
   isOpen: boolean;
@@ -9,13 +10,12 @@ interface ItemFormModalProps {
   mode: 'create' | 'edit';
 }
 
-const CATEGORIES: FoodCategory[] = ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'];
-const UNITS = ['g', 'kg', 'cái', 'bó', 'túi', 'lít', 'ml'];
-
 const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit, item, mode }) => {
+  const { categoriesData } = useCategoryContext();
+  
   const [category, setCategory] = useState<FoodCategory>(() => {
     if (mode === 'edit' && item) return item.category;
-    return 'Rau củ quả';
+    return '';
   });
 
   const [name, setName] = useState(() => {
@@ -25,13 +25,28 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
   const [quantity, setQuantity] = useState<number>(() => {
     if (mode === 'edit' && item) return item.quantity;
-    return 500;
+    return 1;
   });
 
   const [unit, setUnit] = useState(() => {
     if (mode === 'edit' && item) return item.unit;
-    return 'g';
+    return '';
   });
+
+  // Calculate available categories and units
+  const availableCategories = categoriesData.map(c => c.category);
+  const currentCategoryData = categoriesData.find(c => c.category === category);
+  const availableUnits = currentCategoryData?.units || [];
+
+  // Auto update unit when category changes
+  useEffect(() => {
+    if (isOpen && mode === 'create') {
+      const newAvailableUnits = categoriesData.find(c => c.category === category)?.units;
+      if (newAvailableUnits && newAvailableUnits.length > 0 && !newAvailableUnits.includes(unit)) {
+        setUnit(newAvailableUnits[0]);
+      }
+    }
+  }, [category, isOpen, mode, categoriesData]);
 
   const [deadlineDate, setDeadlineDate] = useState(() => {
     if (mode === 'edit' && item) return item.deadlineDate;
@@ -45,6 +60,11 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
     if (mode === 'edit' && item) return item.deadlineTime;
     return '18:00';
   });
+
+  // Cập nhật lại mặc định khi load xong API categories
+  useEffect(() => {
+    // We no longer set a default category/unit to force users to choose
+  }, [categoriesData, mode]);
 
   if (!isOpen) return null;
 
@@ -65,8 +85,8 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
-      alert('Vui lòng nhập tên mặt hàng.');
+    if (!name.trim() || !category || !unit) {
+      alert('Vui lòng điền đầy đủ Tên, Phân loại và Đơn vị!');
       return;
     }
     onSubmit({
@@ -97,7 +117,8 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
               value={category}
               onChange={(e) => setCategory(e.target.value as FoodCategory)}
             >
-              {CATEGORIES.map(cat => (
+              <option value="" disabled hidden>- Chọn -</option>
+              {availableCategories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
             </select>
@@ -151,7 +172,8 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
                 onChange={(e) => setUnit(e.target.value)}
                 aria-label="Đơn vị đo lường"
               >
-                {UNITS.map(u => (
+                <option value="" disabled hidden>-</option>
+                {availableUnits.map(u => (
                   <option key={u} value={u}>{u}</option>
                 ))}
               </select>
