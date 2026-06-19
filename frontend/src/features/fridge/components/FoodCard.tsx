@@ -9,6 +9,7 @@ interface FoodCardProps {
   selected: boolean;
   role: 'homemaker' | 'member';
   onCardClick: (item: FoodItem) => void;
+  onConsumeSpice?: (id: string) => void;
 }
 
 const getCategoryBgClass = (category: string) => {
@@ -30,7 +31,7 @@ const getDaysBgClass = (days: number) => {
   return 'days-bg-good';
 };
 
-const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, selected, role, onCardClick }) => {
+const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, selected, role, onCardClick, onConsumeSpice }) => {
   const isGiaVi = item.category === 'Gia vị';
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -67,7 +68,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
         <div className="food-card-name">{item.name}</div>
       </div>
       
-      {!isGiaVi && (
+      {!isGiaVi ? (
         <div className="food-card-quantity-controls" onClick={(e) => e.stopPropagation()}>
           <button 
             className="qty-btn minus" 
@@ -84,6 +85,22 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
             disabled={role === 'member'}
             style={{ opacity: role === 'member' ? 0.5 : 1, cursor: role === 'member' ? 'default' : 'pointer' }}
           >+</button>
+        </div>
+      ) : (
+        <div style={{ alignSelf: 'stretch', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => onConsumeSpice?.(item.id)}
+            disabled={role === 'member'}
+            style={{
+              flex: 1, height: 32, borderRadius: 8, outline: '0.80px #E0E0E0 solid', outlineOffset: '-0.80px', 
+              background: 'white', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', 
+              cursor: role === 'member' ? 'default' : 'pointer', opacity: role === 'member' ? 0.5 : 1
+            }}
+          >
+            <span style={{ color: '#E65100', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '18px' }}>
+              Báo hết
+            </span>
+          </button>
         </div>
       )}
       

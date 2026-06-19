@@ -8,6 +8,7 @@ import CategoryFilter from './components/CategoryFilter';
 import FoodCard from './components/FoodCard';
 import IngredientFormModal from './modals/IngredientFormModal';
 import QuantityConfirmModal from './modals/QuantityConfirmModal';
+import ConsumeConfirmModal from './modals/ConsumeConfirmModal';
 import RecipeActionBar from './components/RecipeActionBar';
 import Toast from '@/components/shared/Toast';
 
@@ -38,6 +39,9 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
   const [isQtyModalOpen, setIsQtyModalOpen] = useState(false);
   const [qtyModalMode, setQtyModalMode] = useState<'add' | 'subtract'>('add');
   const [qtyModalItem, setQtyModalItem] = useState<FoodItem | null>(null);
+  
+  const [consumeModalItem, setConsumeModalItem] = useState<FoodItem | null>(null);
+  const [isConsumeModalOpen, setIsConsumeModalOpen] = useState(false);
 
   // Toast
   const [toastMsg, setToastMsg] = useState('');
@@ -71,6 +75,26 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
     } catch (err) {
       console.error(err);
       showToast('Có lỗi xảy ra khi cập nhật số lượng!');
+    }
+  };
+
+  const handleConsumeSpiceClick = (id: string) => {
+    const item = items.find(i => i.id === id);
+    if (item) {
+      setConsumeModalItem(item);
+      setIsConsumeModalOpen(true);
+    }
+  };
+
+  const handleConfirmConsume = async () => {
+    if (!consumeModalItem) return;
+    try {
+      await fridgeService.updateFridgeItem(consumeModalItem.id, { quantity: 0 });
+      showToast('Đã dùng hết gia vị!');
+      await refreshFridge();
+    } catch (err) {
+      console.error(err);
+      showToast('Có lỗi xảy ra khi dùng hết gia vị!');
     }
   };
 
@@ -206,6 +230,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
               selected={selectedIds.has(item.id)}
               role={role}
               onCardClick={handleCardClick}
+              onConsumeSpice={handleConsumeSpiceClick}
             />
           ))
         ) : (
@@ -243,6 +268,13 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
         onClose={() => setIsQtyModalOpen(false)}
         onConfirm={handleConfirmQty}
         onDifferentExpiry={handleDifferentExpiry}
+      />
+
+      <ConsumeConfirmModal
+        isOpen={isConsumeModalOpen}
+        itemName={consumeModalItem?.name || ''}
+        onClose={() => setIsConsumeModalOpen(false)}
+        onConfirm={handleConfirmConsume}
       />
     </div>
   );
