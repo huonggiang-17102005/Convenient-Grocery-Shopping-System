@@ -21,18 +21,26 @@
 
 .notification-badge {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  background-color: #ff3b30;
+  /* Ghim tâm của badge vào đúng góc trên bên phải của icon cái chuông */
+  top: 8px;
+  right: 8px;
+  transform: translate(50%, -50%);
+  
+  background-color: #D32F2F;
   color: white;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: bold;
-  padding: 2px 5px;
-  border-radius: 10px;
-  border: 1.5px solid white;
-  min-width: 14px;
-  text-align: center;
-  line-height: 1;
+  padding: 0 5px; /* Khoảng không gian hai bên để text không bị chạm viền */
+  border-radius: 20px; /* Bo cong nhiều để luôn thành hình viên thuốc (pill) */
+  border: 2px solid white;
+  
+  min-width: 18px; /* Nếu 1 số thì sẽ thành hình tròn hoàn hảo */
+  height: 18px; /* Cố định chiều cao thay vì dùng min-height */
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .notification-dropdown {
