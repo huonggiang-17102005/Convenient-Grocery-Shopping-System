@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { ShoppingItem } from '../types';
+import { useFamilyContext } from '../../../contexts/FamilyContext';
 
 interface ShoppingCardProps {
   item: ShoppingItem;
   onToggleCheck: (id: string, e: React.MouseEvent) => void;
   onClickCard: (item: ShoppingItem) => void;
+  disabledCheck?: boolean;
 }
 
 const getCategoryClass = (category: string): string => {
@@ -42,21 +44,31 @@ const isItemOverdue = (item: ShoppingItem): boolean => {
   return false;
 };
 
-const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClickCard }) => {
+const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClickCard, disabledCheck = false }) => {
+  const { familyMembers } = useFamilyContext();
   const overdue = isItemOverdue(item);
   const checked = item.isBought;
+
+  const assigneeName = useMemo(() => {
+    if (!item.assigneeId) return null;
+    const member = familyMembers.find(m => m.id === item.assigneeId);
+    return member ? member.name : item.assigneeId; // fallback to ID if not found
+  }, [item.assigneeId, familyMembers]);
 
   return (
     <div
       className={`shopping-card ${checked ? 'shopping-card--checked' : ''}`}
       onClick={() => onClickCard(item)}
+      style={disabledCheck ? { opacity: 0.6, pointerEvents: 'none' } : {}}
     >
       {/* Checkbox */}
       <div
         className={`shopping-card__checkbox ${
           checked ? 'shopping-card__checkbox--checked' : 'shopping-card__checkbox--unchecked'
         }`}
-        onClick={(e) => onToggleCheck(item.id, e)}
+        onClick={(e) => {
+          onToggleCheck(item.id, e);
+        }}
         title={checked ? 'Đánh dấu chưa mua' : 'Đánh dấu đã mua'}
       >
         {checked && '✓'}
@@ -79,8 +91,8 @@ const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClic
         {overdue && (
           <div className="shopping-card__tag-overdue">Trễ hạn</div>
         )}
-        {item.assigneeId && (
-          <div className="shopping-card__tag-assignee">Chờ {item.assigneeId} mua</div>
+        {assigneeName && (
+          <div className="shopping-card__tag-assignee">Chờ {assigneeName} mua</div>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { FoodItem, FoodCategory, StorageType } from '../features/fridge/types';
 import { useAuth } from './AuthContext';
+import { fridgeService } from '../features/fridge/fridge.service';
 
 const mapCategoryToEmoji = (category: string) => {
   const map: Record<string, string> = {
@@ -72,9 +73,7 @@ export const FridgeProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
       setIsLoading(true);
 
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      const res = await fetch(`${API_URL}/fridge/family/${familyId}`);
-      const result = await res.json();
+      const result = await fridgeService.getFamilyFridge(familyId);
 
       if (result.success) {
         const formattedItems = result.data.map(mapBackendToFrontend);

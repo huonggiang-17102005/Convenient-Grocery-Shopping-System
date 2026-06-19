@@ -1,5 +1,6 @@
 import * as fridgeRepo from '../repo/fridge.repo.js';
 import * as inventoryLogRepo from '../repo/inventoryLog.repo.js';
+import * as notificationService from './notification.service.js';
 import { BadRequestError, NotFoundError } from '../errors/CommonError.js';
 import type { FridgeItem } from '../models/FridgeItem.js';
 
@@ -15,7 +16,8 @@ export const getFamilyFridge = async (familyId: string) => {
 
 export const deductInventory = async (
   familyId: string, 
-  ingredients: { name: string; category?: string; amountValue: number; amountUnit: string }[]
+  ingredients: { name: string; category?: string; amountValue: number; amountUnit: string }[],
+  user?: any
 ) => {
   if (!familyId) {
     throw new BadRequestError('Mã ID của gia đình không hợp lệ.');
@@ -75,12 +77,24 @@ export const deductInventory = async (
       requested: ing.amountValue,
       missing: remainingToDeduct
     });
+
+    const deductedAmount = Number(ing.amountValue) - remainingToDeduct;
+    if (deductedAmount > 0 && user) {
+      const actorName = user.full_name || user.email || 'Một thành viên';
+      await notificationService.createNotification(
+        familyId,
+        'CONSUME',
+        'Sử dụng thực phẩm',
+        `${actorName} đã lấy ${deductedAmount} ${ing.amountUnit || ''} ${ing.name} từ tủ lạnh để nấu ăn.`,
+        { user_id: user.id, actor_name: actorName, item_name: ing.name, deducted: deductedAmount, unit: ing.amountUnit }
+      );
+    }
   }
 
   return results;
 };
 
-export const addFridgeItem = async (data: Partial<FridgeItem>) => {
+export const addFridgeItem = async (data: Partial<FridgeItem>, user?: any) => {
   if (!data.family_id || !data.name || data.quantity === undefined || !data.expiration_date) {
     throw new BadRequestError('Thiếu thông tin bắt buộc để thêm vào tủ lạnh.');
   }
@@ -101,10 +115,24 @@ export const addFridgeItem = async (data: Partial<FridgeItem>) => {
     data.unit
   );
 
+  console.log('--- addFridgeItem --- user is:', user);
+
+  if (user) {
+    const actorName = user.full_name || user.email || 'Một thành viên';
+    const quantityText = data.category === 'Gia vị' ? '' : `${data.quantity} ${data.unit || ''} `;
+    await notificationService.createNotification(
+      data.family_id!,
+      'ADD',
+      'Thêm thực phẩm',
+      `${actorName} đã thêm ${quantityText}${data.name} vào tủ lạnh.`,
+      { user_id: user.id, actor_name: actorName, item_name: data.name, quantity: data.quantity, unit: data.unit, category: data.category }
+    );
+  }
+
   return newItem;
 };
 
-export const updateFridgeItem = async (id: string, data: Partial<FridgeItem>) => {
+export const updateFridgeItem = async (id: string, data: Partial<FridgeItem>, user?: any) => {
   if (!id) throw new BadRequestError('Thiếu ID nguyên liệu.');
 
   const existingItem = await fridgeRepo.getItemById(id);
@@ -112,8 +140,9 @@ export const updateFridgeItem = async (id: string, data: Partial<FridgeItem>) =>
     throw new NotFoundError('Không tìm thấy nguyên liệu trong tủ lạnh.');
   }
 
-  // Nếu không truyền unit (ví dụ khi update Gia vị), ép về chuỗi rỗng để không bị NOT NULL của Database chặn
-  if (data.unit === undefined || data.unit === null) {
+  // Nếu truyền `unit` là null (ví dụ khi update Gia vị), ép về chuỗi rỗng để không bị NOT NULL của Database chặn.
+  // Nếu `unit` là undefined (không truyền trong request), thì giữ nguyên (không update trường này).
+  if (data.unit === null) {
     data.unit = '';
   }
 
@@ -130,15 +159,39 @@ export const updateFridgeItem = async (id: string, data: Partial<FridgeItem>) =>
       );
     }
     await fridgeRepo.deleteItem(id);
+
+    if (user) {
+      const actorName = user.full_name || user.email || 'Một thành viên';
+      await notificationService.createNotification(
+        existingItem.family_id!,
+        'CONSUME',
+        'Dùng hết thực phẩm',
+        `${actorName} đã báo dùng hết ${existingItem.name}.`,
+        { user_id: user.id, actor_name: actorName, item_name: existingItem.name }
+      );
+    }
+
     return { deleted: true, message: 'Đã dùng hết nguyên liệu.' };
   }
 
   // Cập nhật thông thường
   const updatedItem = await fridgeRepo.updateItem(id, data);
+
+  if (user && data.quantity !== undefined && data.quantity !== existingItem.quantity) {
+    const actorName = user.full_name || user.email || 'Một thành viên';
+    await notificationService.createNotification(
+      existingItem.family_id!,
+      'UPDATE',
+      'Cập nhật thực phẩm',
+      `${actorName} đã cập nhật số lượng ${existingItem.name} từ ${existingItem.quantity} thành ${data.quantity} ${existingItem.unit || ''}.`,
+      { user_id: user.id, actor_name: actorName, item_name: existingItem.name, old_qty: existingItem.quantity, new_qty: data.quantity, unit: existingItem.unit }
+    );
+  }
+
   return { deleted: false, item: updatedItem };
 };
 
-export const throwAwayFridgeItem = async (id: string) => {
+export const throwAwayFridgeItem = async (id: string, user?: any) => {
   if (!id) throw new BadRequestError('Thiếu ID nguyên liệu.');
 
   const existingItem = await fridgeRepo.getItemById(id);
@@ -162,6 +215,19 @@ export const throwAwayFridgeItem = async (id: string) => {
   );
 
   await fridgeRepo.deleteItem(id);
+
+  if (user) {
+    const actorName = user.full_name || user.email || 'Một thành viên';
+    const quantityText = existingItem.category === 'Gia vị' ? '' : `${existingItem.quantity} ${existingItem.unit || ''} `;
+    await notificationService.createNotification(
+      existingItem.family_id!,
+      'WASTE',
+      'Vứt bỏ thực phẩm',
+      `${actorName} đã vứt bỏ ${quantityText}${existingItem.name}.`,
+      { user_id: user.id, actor_name: actorName, item_name: existingItem.name, quantity: existingItem.quantity, unit: existingItem.unit }
+    );
+  }
+
   return { message: 'Đã vứt bỏ nguyên liệu.' };
 };
 
@@ -207,6 +273,15 @@ export const runCronCheck = async () => {
       'expire',
       item.quantity,
       item.unit
+    );
+
+    // Đẩy notification
+    await notificationService.createNotification(
+      item.family_id,
+      'EXPIRE',
+      'Thực phẩm hết hạn',
+      `⚠️ Cảnh báo: ${item.name} đã hết hạn!`,
+      { item_name: item.name, quantity: item.quantity, unit: item.unit }
     );
 
     itemIds.push(item.id);

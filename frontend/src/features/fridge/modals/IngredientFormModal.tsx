@@ -359,7 +359,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16, paddingBottom: 16 }}>
           {mode === 'detail' ? (
-            <button type="button" style={{ width: '100%', height: 48, background: 'white', borderRadius: 100, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: 'pointer' }} onClick={onClose}>
+            <button type="button" style={{ width: '100%', height: 48, background: '#1E88E5', borderRadius: 100, color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: 'pointer' }} onClick={onClose}>
               Đóng
             </button>
           ) : (
