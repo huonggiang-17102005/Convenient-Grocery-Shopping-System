@@ -9,19 +9,6 @@ interface ShoppingCardProps {
   disabledCheck?: boolean;
 }
 
-const getCategoryClass = (category: string): string => {
-  switch (category) {
-    case 'Rau củ quả': return 'shopping-card__badge--rau-cu';
-    case 'Thịt cá': return 'shopping-card__badge--thit-ca';
-    case 'Chất lỏng': return 'shopping-card__badge--do-uong';
-    case 'Gia vị': return 'shopping-card__badge--gia-vi';
-    case 'Đồ khô': return 'shopping-card__badge--do-kho';
-    case 'Trứng': return 'shopping-card__badge--trung';
-    case 'Khác': return 'shopping-card__badge--khac';
-    default: return 'shopping-card__badge--default';
-  }
-};
-
 const isItemOverdue = (item: ShoppingItem): boolean => {
   if (item.isBought) return false;
   const now = new Date();
@@ -74,11 +61,6 @@ const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClic
         {checked && '✓'}
       </div>
 
-      {/* Category Badge */}
-      <div className={`shopping-card__badge ${getCategoryClass(item.category)}`}>
-        {item.category}
-      </div>
-
       {/* Item Info */}
       <div className="shopping-card__info">
         <span className={`shopping-card__name ${checked ? 'shopping-card__name--checked' : ''}`}>
@@ -92,7 +74,9 @@ const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClic
           <div className="shopping-card__tag-overdue">Trễ hạn</div>
         )}
         {assigneeName && (
-          <div className="shopping-card__tag-assignee">Chờ {assigneeName} mua</div>
+          <div className="shopping-card__tag-assignee" title={`Chờ ${assigneeName} mua`}>
+            Chờ {assigneeName} mua
+          </div>
         )}
       </div>
     </div>

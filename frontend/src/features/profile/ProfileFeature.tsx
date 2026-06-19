@@ -204,7 +204,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   };
 
   // Confirmed Actions Handlers
-  const handleConfirmAction = async (data?: string) => {
+  const handleConfirmAction = async (_data?: string) => {
     setIsConfirmOpen(false);
 
     try {
@@ -249,9 +249,9 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
           const opt = {
             margin:       10,
             filename:     `Thong-ke-lang-phi-${new Date().toISOString().slice(0, 10)}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
+            image:        { type: 'jpeg' as const, quality: 0.98 },
             html2canvas:  { scale: 2, ignoreElements: (node: Element) => node.classList?.contains('no-print') },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' as const }
           };
           
           html2pdf().set(opt).from(element).save().then(() => {
