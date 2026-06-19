@@ -21,9 +21,10 @@ Hệ thống đi chợ tiện lợi được thiết kế nhằm hỗ trợ ngư
 5. **📊 Báo cáo và Thống kê**
    - Thống kê lịch sử mua sắm và xu hướng tiêu thụ.
    - Báo cáo số lượng thực phẩm lãng phí do hết hạn.
-6. **👑 Phân quyền & Quản trị (Roles & Admin)**
-   - Các vai trò: Người nội trợ, Thành viên gia đình, Quản trị viên (Admin).
-   - Quản trị viên hỗ trợ quản lý tài khoản, danh mục thực phẩm, công thức.
+6. **👑 Phân quyền theo vai trò (Role-based Access Control)**
+   - **Người nội trợ (Chủ gia đình):** Có toàn quyền tạo và quản lý danh sách mua sắm, kiểm soát thực phẩm trong tủ lạnh, lên thực đơn, và quản lý các thành viên khác trong gia đình.
+   - **Thành viên gia đình:** Có quyền xem danh sách mua sắm, cập nhật trạng thái (đánh dấu đã mua), xem thực đơn và theo dõi tình trạng tủ lạnh.
+   - **Quản trị viên (Admin):** Quản lý toàn bộ hệ thống, quản lý tài khoản người dùng, kiểm duyệt và quản lý các danh mục dữ liệu dùng chung (như danh mục thực phẩm cơ bản, công thức nấu ăn).
 
 ## 🛠 Tech Stack (Công nghệ sử dụng)
 
@@ -68,3 +69,26 @@ Khởi động ứng dụng React:
 npm run dev
 ```
 Trang web sẽ tự động hiển thị trên trình duyệt (thường là tại `http://localhost:5173`).
+
+## 🌍 Triển khai (Deployment)
+
+Dự án có thể được triển khai trên các nền tảng đám mây phổ biến như Vercel, Render:
+
+### 1. Frontend (Vercel)
+- Tạo tài khoản và kết nối GitHub repository với **Vercel**.
+- Khi tạo Project mới, cấu hình Framework Preset là **Vite** (hoặc để tự động nhận diện).
+- Root Directory: chọn thư mục `frontend` (tuỳ thuộc cấu trúc repo).
+- Build Command: `npm run build`
+- Output Directory: `dist`
+- Thêm biến môi trường (Environment Variables) nếu có trên giao diện của Vercel.
+
+### 2. Backend (Render hoặc Railway)
+- Tạo Web Service mới trên **Render**.
+- Kết nối repository và cấu hình Root Directory là `backend`.
+- Build Command: `npm install && npm run build` (cần cấu hình script build nếu sử dụng TypeScript).
+- Start Command: `npm start` (hoặc lệnh tương ứng chạy production).
+- **Lưu ý quan trọng:** Cần thiết lập đầy đủ các biến môi trường (Environment Variables) như `PORT`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` trong phần Settings của dịch vụ.
+
+### 3. Database (Supabase)
+- **Supabase** là dịch vụ Cloud nên database đã được triển khai sẵn.
+- Đảm bảo bạn sử dụng URL và API key từ dự án Production của mình để kết nối trong phần cấu hình biến môi trường của Backend.
