@@ -44,19 +44,17 @@ export const NotificationBell: React.FC = () => {
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   const getIcon = (type: string) => {
-    const roleColor = role === 'homemaker' ? '#FF8A00' : '#2563EB';
-    
     switch(type) {
       case 'ADD': return <Check size={18} color="#4CAF50" />;
       case 'CONSUME': return <Info size={18} color="#FF9800" />;
       case 'WASTE': return <Trash2 size={18} color="#F44336" />;
-      case 'UPDATE': return <Edit2 size={18} color={roleColor} />;
+      case 'UPDATE': return <Edit2 size={18} color="#2196F3" />;
       case 'EXPIRE': return <Clock size={18} color="#F44336" />;
       case 'LIKE': return <Heart size={18} color="#E91E63" />;
       case 'JOINED':
       case 'ROLE_CHANGED':
       case 'REMOVED':
-        return <Info size={18} color={roleColor} />;
+        return <Info size={18} color="#2196F3" />;
       default: return <Bell size={18} color="#757575" />;
     }
   };
