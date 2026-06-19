@@ -38,7 +38,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const [storageType, setStorageType] = useState<StorageType>('' as StorageType);
   const [category, setCategory] = useState<FoodCategory>('' as FoodCategory);
   const [name, setName] = useState('');
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState<number | ''>(1);
   const [unit, setUnit] = useState<UnitType>('' as UnitType);
   const [expiryDate, setExpiryDate] = useState('');
   const [emoji, setEmoji] = useState('📦');
@@ -51,7 +51,8 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const [isUnitDropdownOpen, setIsUnitDropdownOpen] = useState(false);
 
   const activeCategoryData = categoriesData.find(c => c.category === category);
-  const DYNAMIC_UNITS = activeCategoryData?.units && activeCategoryData.units.length > 0 ? activeCategoryData.units : ['g', 'l'];
+  const rawUnits = activeCategoryData?.units && activeCategoryData.units.length > 0 ? activeCategoryData.units : ['g', 'ml'];
+  const DYNAMIC_UNITS = rawUnits.map(u => u === 'l' ? 'ml' : u);
 
   // Cập nhật lại unit mặc định nếu unit hiện tại không có trong danh sách của category mới
   useEffect(() => {
@@ -150,7 +151,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
       storageType,
       category,
       name,
-      quantity: category === 'Gia vị' ? 0 : quantity,
+      quantity: category === 'Gia vị' ? 0 : (typeof quantity === 'number' ? quantity : 1),
       unit: category === 'Gia vị' ? undefined : unit,
       expiryDate,
       emoji,
@@ -290,7 +291,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
               <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Số lượng & Đơn vị</label>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))} disabled={isReadOnly} style={{ width: 48, height: 48, background: '#F5F5F5', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
+                <button type="button" onClick={() => setQuantity(Math.max(1, (typeof quantity === 'number' ? quantity : 0) - 1))} disabled={isReadOnly} style={{ width: 48, height: 48, background: '#F5F5F5', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
                   <span style={{ color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>−</span>
                 </button>
 
@@ -299,12 +300,25 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                     type="number"
                     style={{ width: '100%', height: '100%', textAlign: 'center', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}
                     value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setQuantity('');
+                      } else {
+                        const parsed = parseInt(val, 10);
+                        if (!isNaN(parsed)) setQuantity(parsed);
+                      }
+                    }}
+                    onBlur={() => {
+                      if (quantity === '' || quantity < 1) {
+                        setQuantity(1);
+                      }
+                    }}
                     disabled={isReadOnly}
                   />
                 </div>
 
-                <button type="button" onClick={() => setQuantity(quantity + 1)} disabled={isReadOnly} style={{ width: 48, height: 48, background: '#FF8A00', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
+                <button type="button" onClick={() => setQuantity((typeof quantity === 'number' ? quantity : 0) + 1)} disabled={isReadOnly} style={{ width: 48, height: 48, background: '#FF8A00', borderRadius: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
                   <span style={{ color: 'white', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>+</span>
                 </button>
 
