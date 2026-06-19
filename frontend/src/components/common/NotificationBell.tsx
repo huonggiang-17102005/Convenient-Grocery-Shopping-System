@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Bell, Check, Trash2, Edit2, Heart, Info, Clock } from 'lucide-react';
+import { Bell, Check, Trash2, Edit2, Heart, Info, Clock, UserPlus, UserMinus, CheckCircle2, AlertTriangle, UserCheck, Shield, UserX, ClipboardList } from 'lucide-react';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import './NotificationBell.css';
@@ -45,16 +45,27 @@ export const NotificationBell: React.FC = () => {
 
   const getIcon = (type: string) => {
     switch(type) {
+      // Inventory Flow
       case 'ADD': return <Check size={18} color="#4CAF50" />;
       case 'CONSUME': return <Info size={18} color="#FF9800" />;
       case 'WASTE': return <Trash2 size={18} color="#F44336" />;
       case 'UPDATE': return <Edit2 size={18} color="#2196F3" />;
       case 'EXPIRE': return <Clock size={18} color="#F44336" />;
+      
+      // Recipe Flow
       case 'LIKE': return <Heart size={18} color="#E91E63" />;
-      case 'JOINED':
-      case 'ROLE_CHANGED':
-      case 'REMOVED':
-        return <Info size={18} color="#2196F3" />;
+      
+      // Task Flow
+      case 'TASK_ASSIGN': return <ClipboardList size={18} color="#9C27B0" />;
+      case 'TASK_UNASSIGN': return <UserMinus size={18} color="#757575" />;
+      case 'TASK_COMPLETE': return <CheckCircle2 size={18} color="#4CAF50" />;
+      case 'TASK_OVERDUE': return <AlertTriangle size={18} color="#FF5722" />;
+      
+      // Member Flow
+      case 'FAMILY_JOIN': return <UserCheck size={18} color="#4CAF50" />;
+      case 'FAMILY_ROLE': return <Shield size={18} color="#673AB7" />;
+      case 'FAMILY_LEAVE': return <UserX size={18} color="#F44336" />;
+      
       default: return <Bell size={18} color="#757575" />;
     }
   };
