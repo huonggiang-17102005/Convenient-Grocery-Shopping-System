@@ -119,16 +119,21 @@
 
 .recipe-card-priority-badge {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  background: rgba(211, 47, 47, 0.15);
-  color: #D32F2F;
+  top: 10px;
+  left: 10px;
+  background: #D32F2F;
+  color: #ffffff;
   font-size: 10px;
   font-weight: 700;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  padding: 5px 9px;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.10);
+  padding: 6px 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 2;
 }
 
 .recipe-card-fav-btn {
@@ -217,13 +222,16 @@
 }
 
 .recipe-priority-inline-badge {
-  background: rgba(211, 47, 47, 0.15);
-  color: #D32F2F;
+  background: #D32F2F;
+  color: #ffffff;
   font-size: 10px;
   font-weight: 700;
   padding: 2px 8px;
   border-radius: 6px;
   font-family: 'Plus Jakarta Sans', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(211, 47, 47, 0.3);
 }
 
 /* ── Empty state ──────────────────────────────────────────── */
