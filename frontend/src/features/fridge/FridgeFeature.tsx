@@ -273,6 +273,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
         isOpen={isModalOpen}
         mode={modalMode}
         item={selectedItem}
+        role={role}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveModal}
         onDelete={handleDeleteModal}

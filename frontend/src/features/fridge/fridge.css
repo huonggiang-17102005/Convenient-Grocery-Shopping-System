@@ -293,45 +293,7 @@
   font-weight: 500;
 }
 
-.category-bg-rau-cu {
-  background: #E8F5E9;
-  color: #388E3C;
-}
 
-.category-bg-thit-ca {
-  background: #FFCDD2;
-  color: #C62828;
-}
-
-.category-bg-trung {
-  background: #FFF3E0;
-  color: #E65100;
-}
-
-.category-bg-chat-long {
-  background: #E3F2FD;
-  color: #1565C0;
-}
-
-.category-bg-do-kho {
-  background: #F3E5F5;
-  color: #4A148C;
-}
-
-.category-bg-gia-vi {
-  background: #F9FBE7;
-  color: #282401;
-}
-
-.category-bg-khac {
-  background: #ECEFF1;
-  color: #37474F;
-}
-
-.category-bg-default {
-  background: #F5F5F5;
-  color: #757575;
-}
 
 .food-card-emoji {
   font-size: 40px;

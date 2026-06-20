@@ -129,6 +129,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
     localStorage.removeItem('cached_notifications');
     localStorage.removeItem('cached_shopping_items');
+    
+    // Xóa bộ đệm nguyên liệu đã nấu
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('deducted_ingredients_')) {
+        localStorage.removeItem(key);
+      }
+    });
+
     setUser(null);
     setFamily(null);
   }, []);

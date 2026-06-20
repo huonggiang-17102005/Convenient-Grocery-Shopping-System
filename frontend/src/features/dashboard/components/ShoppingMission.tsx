@@ -3,13 +3,39 @@ import type { ShoppingItem } from '../../shopping-list/types';
 
 interface ShoppingMissionProps {
   items: ShoppingItem[];
+  currentUserId: string;
   onToggleCheck: (id: string) => void;
 }
 
-export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, onToggleCheck }) => {
-  const shinItems = items.filter(item => item.assigneeId === 'Shin');
+const isItemOverdue = (item: ShoppingItem): boolean => {
+  if (item.isBought) return false;
+  if (!item.deadlineDate || !item.deadlineTime) return false;
+  
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  const localDate = new Date(now.getTime() - (offset * 60 * 1000));
+  const todayStr = localDate.toISOString().split('T')[0];
 
-  if (shinItems.length === 0) {
+  if (item.deadlineDate < todayStr) {
+    return true;
+  }
+  if (item.deadlineDate === todayStr) {
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const [dlHour, dlMin] = item.deadlineTime.split(':').map(Number);
+    if (currentHour > dlHour || (currentHour === dlHour && currentMinute >= dlMin)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+import { getCategoryBgClass } from '../../../utils/categoryHelper';
+
+export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, currentUserId, onToggleCheck }) => {
+  const myItems = items.filter(item => item.assigneeId === currentUserId);
+
+  if (myItems.length === 0) {
     return (
       <section className="shopping-mission">
         <h2 className="shopping-mission__title">Nhiệm vụ mua sắm của bạn</h2>
@@ -24,20 +50,21 @@ export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, onToggl
     <section className="shopping-mission">
       <h2 className="shopping-mission__title">Nhiệm vụ mua sắm của bạn</h2>
       <div className="shopping-mission__list">
-        {shinItems.map(item => (
+        {myItems.map(item => (
           <div key={item.id} className="shopping-mission__item-row">
             {/* Checkbox */}
             <button
               type="button"
               className={`shopping-mission__checkbox ${item.isBought ? 'shopping-mission__checkbox--checked' : ''}`}
-              onClick={() => onToggleCheck(item.id)}
-              aria-label={item.isBought ? `Đánh dấu chưa mua ${item.name}` : `Đánh dấu đã mua ${item.name}`}
+              onClick={() => { if (!item.isBought) onToggleCheck(item.id); }}
+              aria-label={item.isBought ? `Đã mua ${item.name}` : `Đánh dấu đã mua ${item.name}`}
+              style={item.isBought ? { cursor: 'default' } : undefined}
             >
               {item.isBought && <span className="shopping-mission__check-icon">✓</span>}
             </button>
 
             {/* Category badge */}
-            <div className="shopping-mission__badge">
+            <div className={`shopping-mission__badge ${getCategoryBgClass(item.category)}`}>
               {item.category}
             </div>
 
@@ -45,6 +72,11 @@ export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, onToggl
             <div className={`shopping-mission__name ${item.isBought ? 'shopping-mission__name--checked' : ''}`}>
               {item.name} - {item.quantity} {item.unit}
             </div>
+            
+            {/* Overdue badge */}
+            {isItemOverdue(item) && (
+              <div className="shopping-card__tag-overdue" style={{ marginLeft: '8px' }}>Trễ hạn</div>
+            )}
           </div>
         ))}
       </div>

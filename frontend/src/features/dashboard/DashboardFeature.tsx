@@ -33,6 +33,9 @@ import InviteCodeModal from './modals/InviteCodeModal';
 import ExpireItemModal from './modals/ExpireItemModal';
 import CookConfirmModal from './modals/CookConfirmModal';
 import type { CookIngredient } from './modals/CookConfirmModal';
+import IngredientFormModal from '../fridge/modals/IngredientFormModal';
+import type { ShoppingItem } from '../shopping-list/types';
+import { getCategoryBgClass } from '../../utils/categoryHelper';
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -48,24 +51,12 @@ const EMOJI_MAP: Record<string, string> = {
 };
 
 const mapFoodItemToExpiringCardProps = (item: any): IngredientCardProps => {
-  let categoryColor = '#E0E0E0';
-  let categoryTextColor = '#757575';
-  
-  switch(item.category) {
-    case 'Đồ uống': categoryColor = '#BBDEFB'; categoryTextColor = '#1565C0'; break;
-    case 'Thịt cá': categoryColor = '#FFCDD2'; categoryTextColor = '#C62828'; break;
-    case 'Trái cây':
-    case 'Rau củ quả': categoryColor = '#F8BBD0'; categoryTextColor = '#C2185B'; break;
-    default: categoryColor = '#FFF3E0'; categoryTextColor = '#EF6C00'; break;
-  }
-
   return {
     emoji: item.emoji || EMOJI_MAP[item.category] || '📦',
     image: item.image,
     name: item.name,
     category: item.category || 'Khác',
-    categoryColor,
-    categoryTextColor,
+    categoryClass: getCategoryBgClass(item.category),
     daysLeft: item.daysRemaining || 0,
   };
 };
@@ -105,6 +96,10 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   // Selected item for ExpireItemModal
   const [selectedItem, setSelectedItem] = useState<IngredientCardProps | null>(null);
 
+  // Fridge Modal state for checked items
+  const [itemToSaveFridge, setItemToSaveFridge] = useState<ShoppingItem | null>(null);
+  const [isFridgeModalOpen, setIsFridgeModalOpen] = useState(false);
+
   // Toast state
   const [toastMsg,     setToastMsg]     = useState('');
   const [toastTrigger, setToastTrigger] = useState(0);
@@ -135,9 +130,22 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   const handleCookConfirm = async (ingredients: CookIngredient[]) => {
     if (!familyId) return;
+    if (ingredients.length === 0) {
+      showToast('Không có nguyên liệu mới nào cần trừ kho!');
+      return;
+    }
     try {
       await fridgeService.deductInventory(familyId, ingredients);
       showToast('Đã trừ kho thành công!');
+
+      // Lưu vết vào LocalStorage
+      const todayStr = new Date().toISOString().split('T')[0];
+      const storageKey = `deducted_ingredients_${familyId}_${todayStr}`;
+      let stored: string[] = [];
+      try { stored = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) {}
+      const newDeducted = [...stored, ...ingredients.map(i => i.name)];
+      localStorage.setItem(storageKey, JSON.stringify(newDeducted));
+
       // Refresh tủ lạnh
       await refreshFridge();
     } catch (err: unknown) {
@@ -150,23 +158,61 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   const handleToggleShoppingItem = async (id: string) => {
     const item = shoppingItems.find(i => i.id === id);
-    if (!item) return;
+    if (!item || item.isBought) return;
 
-    const nextBought = !item.isBought;
+    setItemToSaveFridge(item);
+    setIsFridgeModalOpen(true);
+  };
 
+  const handleSaveToFridge = async (itemData: any) => {
+    if (!itemToSaveFridge || !familyId) return;
     try {
-      await shoppingService.updateShoppingItem(id, { isBought: nextBought });
+      // 1. Lưu vào tủ lạnh
+      await fridgeService.addFridgeItem({
+        family_id: familyId,
+        name: itemData.name,
+        quantity: itemData.quantity,
+        unit: itemData.unit,
+        category: itemData.category,
+        expiration_date: itemData.expiryDate || new Date().toISOString(),
+        location: itemData.storageType,
+        image_url: itemData.image,
+        image_public_id: itemData.imagePublicId
+      });
       
-      setShoppingItems(prev => prev.map(i => i.id === id ? { ...i, isBought: nextBought } : i));
+      // 2. Đánh dấu đã mua
+      await shoppingService.updateShoppingItem(itemToSaveFridge.id, { isBought: true });
+      
+      setShoppingItems(prev => prev.map(i => i.id === itemToSaveFridge.id ? { ...i, isBought: true } : i));
 
-      if (nextBought) {
-        showToast('Đã mua thành công!');
-      }
+      showToast('Đã mua xong và lưu vào tủ lạnh!');
+      setIsFridgeModalOpen(false);
+      setItemToSaveFridge(null);
     } catch (err) {
       console.error(err);
-      showToast('Có lỗi xảy ra khi cập nhật mua sắm!');
+      showToast('Có lỗi xảy ra khi lưu vào tủ lạnh!');
     }
   };
+
+  // Tính toán nhiệm vụ mua sắm trong tuần cho Member
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  const localDate = new Date(now.getTime() - (offset * 60 * 1000));
+  const day = localDate.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  const monday = new Date(localDate);
+  monday.setDate(localDate.getDate() + diffToMonday);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const startOfWeekStr = monday.toISOString().split('T')[0];
+  const endOfWeekStr = sunday.toISOString().split('T')[0];
+
+  const thisWeekMissions = shoppingItems.filter(item => {
+    if (item.deadlineDate) {
+      return item.deadlineDate >= startOfWeekStr && item.deadlineDate <= endOfWeekStr;
+    }
+    return false; // Không hiển thị item không có deadline
+  });
 
   return (
     <>
@@ -214,7 +260,8 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       {/* Shopping Mission - Member only */}
       {role === 'member' && (
         <ShoppingMission
-          items={shoppingItems}
+          items={thisWeekMissions}
+          currentUserId={user?.id || ''}
           onToggleCheck={handleToggleShoppingItem}
         />
       )}
@@ -261,6 +308,18 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
           fridgeItems={fridgeItems}
         />
       )}
+
+      <IngredientFormModal
+        isOpen={isFridgeModalOpen}
+        mode="add"
+        item={itemToSaveFridge as any}
+        role={role}
+        onClose={() => {
+          setIsFridgeModalOpen(false);
+          setItemToSaveFridge(null);
+        }}
+        onSave={handleSaveToFridge}
+      />
     </>
   );
 };

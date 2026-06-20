@@ -135,55 +135,7 @@
   border: 1.27px solid #757575;
 }
 
-.shopping-card__badge {
-  padding: 4.5px 8px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 500;
-  line-height: 18px;
-  text-align: center;
-  flex-shrink: 0;
-}
 
-.shopping-card__badge--default {
-  background: #F5F5F5;
-  color: #757575;
-}
-
-.shopping-card__badge--rau-cu {
-  background: #E8F5E9;
-  color: #388E3C;
-}
-
-.shopping-card__badge--thit-ca {
-  background: #FFCDD2;
-  color: #C62828;
-}
-
-.shopping-card__badge--do-uong {
-  background: #E3F2FD;
-  color: #1565C0;
-}
-
-.shopping-card__badge--gia-vi {
-  background: #F9FBE7;
-  color: #282401;
-}
-
-.shopping-card__badge--do-kho {
-  background: #F3E5F5;
-  color: #4A148C;
-}
-
-.shopping-card__badge--trung {
-  background: #FFF3E0;
-  color: #E65100;
-}
-
-.shopping-card__badge--khac {
-  background: #ECEFF1;
-  color: #37474F;
-}
 
 .shopping-card__info {
   flex: 1;
@@ -226,12 +178,15 @@
 .shopping-card__tag-assignee {
   padding: 5px 8px;
   background: var(--primary-light);
-  border-radius: 100px;
+  border-radius: 8px;
   color: var(--primary-color);
   font-size: 11px;
   font-weight: 500;
   line-height: 18px;
-  text-align: center;
+  text-align: left;
+  max-width: 120px;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* Action Bottom Sheet styles */
