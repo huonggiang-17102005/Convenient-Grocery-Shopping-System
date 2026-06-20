@@ -159,15 +159,16 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
               pm.recipe.ingredients.forEach(ing => {
                 const ik = ing.name.toLowerCase();
                 const current = ingMap.get(ik);
-                const parsedAmount = Number(ing.amount) || 0;
+                const parsedAmount = Number(ing.amount ?? (ing as any).quantity) || 0;
                 const addedAmount = parsedAmount * multiplier;
                 if (current) {
-                  current.amountValue = String(parseFloat(current.amountValue) + addedAmount);
+                  const newVal = parseFloat(current.amountValue) + addedAmount;
+                  current.amountValue = String(Math.round(newVal * 100) / 100);
                 } else {
                   ingMap.set(ik, {
                     name: ing.name,
                     category: ing.category || 'Khác',
-                    amountValue: String(addedAmount),
+                    amountValue: String(Math.round(addedAmount * 100) / 100),
                     amountUnit: ing.unit
                   });
                 }

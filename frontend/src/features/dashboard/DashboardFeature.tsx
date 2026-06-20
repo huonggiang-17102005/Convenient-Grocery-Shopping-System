@@ -130,9 +130,22 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   const handleCookConfirm = async (ingredients: CookIngredient[]) => {
     if (!familyId) return;
+    if (ingredients.length === 0) {
+      showToast('Không có nguyên liệu mới nào cần trừ kho!');
+      return;
+    }
     try {
       await fridgeService.deductInventory(familyId, ingredients);
       showToast('Đã trừ kho thành công!');
+
+      // Lưu vết vào LocalStorage
+      const todayStr = new Date().toISOString().split('T')[0];
+      const storageKey = `deducted_ingredients_${familyId}_${todayStr}`;
+      let stored: string[] = [];
+      try { stored = JSON.parse(localStorage.getItem(storageKey) || '[]'); } catch(e) {}
+      const newDeducted = [...stored, ...ingredients.map(i => i.name)];
+      localStorage.setItem(storageKey, JSON.stringify(newDeducted));
+
       // Refresh tủ lạnh
       await refreshFridge();
     } catch (err: unknown) {

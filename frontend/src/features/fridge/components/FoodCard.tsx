@@ -66,7 +66,7 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
             style={{ opacity: role === 'member' ? 0.5 : 1, cursor: role === 'member' ? 'default' : 'pointer' }}
           >−</button>
           <div className="qty-value">
-            {item.quantity} {item.unit && <span style={{fontSize: '12px'}}>{item.unit}</span>}
+            {Math.round(item.quantity * 100) / 100} {item.unit && <span style={{fontSize: '12px'}}>{item.unit}</span>}
           </div>
           <button 
             className="qty-btn plus" 

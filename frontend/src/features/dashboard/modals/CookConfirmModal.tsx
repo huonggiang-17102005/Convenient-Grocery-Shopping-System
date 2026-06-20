@@ -2,18 +2,21 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
 import type { FoodCategory } from '../../fridge/types';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 export interface CookIngredient {
   name: string;
   category: string;
   amountValue: string;
   amountUnit: string;
+  isDeducted?: boolean;
 }
 
 interface FridgeItem {
   name: string;
   category?: string;
   quantity: number;
+  unit?: string;
 }
 
 interface CookConfirmModalProps {
@@ -33,12 +36,34 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
 }) => {
   const { categoriesData } = useCategoryContext();
   const availableCategories = categoriesData.map(c => c.category as FoodCategory);
+  const { user } = useAuth();
 
-  const [ingredients, setIngredients] = useState<CookIngredient[]>(() =>
-    initialIngredients.length > 0 
-      ? initialIngredients 
-      : [{ name: '', category: availableCategories[0] || '', amountValue: '', amountUnit: categoriesData[0]?.units?.[0] || '' }]
-  );
+  const [ingredients, setIngredients] = useState<CookIngredient[]>(() => {
+    let stored: string[] = [];
+    if (user?.family_id) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const storageKey = `deducted_ingredients_${user.family_id}_${todayStr}`;
+      try {
+        stored = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      } catch(e) {}
+    }
+
+    if (initialIngredients.length > 0) {
+      return initialIngredients.map(ing => ({
+        ...ing,
+        isDeducted: stored.includes(ing.name)
+      }));
+    }
+    return [{ name: '', category: availableCategories[0] || '', amountValue: '', amountUnit: categoriesData[0]?.units?.[0] || '' }];
+  });
+
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  const getFilteredFridgeItems = (query: string) => {
+    const q = query.toLowerCase().trim();
+    if (!q) return fridgeItems;
+    return fridgeItems.filter(f => f.name.toLowerCase().includes(q));
+  };
 
   // Update initial ingredient category if we load categories after state init
   useEffect(() => {
@@ -62,7 +87,8 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
   };
 
   const handleConfirm = () => {
-    onConfirm?.(ingredients);
+    const activeIngredients = ingredients.filter(i => !i.isDeducted);
+    onConfirm?.(activeIngredients);
     onClose();
   };
 
@@ -70,7 +96,7 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
   const warnings = useMemo(() => {
     const msgs: string[] = [];
     ingredients.forEach(ing => {
-      if (!ing.name || !ing.amountValue) return;
+      if (!ing.name || !ing.amountValue || ing.isDeducted) return;
 
       const requested = parseFloat(ing.amountValue);
       if (isNaN(requested) || requested <= 0) return;
@@ -115,16 +141,45 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
         <div style={{ alignSelf: 'stretch', paddingTop: 16, paddingBottom: 4, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', gap: 8, display: 'flex' }}>
           
           {ingredients.map((item, index) => (
-            <div key={index} style={{ alignSelf: 'stretch', justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex', width: '100%', boxSizing: 'border-box' }}>
-              <div style={{ flex: 1, width: '100%', background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex', overflow: 'hidden' }}>
+            <div key={index} style={{ alignSelf: 'stretch', justifyContent: 'flex-start', alignItems: 'center', gap: 8, display: 'flex', width: '100%', boxSizing: 'border-box', position: 'relative', opacity: item.isDeducted ? 0.5 : 1, pointerEvents: item.isDeducted ? 'none' : 'auto' }}>
+              <div style={{ flex: 1, width: '100%', background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex', overflow: 'visible', position: 'relative' }}>
+                {item.isDeducted && <div style={{ position: 'absolute', right: 40, top: 10, background: '#E0E0E0', color: '#757575', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 'bold', zIndex: 5 }}>Đã nấu</div>}
                 <div style={{ width: '100%', paddingTop: 8, paddingBottom: 4, paddingLeft: 12, paddingRight: 12, justifyContent: 'space-between', alignItems: 'center', gap: 8, display: 'inline-flex', boxSizing: 'border-box' }}>
-                  <div style={{ flex: 1, height: 32, overflow: 'hidden', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', display: 'inline-flex' }}>
+                  <div style={{ flex: 1, height: 32, overflow: 'visible', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', display: 'inline-flex', position: 'relative' }}>
                     <input
                       style={{ alignSelf: 'stretch', border: 'none', outline: 'none', color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', background: 'transparent' }}
                       value={item.name}
-                      onChange={(e) => updateField(index, 'name', e.target.value)}
+                      onChange={(e) => {
+                        updateField(index, 'name', e.target.value);
+                        setActiveIndex(index);
+                      }}
+                      onFocus={() => setActiveIndex(index)}
+                      onBlur={() => setTimeout(() => setActiveIndex(null), 150)}
                       placeholder="Tên nguyên liệu..."
                     />
+                    {activeIndex === index && (
+                      <div style={{ position: 'absolute', top: 32, left: -12, width: 'calc(100% + 40px)', background: 'white', border: '1px solid #E0E0E0', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10, maxHeight: 150, overflowY: 'auto' }}>
+                        {getFilteredFridgeItems(item.name).length === 0 ? (
+                          <div style={{ padding: '8px 12px', color: '#9E9E9E', fontSize: 12, fontFamily: 'Plus Jakarta Sans' }}>Không tìm thấy trong tủ lạnh</div>
+                        ) : (
+                          getFilteredFridgeItems(item.name).map((fi, idx) => (
+                            <div 
+                              key={idx} 
+                              style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid #F5F5F5', display: 'flex', justifyContent: 'space-between' }}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                updateField(index, 'name', fi.name);
+                                if (fi.category) updateField(index, 'category', fi.category);
+                                setActiveIndex(null);
+                              }}
+                            >
+                              <span style={{ fontSize: 13, color: '#1A1A1A', fontFamily: 'Plus Jakarta Sans', fontWeight: 500 }}>{fi.name}</span>
+                              <span style={{ fontSize: 12, color: '#FF8A00', fontFamily: 'Plus Jakarta Sans' }}>Còn {fi.quantity}{fi.unit ? ` ${fi.unit}` : ''}</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div style={{ width: 28, height: 28, background: '#F5F5F5', borderRadius: 6, justifyContent: 'center', alignItems: 'center', display: 'flex', cursor: 'pointer' }} onClick={() => removeRow(index)}>
                     <X size={14} color="#9E9E9E" />
@@ -176,8 +231,8 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
           ))}
 
         </div>
-        <div style={{ alignSelf: 'stretch', height: 45, paddingTop: 4, cursor: 'pointer', display: 'flex', justifyContent: 'flex-start' }} onClick={addIngredient}>
-          <div style={{ color: '#FF8A00', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>+ Thêm nguyên liệu mới</div>
+        <div style={{ alignSelf: 'stretch', marginTop: 8, marginBottom: 16, cursor: 'pointer', display: 'flex', justifyContent: 'flex-start' }} onClick={addIngredient}>
+          <div style={{ color: '#FF8A00', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '18px' }}>+ Thêm nguyên liệu mới</div>
         </div>
 
         {/* Warnings */}
