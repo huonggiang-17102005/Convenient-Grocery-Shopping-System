@@ -61,11 +61,17 @@ const WasteStats: React.FC<WasteStatsProps> = ({ categories, onExportReport }) =
       <h2 className="profile-section-title">Thống kê lãng phí tháng {new Date().getMonth() + 1}</h2>
       <div style={{ alignSelf: 'stretch', padding: 16, background: 'white', borderRadius: 16, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
         <div style={{ width: '100%', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
-          {visibleCategories.map((stat, index) => (
-            <div key={index} style={{ width: '100%', marginTop: index === 0 ? -16 : 0 }}>
-              <CategoryStatRow stat={stat} />
+          {categories.length === 0 ? (
+            <div style={{ color: '#757575', fontSize: 13, fontFamily: 'Plus Jakarta Sans', width: '100%', textAlign: 'center', padding: '16px 0 0 0' }}>
+              Chưa có dữ liệu thống kê lãng phí cho tháng này.
             </div>
-          ))}
+          ) : (
+            visibleCategories.map((stat, index) => (
+              <div key={index} style={{ width: '100%', marginTop: index === 0 ? -16 : 0 }}>
+                <CategoryStatRow stat={stat} />
+              </div>
+            ))
+          )}
         </div>
         
         {categories.length > INITIAL_COUNT && (
@@ -84,14 +90,15 @@ const WasteStats: React.FC<WasteStatsProps> = ({ categories, onExportReport }) =
         <div className="no-print" style={{ width: '100%', paddingTop: 12, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
           <button 
             onClick={onExportReport}
-            style={{ width: '100%', height: 44, background: '#FF8A00', borderRadius: 100, border: 'none', outline: 'none', justifyContent: 'center', alignItems: 'center', gap: 8, display: 'inline-flex', cursor: 'pointer' }}
+            disabled={categories.length === 0}
+            style={{ width: '100%', height: 44, background: categories.length === 0 ? '#E0E0E0' : '#FF8A00', cursor: categories.length === 0 ? 'default' : 'pointer', borderRadius: 100, border: 'none', outline: 'none', justifyContent: 'center', alignItems: 'center', gap: 8, display: 'inline-flex' }}
           >
             <div style={{ width: 20, height: 20, position: 'relative', overflow: 'hidden' }}>
               <div style={{ width: 13.33, height: 16.66, left: 3.33, top: 1.67, position: 'absolute', outline: '1.67px white solid', outlineOffset: '-0.83px' }} />
               <div style={{ width: 5, height: 5, left: 11.66, top: 1.67, position: 'absolute', outline: '1.67px white solid', outlineOffset: '-0.83px' }} />
               <div style={{ width: 5, height: 2.50, left: 7.50, top: 12.50, position: 'absolute', outline: '1.67px white solid', outlineOffset: '-0.83px' }} />
             </div>
-            <div style={{ textAlign: 'center', color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px', wordWrap: 'break-word' }}>
+            <div style={{ textAlign: 'center', color: categories.length === 0 ? '#9E9E9E' : 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px', wordWrap: 'break-word' }}>
               Xuất báo cáo gia đình
             </div>
           </button>

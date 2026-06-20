@@ -16,7 +16,7 @@ interface ShareCommunityModalProps {
 
 const DIFFICULTIES: DifficultyLevel[] = ['Dễ', 'Trung bình', 'Khó'];
 
-const createEmptyIngredient = (categoriesData: any[]): Ingredient => {
+const createEmptyIngredient = (): Ingredient => {
   return {
     id: 'ing_' + Date.now() + Math.random(),
     category: '',
@@ -101,14 +101,9 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
     return data?.units || [];
   };
 
-  const getSpiceUnits = () => {
-    const data = categoriesData.find(c => c.category === 'Gia vị');
-    return data?.units || [];
-  };
-
   useEffect(() => {
     if (isOpen && categoriesData.length > 0) {
-      if (ingredients.length === 0) setIngredients([createEmptyIngredient(categoriesData)]);
+      if (ingredients.length === 0) setIngredients([createEmptyIngredient()]);
       if (spices.length === 0) setSpices([createEmptySpice(categoriesData)]);
     }
   }, [isOpen, categoriesData, ingredients.length, spices.length]);
@@ -141,7 +136,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
         const newIng = { ...ing, [field]: value };
         if (field === 'category') {
           const newUnits = getAvailableUnits(value as string);
-          if (newUnits.length > 0 && !newUnits.includes(newIng.unit)) {
+          if (newUnits.length > 0) {
             newIng.unit = newUnits[0];
           }
         }
@@ -376,18 +371,21 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                         style={{ paddingRight: '18px', width: '60px' }}
                         value={ing.unit}
                         onChange={(e) => handleIngredientChange(ing.id, 'unit', e.target.value)}
+                        disabled={ing.category !== 'Khác'}
                       >
                         <option value="" disabled hidden>-</option>
                         {getAvailableUnits(ing.category).map((u) => (
                           <option key={u} value={u}>{u}</option>
                         ))}
                       </select>
-                      <span style={{
-                        marginLeft: '-14px',
-                        pointerEvents: 'none',
-                        fontSize: '7px',
-                        color: 'var(--primary-color)'
-                      }}>▼</span>
+                      {ing.category === 'Khác' && (
+                        <span style={{
+                          marginLeft: '-14px',
+                          pointerEvents: 'none',
+                          fontSize: '7px',
+                          color: 'var(--primary-color)'
+                        }}>▼</span>
+                      )}
                     </div>
                 </div>
               </div>
@@ -397,7 +395,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
               id="share-modal-add-ingredient-btn"
               type="button"
               className="form-add-btn"
-              onClick={() => setIngredients((p) => [...p, createEmptyIngredient(categoriesData)])}
+              onClick={() => setIngredients((p) => [...p, createEmptyIngredient()])}
             >
               + Thêm nguyên liệu
             </button>

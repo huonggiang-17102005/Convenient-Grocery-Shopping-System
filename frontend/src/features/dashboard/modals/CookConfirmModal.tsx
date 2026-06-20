@@ -43,6 +43,7 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
 
   const [ingredients, setIngredients] = useState<CookIngredient[]>([]);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [activeCategoryDropdownIndex, setActiveCategoryDropdownIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -78,7 +79,16 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
 
   const updateField = (index: number, field: keyof CookIngredient, value: string) => {
     setIngredients((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+      prev.map((item, i) => {
+        if (i !== index) return item;
+        const newItem = { ...item, [field]: value };
+        if (field === 'category') {
+          const catData = categoriesData.find(c => c.category === value);
+          const defaultUnit = catData?.units?.[0] || 'g';
+          newItem.amountUnit = value === 'Khác' ? item.amountUnit : defaultUnit;
+        }
+        return newItem;
+      })
     );
   };
 
@@ -205,37 +215,73 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
                 </div>
                 
                 <div style={{ alignSelf: 'stretch', paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, justifyContent: 'flex-start', alignItems: 'center', display: 'flex', boxSizing: 'border-box' }}>
-                  <div style={{ width: 90, flexShrink: 0, justifyContent: 'flex-start', alignItems: 'center', display: 'flex' }}>
-                    <div style={{ width: '100%', height: 26, background: '#FFF3E0', borderRadius: 6, position: 'relative', overflow: 'hidden' }}>
-                      <select 
-                        style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' }}
-                        value={item.category}
-                        onChange={(e) => updateField(index, 'category', e.target.value)}
-                        title="Chọn danh mục"
-                      >
-                        {availableCategories.map(cat => (
-                          <option 
-                            key={cat} 
-                            value={cat}
-                            style={{
-                              background: '#ffffff',
-                              color: '#1A1A1A',
-                              fontFamily: 'Plus Jakarta Sans',
-                              fontSize: '13px',
-                              padding: '8px 12px'
-                            }}
-                          >
-                            {cat}
-                          </option>
-                        ))}
-                      </select>
-                      <div style={{ width: '100%', height: '100%', paddingLeft: 6, paddingRight: 6, justifyContent: 'space-between', alignItems: 'center', display: 'flex', pointerEvents: 'none' }}>
-                        <div style={{ color: '#FF8A00', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {item.category}
-                        </div>
-                        <div style={{ color: '#FF8A00', fontSize: 8 }}>▼</div>
+                  <div style={{ width: 90, flexShrink: 0, justifyContent: 'flex-start', alignItems: 'center', display: 'flex', position: 'relative' }}>
+                    <div 
+                      style={{ width: '100%', height: 26, background: '#FFF3E0', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', paddingLeft: 6, paddingRight: 6, justifyContent: 'space-between' }}
+                      onClick={() => setActiveCategoryDropdownIndex(activeCategoryDropdownIndex === index ? null : index)}
+                    >
+                      <div style={{ color: '#FF8A00', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {item.category}
                       </div>
+                      <div style={{ color: '#FF8A00', fontSize: 8 }}>▼</div>
                     </div>
+
+                    {activeCategoryDropdownIndex === index && (
+                      <>
+                        <div 
+                          style={{ position: 'fixed', inset: 0, zIndex: 1999, background: 'transparent' }} 
+                          onClick={() => setActiveCategoryDropdownIndex(null)}
+                        />
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          marginTop: 4,
+                          width: 120,
+                          background: 'white',
+                          borderRadius: 8,
+                          border: '1.27px solid #E0E0E0',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          zIndex: 2000,
+                          overflow: 'hidden'
+                        }}>
+                          {availableCategories.map((cat, catIdx) => (
+                            <div key={cat}>
+                              <button
+                                type="button"
+                                style={{
+                                  width: '100%',
+                                  height: 32,
+                                  padding: '0 10px',
+                                  background: item.category === cat ? '#FFF3E0' : 'white',
+                                  border: 'none',
+                                  textAlign: 'left',
+                                  fontSize: 11,
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  fontWeight: '500',
+                                  color: item.category === cat ? '#FF8A00' : '#1A1A1A',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  transition: 'background 0.2s'
+                                }}
+                                onClick={() => {
+                                  updateField(index, 'category', cat);
+                                  setActiveCategoryDropdownIndex(null);
+                                }}
+                              >
+                                {cat}
+                              </button>
+                              {catIdx < availableCategories.length - 1 && (
+                                <div style={{ height: 1, background: '#F5F5F5', width: '100%' }} />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                   <div style={{ width: 1, height: 16, position: 'relative', background: '#E0E0E0', margin: '0 8px', flexShrink: 0 }} />
                   <div style={{ flex: 1, height: 26, overflow: 'hidden', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', display: 'flex' }}>
@@ -249,10 +295,11 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
                   <div style={{ width: 1, height: 16, position: 'relative', background: '#E0E0E0', margin: '0 8px', flexShrink: 0 }} />
                   <div style={{ width: 36, flexShrink: 0, height: 26, paddingLeft: 4, paddingRight: 4, justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
                     <input
-                      style={{ alignSelf: 'stretch', width: '100%', textAlign: 'center', border: 'none', outline: 'none', color: '#757575', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', background: 'transparent' }}
+                      style={{ alignSelf: 'stretch', width: '100%', textAlign: 'center', border: 'none', outline: 'none', color: item.category !== 'Khác' ? '#9E9E9E' : '#757575', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', background: 'transparent' }}
                       value={item.amountUnit}
                       onChange={(e) => updateField(index, 'amountUnit', e.target.value)}
-                      placeholder="g"
+                      placeholder="ĐVT"
+                      disabled={item.category !== 'Khác'}
                     />
                   </div>
                 </div>

@@ -24,12 +24,12 @@ type ActiveTab = 'library' | 'favorites' | 'community';
 
 export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   // ── Data state ──────────────────────────────────────────────
-  const { 
-    recipes, setRecipes, 
-    systemRecipes, setSystemRecipes,
-    favoriteRecipes, setFavoriteRecipes, 
-    communityPosts, setCommunityPosts, 
-    refreshRecipes 
+  const {
+    recipes, setRecipes,
+    systemRecipes,
+    favoriteRecipes, setFavoriteRecipes,
+    communityPosts, setCommunityPosts,
+    refreshRecipes
   } = useRecipesContext();
 
   // ── UI state ─────────────────────────────────────────────────
@@ -110,7 +110,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   const handleToggleFavorite = useCallback(async (recipeId: string) => {
     try {
       const { isFavorited } = await recipesService.toggleFavorite(recipeId);
-      
+
       // Update family/library recipes
       setRecipes((prev) =>
         prev.map((r) => (r.id === recipeId ? { ...r, isFavorited } : r))
@@ -228,13 +228,13 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       quantity?: number;
       unit?: string;
     }> = [];
-    
+
     recipe.ingredients.forEach(ing => {
-      const inFridge = (fridgeItems || []).find(f => 
+      const inFridge = (fridgeItems || []).find(f =>
         (f.category || 'Khác').toLowerCase() === (ing.category || 'Khác').toLowerCase() &&
         f.name.toLowerCase() === ing.name.toLowerCase()
       );
-      
+
       if (ing.category === 'Gia vị') {
         if (!inFridge) {
           missing.push({
@@ -308,6 +308,8 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
           category: item.category,
           quantity: finalQty,
           unit: finalUnit,
+          deadlineDate: '',
+          deadlineTime: ''
         });
       }
 
@@ -336,12 +338,14 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         difficulty: recipe.difficulty,
         servings: recipe.servings,
         ingredients: recipe.ingredients.map(ing => ({
+          id: ing.id || ('ing_' + Date.now() + Math.random()),
           category: ing.category,
           name: ing.name,
           amount: ing.amount,
           unit: ing.unit,
         })),
         steps: recipe.steps.map(step => ({
+          id: step.id || ('step_' + Date.now() + Math.random()),
           description: step.description,
         })),
       };
@@ -370,7 +374,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         // Create recipe first, then share
         const createdRecipe = await recipesService.createRecipe(recipeData);
         await recipesService.shareToCommunity(createdRecipe.id, description);
-        
+
         setIsShareOpen(false);
         // Refresh data to show in community or just show success alert
         alert('Đã gửi công thức lên cộng đồng, vui lòng chờ duyệt!');
@@ -491,7 +495,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         onConfirm={handleDeleteConfirm}
       />
 
-      <Toast message={toastMsg} trigger={toastTrigger} onHide={() => {}} />
+      <Toast message={toastMsg} trigger={toastTrigger} onHide={() => { }} />
     </div>
   );
 };

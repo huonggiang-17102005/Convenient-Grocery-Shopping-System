@@ -41,13 +41,15 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
   // Auto update unit when category changes
   useEffect(() => {
-    if (isOpen && mode === 'create') {
+    if (isOpen) {
       const newAvailableUnits = categoriesData.find(c => c.category === category)?.units;
-      if (newAvailableUnits && newAvailableUnits.length > 0 && !newAvailableUnits.includes(unit)) {
-        setUnit(newAvailableUnits[0]);
+      if (newAvailableUnits && newAvailableUnits.length > 0) {
+        if (category !== 'Khác' || !unit || !newAvailableUnits.includes(unit)) {
+          setUnit(newAvailableUnits[0]);
+        }
       }
     }
-  }, [category, isOpen, mode, categoriesData]);
+  }, [category, isOpen, categoriesData]);
 
   const [deadlineDate, setDeadlineDate] = useState(() => {
     if ((mode === 'edit' || mode === 'view') && item) return item.deadlineDate;
@@ -168,12 +170,12 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
                 <div style={{ width: 76, position: 'relative', height: 48, paddingLeft: 12, paddingRight: 12, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ color: unit ? '#1A1A1A' : '#9E9E9E', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>{unit || '-'}</div>
-                  <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>▼</div>
+                  <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', display: category === 'Khác' ? 'block' : 'none' }}>▼</div>
                 <select
-                  style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: readOnly ? 'not-allowed' : 'pointer' }}
+                  style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: (readOnly || category !== 'Khác') ? 'not-allowed' : 'pointer' }}
                   value={unit}
                   onChange={(e) => setUnit(e.target.value)}
-                  disabled={readOnly}
+                  disabled={readOnly || category !== 'Khác'}
                 >
                     <option value="" disabled hidden>-</option>
                   {availableUnits.map(u => (

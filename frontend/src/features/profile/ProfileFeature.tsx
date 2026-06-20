@@ -50,16 +50,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   // Lấy danh sách thành viên từ Context (đã được cache ở tầng Layout)
   const { familyMembers, setFamilyMembers } = useFamilyContext();
 
-  const MOCK_CATEGORIES_STATS = [
-    { name: 'Thịt cá', total: 1.5, unit: 'kg', consumed: 1.2, consumedPercent: 80, wasted: 0.3, wastedPercent: 20, color: '#EF5350' },
-    { name: 'Rau củ', total: 1000, unit: 'g', consumed: 850, consumedPercent: 85, wasted: 150, wastedPercent: 15, color: '#66BB6A' },
-    { name: 'Đồ uống', total: 4, unit: 'lít', consumed: 3.5, consumedPercent: 88, wasted: 0.5, wastedPercent: 12, color: '#42A5F5' },
-    { name: 'Trứng', total: 10, unit: 'quả', consumed: 8, consumedPercent: 80, wasted: 2, wastedPercent: 20, color: '#FFA726' },
-    { name: 'Đồ khô', total: 450, unit: 'g', consumed: 400, consumedPercent: 89, wasted: 50, wastedPercent: 11, color: '#8D6E63' },
-    { name: 'Gia vị', total: 130, unit: 'g', consumed: 120, consumedPercent: 92, wasted: 10, wastedPercent: 8, color: '#AB47BC' }
-  ];
-
-  const [categoriesStats, setCategoriesStats] = useState(MOCK_CATEGORIES_STATS);
+  const [categoriesStats, setCategoriesStats] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchWasteStats = async () => {

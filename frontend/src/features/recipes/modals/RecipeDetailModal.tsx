@@ -76,6 +76,16 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
 
           <h2 className="recipe-detail-title">{recipe.name}</h2>
 
+          {/* Cook time & difficulty badges */}
+          <div className="recipe-detail-tags" style={{ display: 'flex', gap: '8px', marginTop: '-12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <span className={`recipe-tag ${recipe.cookTimeMinutes <= 30 ? 'recipe-tag--easy' : recipe.cookTimeMinutes <= 60 ? 'recipe-tag--medium' : 'recipe-tag--hard'}`}>
+              ⏱️ {recipe.cookTimeMinutes} phút
+            </span>
+            <span className={`recipe-tag ${recipe.difficulty?.toLowerCase() === 'dễ' ? 'recipe-tag--easy' : recipe.difficulty?.toLowerCase() === 'trung bình' ? 'recipe-tag--medium' : 'recipe-tag--hard'}`}>
+              📊 {recipe.difficulty}
+            </span>
+          </div>
+
           {/* Ingredient info box */}
           <div className="recipe-detail-ingredients-box">
             <h4 className="recipe-detail-section-title">Thông tin nguyên liệu</h4>
