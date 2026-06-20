@@ -119,12 +119,12 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
           <div style={{ alignSelf: 'stretch', padding: 12, background: '#F9FAFB', borderRadius: 8, border: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {mode === 'add' ? (
               <div style={{ color: '#4B5563', fontSize: 13, fontFamily: 'Plus Jakarta Sans', lineHeight: '18px' }}>
-                💡 Nếu thêm vào <strong>{delta} {unit}</strong>, lô {item.name} hạn {expiryText} sẽ có tổng cộng là <strong style={{color: '#FF8A00'}}>{item.quantity + Number(delta)} {unit}</strong>.
+                💡 Nếu thêm vào <strong>{delta} {unit}</strong>, lô {item.name} hạn {expiryText} sẽ có tổng cộng là <strong style={{color: '#FF8A00'}}>{Math.round((item.quantity + Number(delta)) * 100) / 100} {unit}</strong>.
               </div>
             ) : (
               <>
                 <div style={{ color: '#4B5563', fontSize: 13, fontFamily: 'Plus Jakarta Sans', lineHeight: '18px' }}>
-                  📌 Sử dụng từ lô <strong>{item.name}</strong> hạn {expiryText}. Lô này sẽ còn lại <strong style={{color: '#FF8A00'}}>{item.quantity - Number(delta)} {unit}</strong>.
+                  📌 Sử dụng từ lô <strong>{item.name}</strong> hạn {expiryText}. Lô này sẽ còn lại <strong style={{color: '#FF8A00'}}>{Math.round((item.quantity - Number(delta)) * 100) / 100} {unit}</strong>.
                 </div>
               </>
             )}

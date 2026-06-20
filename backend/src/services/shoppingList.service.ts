@@ -167,8 +167,12 @@ async function syncItemToFridge(familyId: string, item: any) {
 
     if (existing) {
       // Add quantity
-      const newQty = Number(existing.quantity) + Number(item.quantity);
-      await fridgeRepo.updateItemQuantity(existing.id, newQty);
+      if (item.category === 'Gia vị') {
+        // Do not add quantity for Gia vị
+      } else {
+        const newQty = Number(existing.quantity) + Number(item.quantity);
+        await fridgeRepo.updateItemQuantity(existing.id, newQty);
+      }
     } else {
       // Insert new fridge item
       const expiry = new Date();
@@ -177,8 +181,8 @@ async function syncItemToFridge(familyId: string, item: any) {
       const newFridgeItem = {
         family_id: familyId,
         name: item.name,
-        quantity: Number(item.quantity),
-        unit: item.unit,
+        quantity: item.category === 'Gia vị' ? 1 : Number(item.quantity),
+        unit: item.category === 'Gia vị' ? 'cái' : item.unit,
         category: item.category,
         image_url: item.image_url || null,
         image_public_id: item.image_public_id || null,

@@ -17,6 +17,11 @@ interface WasteStatsProps {
 }
 
 const CategoryStatRow: React.FC<{ stat: CategoryStat }> = ({ stat }) => {
+  const formatVal = (val: number) => {
+    if (val === undefined || val === null) return '0';
+    return (Math.round((val + Number.EPSILON) * 100) / 100).toString();
+  };
+
   return (
     <div style={{ width: '100%', paddingTop: 16, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
       <div style={{ alignSelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
@@ -27,7 +32,7 @@ const CategoryStatRow: React.FC<{ stat: CategoryStat }> = ({ stat }) => {
           </div>
         </div>
         <div style={{ position: 'relative', color: '#757575', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', lineHeight: '16.50px', wordWrap: 'break-word' }}>
-          Tổng: {stat.total} {stat.unit}
+          Tổng: {formatVal(stat.total)} {stat.unit}
         </div>
       </div>
       
@@ -40,10 +45,10 @@ const CategoryStatRow: React.FC<{ stat: CategoryStat }> = ({ stat }) => {
       
       <div style={{ width: '100%', paddingTop: 4, justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
         <div style={{ position: 'relative', color: '#2E7D32', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '16.50px', wordWrap: 'break-word' }}>
-          Tiêu thụ: {stat.consumed} {stat.unit} ({stat.consumedPercent}%)
+          Tiêu thụ: {formatVal(stat.consumed)} {stat.unit} ({formatVal(stat.consumedPercent)}%)
         </div>
         <div style={{ position: 'relative', color: '#D32F2F', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '16.50px', wordWrap: 'break-word' }}>
-          Lãng phí: {stat.wasted} {stat.unit} ({stat.wastedPercent}%)
+          Lãng phí: {formatVal(stat.wasted)} {stat.unit} ({formatVal(stat.wastedPercent)}%)
         </div>
       </div>
     </div>

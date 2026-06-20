@@ -70,7 +70,7 @@ export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, current
 
             {/* Item details */}
             <div className={`shopping-mission__name ${item.isBought ? 'shopping-mission__name--checked' : ''}`}>
-              {item.name} - {item.quantity} {item.unit}
+              {item.category === 'Gia vị' ? (item.unit ? `${item.name} - ${item.unit}` : item.name) : `${item.name} - ${Math.round(item.quantity * 100) / 100} ${item.unit}`}
             </div>
             
             {/* Overdue badge */}

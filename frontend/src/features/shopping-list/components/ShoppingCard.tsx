@@ -65,7 +65,7 @@ const ShoppingCard: React.FC<ShoppingCardProps> = ({ item, onToggleCheck, onClic
       {/* Item Info */}
       <div className="shopping-card__info">
         <span className={`shopping-card__name ${checked ? 'shopping-card__name--checked' : ''}`}>
-          {item.category === 'Gia vị' ? item.name : `${item.name} - ${item.quantity} ${item.unit}`}
+          {item.category === 'Gia vị' ? (item.unit ? `${item.name} - ${item.unit}` : item.name) : `${item.name} - ${Math.round(item.quantity * 100) / 100} ${item.unit}`}
         </span>
       </div>
 

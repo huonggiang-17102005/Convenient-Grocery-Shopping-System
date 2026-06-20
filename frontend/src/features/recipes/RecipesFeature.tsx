@@ -237,12 +237,13 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
       if (ing.category === 'Gia vị') {
         if (!inFridge) {
+          const roundedAmount = Math.round(ing.amount * 100) / 100;
           missing.push({
             name: ing.name,
             category: ing.category,
             neededText: 'Gia vị chưa có trong tủ lạnh',
-            defaultBuyAmount: ing.amount > 0 ? `${ing.amount} ${ing.unit}` : '1 gói',
-            quantity: ing.amount > 0 ? ing.amount : 1,
+            defaultBuyAmount: ing.amount > 0 ? `${roundedAmount} ${ing.unit}` : '1 gói',
+            quantity: ing.amount > 0 ? roundedAmount : 1,
             unit: ing.amount > 0 ? ing.unit : 'gói',
           });
         }
@@ -250,12 +251,15 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         const available = inFridge ? inFridge.quantity : 0;
         if (available < ing.amount) {
           const diff = ing.amount - available;
+          const roundedAmount = Math.round(ing.amount * 100) / 100;
+          const roundedAvailable = Math.round(available * 100) / 100;
+          const roundedDiff = Math.round(diff * 100) / 100;
           missing.push({
             name: ing.name,
             category: ing.category,
-            neededText: `Cần ${ing.amount}${ing.unit} (Trong tủ: ${available}${ing.unit})`,
-            defaultBuyAmount: `${diff} ${ing.unit}`,
-            quantity: diff,
+            neededText: `Cần ${roundedAmount}${ing.unit} (Trong tủ: ${roundedAvailable}${ing.unit})`,
+            defaultBuyAmount: `${roundedDiff} ${ing.unit}`,
+            quantity: roundedDiff,
             unit: ing.unit,
           });
         }
@@ -295,9 +299,8 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         let finalQty = 1;
         let finalUnit = 'g';
         if (item.category === 'Gia vị') {
-          const parsed = parseQuantity(item.buyAmountStr || '');
-          finalQty = parsed.amount;
-          finalUnit = parsed.unit;
+          finalQty = 0;
+          finalUnit = (item.buyAmountStr || '').trim();
         } else {
           finalQty = item.quantity ?? 1;
           finalUnit = item.unit || 'g';

@@ -97,13 +97,13 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
               {expiring.map((ing) => (
                 <li key={ing.id} className="recipe-detail-ingredient expiring">
                   <span className="ingredient-dot" style={{ background: '#D32F2F' }} />
-                  <strong>{ing.name} – {ing.amount}{ing.unit}</strong>
+                  <strong>{ing.name} – {Math.round(ing.amount * 100) / 100}{ing.unit}</strong>
                 </li>
               ))}
               {notExpiring.map((ing) => (
                 <li key={ing.id} className="recipe-detail-ingredient">
                   <span className="ingredient-dot" style={{ background: '#1A1A1A' }} />
-                  {ing.name} – {ing.amount}{ing.unit}
+                  {ing.name} – {Math.round(ing.amount * 100) / 100}{ing.unit}
                 </li>
               ))}
             </ul>

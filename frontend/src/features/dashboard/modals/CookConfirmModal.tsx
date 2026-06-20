@@ -123,9 +123,11 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
       const totalAvailable = matches.reduce((sum, fi) => sum + fi.quantity, 0);
 
       if (totalAvailable === 0) {
-        msgs.push(`Không tìm thấy nguyên liệu ${ing.name} - ${ing.amountValue}${ing.amountUnit} trong tủ lạnh, sẽ không áp dụng tự động trừ kho đối với nguyên liệu này.`);
+        msgs.push(`Không tìm thấy nguyên liệu ${ing.name} - ${Math.round((requested + Number.EPSILON) * 100) / 100}${ing.amountUnit} trong tủ lạnh, sẽ không áp dụng tự động trừ kho đối với nguyên liệu này.`);
       } else if (totalAvailable < requested) {
-        msgs.push(`Chỉ còn ${totalAvailable}${ing.amountUnit} ${ing.name} trong tủ lạnh, phần thiếu (${requested - totalAvailable}${ing.amountUnit}) sẽ không được tự động trừ.`);
+        const roundedAvailable = Math.round((totalAvailable + Number.EPSILON) * 100) / 100;
+        const roundedMissing = Math.round(((requested - totalAvailable) + Number.EPSILON) * 100) / 100;
+        msgs.push(`Chỉ còn ${roundedAvailable}${ing.amountUnit} ${ing.name} trong tủ lạnh, phần thiếu (${roundedMissing}${ing.amountUnit}) sẽ không được tự động trừ.`);
       }
     });
     return msgs;
@@ -198,7 +200,7 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
                               }}
                             >
                               <span style={{ fontSize: 13, color: '#1A1A1A', fontFamily: 'Plus Jakarta Sans', fontWeight: 500 }}>{fi.name}</span>
-                              <span style={{ fontSize: 12, color: '#FF8A00', fontFamily: 'Plus Jakarta Sans' }}>Còn {fi.quantity}{fi.unit ? ` ${fi.unit}` : ''}</span>
+                              <span style={{ fontSize: 12, color: '#FF8A00', fontFamily: 'Plus Jakarta Sans' }}>Còn {Math.round((fi.quantity + Number.EPSILON) * 100) / 100}{fi.unit ? ` ${fi.unit}` : ''}</span>
                             </div>
                           ))
                         )}

@@ -42,6 +42,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
   // Auto update unit when category changes
   useEffect(() => {
     if (isOpen) {
+      if (category === 'Gia vị') return;
       const newAvailableUnits = categoriesData.find(c => c.category === category)?.units;
       if (newAvailableUnits && newAvailableUnits.length > 0) {
         if (category !== 'Khác' || !unit || !newAvailableUnits.includes(unit)) {
@@ -99,7 +100,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
       name: name.trim(),
       category,
       quantity: isGiaVi ? 0 : quantity,
-      unit: isGiaVi ? '' : unit,
+      unit: isGiaVi ? unit.trim() : unit,
       deadlineDate,
       deadlineTime,
     });
@@ -121,7 +122,13 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
               id="category-select"
               className="form-select"
               value={category}
-              onChange={(e) => setCategory(e.target.value as FoodCategory)}
+              onChange={(e) => {
+                const newCat = e.target.value as FoodCategory;
+                setCategory(newCat);
+                if (newCat === 'Gia vị') {
+                  setUnit('');
+                }
+              }}
               disabled={readOnly}
             >
               <option value="" disabled hidden>- Chọn -</option>
@@ -144,6 +151,22 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
               disabled={readOnly}
             />
           </div>
+
+          {/* Spice Amount Input */}
+          {isGiaVi && (
+            <div className="form-group" style={{ paddingTop: '8px' }}>
+              <label htmlFor="spice-amount-input" className="form-label">Lượng cần mua (tùy chọn)</label>
+              <input
+                id="spice-amount-input"
+                type="text"
+                className="form-input"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                placeholder="Ví dụ: 1 gói, 2 chai, ..."
+                disabled={readOnly}
+              />
+            </div>
+          )}
 
           {/* Số lượng & Đơn vị */}
           {!isGiaVi && (
