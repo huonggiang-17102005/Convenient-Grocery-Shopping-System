@@ -22,6 +22,7 @@ export interface Recipe {
   name: string;
   emoji: string;        // Emoji đại diện (hiển thị trong card)
   imageUrl?: string;    // URL ảnh thực (tùy chọn)
+  imagePublicId?: string; // ID ảnh trên Cloud storage
   cookTimeMinutes: number;
   difficulty: DifficultyLevel;
   servings: number;

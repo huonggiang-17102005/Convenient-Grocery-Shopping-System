@@ -5,6 +5,7 @@ import UnitDropdown from '../components/UnitDropdown';
 import type { UnitType } from '../components/UnitDropdown';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
 import { fridgeService } from '../fridge.service';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 import './IngredientFormModal.css';
 
 interface IngredientFormModalProps {
@@ -47,6 +48,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const [image, setImage] = useState('');
   const [imagePublicId, setImagePublicId] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -182,7 +184,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
           {mode === 'edit' && item && onDelete && (
             <div
               style={{ width: 40, height: 40, background: '#FFEBEE', borderRadius: 8, display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
-              onClick={() => onDelete(item.id)}
+              onClick={() => setIsDeleteModalOpen(true)}
             >
               <Trash2 size={20} color="#D32F2F" />
             </div>
@@ -382,6 +384,17 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         </div>
 
       </div>
+      
+      {item && onDelete && (
+        <ConfirmDeleteModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={() => onDelete(item.id)}
+          title="Vứt bỏ thực phẩm"
+          message={`Bạn có chắc chắn muốn vứt bỏ "${item.name}" không? Hành động này không thể hoàn tác.`}
+          confirmText="Vứt bỏ"
+        />
+      )}
     </div>
   );
 };

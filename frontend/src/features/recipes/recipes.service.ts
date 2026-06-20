@@ -24,6 +24,7 @@ const mapBackendToFrontendRecipe = (item: any): Recipe => {
     name: item.name,
     emoji: item.emoji || '🍽️', // Backend doesn't have emoji yet, default to icon
     imageUrl: item.image_url,
+    imagePublicId: item.image_public_id,
     cookTimeMinutes: item.cooking_time || 30,
     difficulty: item.difficulty || 'Dễ',
     servings: item.servings || 4,
@@ -68,12 +69,22 @@ export const recipesService = {
   },
 
   createRecipe: async (recipe: Omit<Recipe, 'id' | 'isFavorited'>): Promise<Recipe> => {
-    const response = await api.post('', recipe);
+    const payload = {
+      ...recipe,
+      image_url: recipe.imageUrl,
+      image_public_id: recipe.imagePublicId,
+    };
+    const response = await api.post('', payload);
     return mapBackendToFrontendRecipe(response.data);
   },
 
   updateRecipe: async (id: string, recipe: Partial<Recipe>): Promise<Recipe> => {
-    const response = await api.put(`/${id}`, recipe);
+    const payload = {
+      ...recipe,
+      ...(recipe.imageUrl !== undefined && { image_url: recipe.imageUrl }),
+      ...(recipe.imagePublicId !== undefined && { image_public_id: recipe.imagePublicId }),
+    };
+    const response = await api.put(`/${id}`, payload);
     return mapBackendToFrontendRecipe(response.data);
   },
 

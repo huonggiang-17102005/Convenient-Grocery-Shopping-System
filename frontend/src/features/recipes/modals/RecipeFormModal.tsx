@@ -1,10 +1,12 @@
 // src/features/recipes/modals/RecipeFormModal.tsx
 // Shared form for both Add and Edit personal recipe
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera, Image as ImageIcon } from 'lucide-react';
 import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
 import ImageWithFallback from '../../../components/common/ImageWithFallback';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
+import { fridgeService } from '../../fridge/fridge.service';
 
 interface RecipeFormModalProps {
   isOpen: boolean;
@@ -74,6 +76,9 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   const [servings, setServings] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.servings : ''));
   const [emoji] = useState(() => (mode === 'edit' && recipe ? recipe.emoji : '🍽️'));
   const [imageUrl, setImageUrl] = useState(() => (mode === 'edit' && recipe ? recipe.imageUrl || '' : ''));
+  const [imagePublicId, setImagePublicId] = useState(() => (mode === 'edit' && recipe ? recipe.imagePublicId || '' : ''));
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [ingredients, setIngredients] = useState<Ingredient[]>(() => {
     if (mode === 'edit' && recipe && recipe.ingredients.length > 0) {
@@ -118,6 +123,25 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   }, [categoriesData, mode, ingredients.length, spices.length]);
 
   if (!isOpen) return null;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const data = await fridgeService.uploadImage(file);
+      if (data.imageUrl) {
+        setImageUrl(data.imageUrl);
+        setImagePublicId(data.imagePublicId || '');
+      }
+    } catch (err) {
+      console.error('Lỗi tải ảnh:', err);
+      alert('Không thể tải ảnh lên. Vui lòng thử lại.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleIngredientChange = (id: string, field: keyof Ingredient, value: string | number) => {
     setIngredients((prev) =>
@@ -185,6 +209,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
       name: name.trim(),
       emoji,
       imageUrl: imageUrl.trim() || undefined,
+      imagePublicId: imagePublicId.trim() || undefined,
       cookTimeMinutes: Number(cookTime),
       difficulty: difficulty as DifficultyLevel,
       servings: Number(servings),
@@ -442,15 +467,36 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
 
           {/* Image URL Input & Preview */}
           <div className="form-group">
-            <label className="form-label">Hình ảnh món ăn (Đường dẫn URL)</label>
+            <label className="form-label">Hình ảnh món ăn (Đường dẫn URL hoặc Tải lên)</label>
             <input
               type="text"
               className="form-input"
               placeholder="Nhập đường dẫn ảnh từ Unsplash, Pexels..."
               value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
+              onChange={(e) => { setImageUrl(e.target.value); setImagePublicId(''); }}
               style={{ marginBottom: '12px' }}
             />
+
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+
+            <div style={{ display: 'flex', gap: 12, marginBottom: '16px' }}>
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ flex: 1, height: 44, background: 'white', borderRadius: 8, outline: '1px solid #E0E0E0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer' }}>
+                <ImageIcon size={18} color="#FF8A00" />
+                <span style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>
+                  {isUploading ? 'Đang tải...' : 'Chọn ảnh'}
+                </span>
+              </button>
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ flex: 1, height: 44, background: 'white', borderRadius: 8, outline: '1px solid #E0E0E0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer' }}>
+                <Camera size={18} color="#FF8A00" />
+                <span style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Chụp ảnh</span>
+              </button>
+            </div>
             <div className="form-image-preview">
               {imageUrl ? (
                 <ImageWithFallback src={imageUrl} fallbackType="recipe" alt="Preview" style={{ width: '100%', height: '150px', borderRadius: '8px', objectFit: 'cover' }} />
