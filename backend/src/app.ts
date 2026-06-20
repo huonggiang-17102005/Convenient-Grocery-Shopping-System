@@ -48,6 +48,10 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use(errorMiddleware);
 
-app.listen(PORT, () => {
-  console.log(`Server đang chạy tại cổng: http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server đang chạy tại cổng: http://localhost:${PORT}`);
+  });
+}
+
+export default app;
