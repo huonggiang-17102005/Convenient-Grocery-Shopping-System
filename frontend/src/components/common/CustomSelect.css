@@ -1,0 +1,128 @@
+.custom-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  color: #1A1A1A;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+  text-align: left;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.custom-select-trigger:focus {
+  border-color: var(--primary-color, #FF8A00);
+}
+
+.custom-select-trigger.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background: #F5F5F5;
+  border-color: #E0E0E0;
+}
+
+.custom-select-arrow {
+  color: #757575;
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  margin-left: 8px;
+}
+
+.custom-select-container.open .custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 6px;
+  background: white;
+  border-radius: 12px;
+  border: 1.27px solid #E0E0E0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  z-index: 2100;
+  overflow: hidden;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.custom-select-option {
+  height: 48px;
+  padding: 0 16px;
+  background: white;
+  border: none;
+  text-align: left;
+  font-weight: 500;
+  color: #1A1A1A;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.custom-select-option:hover {
+  background: var(--primary-light, #FFE0B2);
+  color: var(--primary-color, #FF8A00);
+}
+
+.custom-select-option.selected {
+  background: var(--primary-bg-opacity, rgba(255, 138, 0, 0.10));
+  color: var(--primary-color, #FF8A00);
+}
+
+.custom-select-divider {
+  height: 1px;
+  background: #F0F0F0;
+  width: 100%;
+}
+
+/* Custom override for compact Figma select inside ingredient card */
+.custom-select-container.figma-category-select-wrapper-custom {
+  width: auto;
+}
+
+.custom-select-container.figma-category-select-wrapper-custom .custom-select-trigger {
+  border: none !important;
+  background: var(--primary-light) !important;
+  color: var(--primary-color) !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+}
+
+.custom-select-container.figma-category-select-wrapper-custom .custom-select-trigger.disabled {
+  background: #EAEAEA !important;
+  color: #888888 !important;
+  opacity: 0.8 !important;
+}
+
+.custom-select-container.figma-category-select-wrapper-custom .custom-select-trigger.disabled .custom-select-arrow {
+  color: #888888 !important;
+}
+
+.custom-select-container.figma-category-select-wrapper-custom .custom-select-arrow {
+  color: var(--primary-color) !important;
+  font-size: 8px;
+  margin-left: 4px;
+}
+
+.custom-select-container.figma-category-select-wrapper-custom .custom-select-options {
+  min-width: 90px;
+}

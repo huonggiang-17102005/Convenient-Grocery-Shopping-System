@@ -13,7 +13,7 @@ import WeekDayTabs from './components/WeekDayTabs';
 import type { DayTab } from './components/WeekDayTabs';
 import MealSection from './components/MealSection';
 import AddDishBottomSheet from './modals/AddDishBottomSheet';
-import Toast from '@/components/shared/Toast';
+import Toast from '@/components/common/Toast';
 
 // ── Helper: build week tabs starting from current Monday ─────────────────────
 function buildWeekDays(weekOffset: number = 0): DayTab[] {

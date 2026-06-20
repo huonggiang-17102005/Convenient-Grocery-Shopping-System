@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
+import CustomSelect from '../../components/common/CustomSelect';
 import './Dashboard.css';
 import './Setting.css';
 
@@ -272,26 +273,21 @@ const SettingAdmin: React.FC = () => {
                   <div className="admin-setting-filter">
                     <div className="admin-setting-filter-label">Thời gian:</div>
                     
-                    <select 
-                      title="Chọn tháng"
-                      className="admin-setting-dropdown"
-                      style={{ 
-                        outline: 'none', 
-                        appearance: 'none', 
-                        paddingRight: '32px', 
-                        backgroundImage: 'url("data:image/svg+xml;utf8,<svg fill=%27%23757575%27 height=%2724%27 viewBox=%270 0 24 24%27 width=%2724%27 xmlns=%27http://www.w3.org/2000/svg%27><path d=%27M7 10l5 5 5-5z%27/><path d=%27M0 0h24v24H0z%27 fill=%27none%27/></svg>")', 
-                        backgroundRepeat: 'no-repeat', 
-                        backgroundPositionX: '95%', 
-                        backgroundPositionY: 'center' 
-                      }}
+                    <CustomSelect
                       value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(e.target.value)}
-                    >
-                      <option value="">Tất cả các tháng</option>
-                      {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                        <option key={m} value={m.toString()}>Tháng {m}</option>
-                      ))}
-                    </select>
+                      onChange={setSelectedMonth}
+                      options={[
+                        { value: '', label: 'Tất cả các tháng' },
+                        ...Array.from({ length: 12 }, (_, i) => i + 1).map(m => ({
+                          value: m.toString(),
+                          label: `Tháng ${m}`
+                        }))
+                      ]}
+                      triggerHeight={40}
+                      fontSize={14}
+                      padding="0 16px"
+                      className="admin-setting-filter-select"
+                    />
 
                     <input 
                       type="number"

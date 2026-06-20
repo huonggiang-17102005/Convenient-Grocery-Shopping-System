@@ -215,6 +215,22 @@
   font-weight: 500;
 }
 
+/* CustomSelect override for filter bar in Setting page */
+.admin-setting-filter-select {
+  width: 180px;
+}
+
+.admin-setting-filter-select .custom-select-trigger {
+  height: 40px;
+  border-radius: 8px;
+  border-color: #E0E0E0;
+}
+
+.admin-setting-filter-select .custom-select-options {
+  border-radius: 8px;
+  z-index: 1100;
+}
+
 .admin-setting-export-btn {
   height: 38px;
   padding: 0 16px;

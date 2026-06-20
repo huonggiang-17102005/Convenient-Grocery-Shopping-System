@@ -8,7 +8,7 @@ import ItemFormModal from './modals/ItemFormModal';
 import DeleteConfirmModal from './modals/DeleteConfirmModal';
 import type { ShoppingItem, FoodCategory } from './types';
 import { shoppingService } from './shopping-list.service';
-import Toast from '@/components/shared/Toast';
+import Toast from '@/components/common/Toast';
 import IngredientFormModal from '../fridge/modals/IngredientFormModal';
 import { fridgeService } from '../fridge/fridge.service';
 import { useShoppingListContext } from '../../contexts/ShoppingListContext';

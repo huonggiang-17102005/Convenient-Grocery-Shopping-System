@@ -9,6 +9,7 @@ interface RecipeDetailModalProps {
   recipe: Recipe | null;
   showEditDelete?: boolean;
   showShoppingAndCook?: boolean;
+  role?: 'homemaker' | 'member';
   onClose: () => void;
   onEdit: (recipe: Recipe) => void;
   onDelete: (recipe: Recipe) => void;
@@ -22,6 +23,7 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   recipe,
   showEditDelete = true,
   showShoppingAndCook = true,
+  role,
   onClose,
   onEdit,
   onDelete,
@@ -135,7 +137,7 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
 
           {/* Action buttons */}
           <div className="recipe-detail-actions">
-            {recipe.authorId === null ? (
+            {recipe.authorId === null && (
               <button
                 id="recipe-detail-save-family-btn"
                 type="button"
@@ -144,17 +146,6 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
               >
                 Lưu vào thư viện Gia đình
               </button>
-            ) : (
-              showShoppingAndCook && (
-                <button
-                  id="recipe-detail-cook-btn"
-                  type="button"
-                  className="recipe-detail-primary-btn"
-                  onClick={() => {/* Lưu vào thực đơn - placeholder */}}
-                >
-                  Lưu vào thực đơn hôm nay
-                </button>
-              )
             )}
 
             {/* Action buttons (show edit/delete for both roles only if showEditDelete is true) */}
@@ -163,7 +154,7 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
                 <button
                   id="recipe-detail-edit-btn"
                   type="button"
-                  className="recipe-detail-outline-btn"
+                  className="recipe-detail-primary-btn"
                   onClick={() => onEdit(recipe)}
                 >
                   Sửa công thức

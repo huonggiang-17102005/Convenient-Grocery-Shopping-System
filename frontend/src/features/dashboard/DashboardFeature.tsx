@@ -16,7 +16,7 @@ export interface DashboardFeatureProps {
 }
 
 // Components
-import Toast from '@/components/shared/Toast';
+import Toast from '@/components/common/Toast';
 import ExpiringWarningList from './components/ExpiringWarningList';
 import TodayMenu from './components/TodayMenu';
 import type { IngredientCardProps } from './components/IngredientCard';

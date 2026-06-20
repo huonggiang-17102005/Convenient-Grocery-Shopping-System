@@ -19,7 +19,7 @@ import AvatarModal from './modals/AvatarModal';
 import AccountModal from './modals/AccountModal';
 import ConfirmModal from './modals/ConfirmModal';
 import type { ConfirmVariant } from './modals/ConfirmModal';
-import Toast from '@/components/shared/Toast';
+import Toast from '@/components/common/Toast';
 import useRealtimeNoti from '../../hooks/useRealtimeNoti';
 import { useFamilyContext } from '../../contexts/FamilyContext';
 import { useAuth } from '../../contexts/AuthContext';

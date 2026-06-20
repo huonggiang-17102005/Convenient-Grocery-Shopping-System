@@ -44,6 +44,7 @@ const mapBackendToFrontendRecipe = (item: any): Recipe => {
     authorId: item.author_id,
     authorName: item.author?.full_name || null,
     visibility: item.visibility,
+    createdAt: item.created_at || undefined,
   };
 };
 

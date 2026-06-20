@@ -34,6 +34,7 @@ export interface Recipe {
   authorId?: string | null;
   authorName?: string | null;
   visibility?: 'Private' | 'Public' | 'Pending';
+  createdAt?: string; // ISO date string
 }
 
 // Dùng cho tab Cộng đồng
