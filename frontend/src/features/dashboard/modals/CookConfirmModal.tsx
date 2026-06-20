@@ -213,7 +213,21 @@ const CookConfirmModal: React.FC<CookConfirmModalProps> = ({
                         onChange={(e) => updateField(index, 'category', e.target.value)}
                         title="Chọn danh mục"
                       >
-                        {availableCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        {availableCategories.map(cat => (
+                          <option 
+                            key={cat} 
+                            value={cat}
+                            style={{
+                              background: '#ffffff',
+                              color: '#1A1A1A',
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: '13px',
+                              padding: '8px 12px'
+                            }}
+                          >
+                            {cat}
+                          </option>
+                        ))}
                       </select>
                       <div style={{ width: '100%', height: '100%', paddingLeft: 6, paddingRight: 6, justifyContent: 'space-between', alignItems: 'center', display: 'flex', pointerEvents: 'none' }}>
                         <div style={{ color: '#FF8A00', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

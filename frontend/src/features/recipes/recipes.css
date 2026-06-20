@@ -241,6 +241,24 @@
   color: #757575;
 }
 
+.recipe-tag--easy {
+  background: #E8F5E9;
+  color: #2E7D32;
+  font-weight: 600;
+}
+
+.recipe-tag--medium {
+  background: #FFF3E0;
+  color: #E65100;
+  font-weight: 600;
+}
+
+.recipe-tag--hard {
+  background: #FCE8E6;
+  color: #D32F2F;
+  font-weight: 600;
+}
+
 /* ── Library tip ──────────────────────────────────────────── */
 .recipe-library-tip {
   font-size: 13px;

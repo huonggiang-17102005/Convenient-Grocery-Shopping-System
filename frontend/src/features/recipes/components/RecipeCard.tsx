@@ -57,7 +57,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
         <h3 className="recipe-card-name">{recipe.name}</h3>
 
         {(recipe.authorName || recipe.visibility === 'Public' || recipe.authorId === null) && (
-          <div className="recipe-card-author" style={{ fontSize: '11px', color: '#757575', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div className="recipe-card-author" style={{ fontSize: '11.5px', color: '#1A1A1A', fontWeight: '600', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span>👤</span>
             <span>
               {recipe.visibility === 'Public'
@@ -76,10 +76,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           ) : null}
 
           <div className="recipe-card-tags-row">
-            <span className="recipe-tag recipe-tag--neutral">
+            <span className={`recipe-tag ${recipe.cookTimeMinutes <= 30 ? 'recipe-tag--easy' : recipe.cookTimeMinutes <= 60 ? 'recipe-tag--medium' : 'recipe-tag--hard'}`}>
               {recipe.cookTimeMinutes} phút
             </span>
-            <span className="recipe-tag recipe-tag--neutral">
+            <span className={`recipe-tag ${recipe.difficulty?.toLowerCase() === 'dễ' ? 'recipe-tag--easy' : recipe.difficulty?.toLowerCase() === 'trung bình' ? 'recipe-tag--medium' : 'recipe-tag--hard'}`}>
               {recipe.difficulty}
             </span>
           </div>

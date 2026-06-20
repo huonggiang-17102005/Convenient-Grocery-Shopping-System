@@ -7,15 +7,33 @@ export interface ShoppingConfirmIngredient {
   name: string;
   category: string;
   neededText: string;
-  buyAmountStr: string;
+  buyAmountStr?: string; // for 'Gia vị'
+  quantity?: number; // for non-'Gia vị'
+  unit?: string; // for non-'Gia vị'
 }
 
 interface ShoppingConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm?: (ingredients: Array<{ name: string; category: string; buyAmountStr: string }>) => void;
-  initialIngredients?: Array<{ name: string; category: string; neededText: string; defaultBuyAmount: string }>;
+  onConfirm?: (ingredients: Array<{ name: string; category: string; buyAmountStr?: string; quantity?: number; unit?: string }>) => void;
+  initialIngredients?: Array<{ name: string; category: string; neededText: string; defaultBuyAmount: string; quantity?: number; unit?: string }>;
 }
+
+const parseQuantity = (str: string): { amount: number; unit: string } => {
+  const trimmed = str.trim();
+  const match = trimmed.match(/^([\d.,]+)\s*(.*)$/);
+  if (match) {
+    const num = parseFloat(match[1].replace(',', '.'));
+    return {
+      amount: isNaN(num) ? 1 : num,
+      unit: match[2] || 'g',
+    };
+  }
+  return {
+    amount: 1,
+    unit: trimmed || 'g',
+  };
+};
 
 const ShoppingConfirmModal: React.FC<ShoppingConfirmModalProps> = ({
   isOpen,
@@ -24,10 +42,9 @@ const ShoppingConfirmModal: React.FC<ShoppingConfirmModalProps> = ({
   initialIngredients = []
 }) => {
   const { categoriesData } = useCategoryContext();
-  // Filter out "Gia vị" from the dropdown select list
   const availableCategories = categoriesData
     .map(c => c.category as FoodCategory)
-    .filter(cat => cat !== 'Gia vị');
+    .filter(cat => cat && !cat.startsWith('__'));
 
   const [ingredients, setIngredients] = useState<ShoppingConfirmIngredient[]>([]);
 
@@ -39,25 +56,63 @@ const ShoppingConfirmModal: React.FC<ShoppingConfirmModalProps> = ({
             name: ing.name,
             category: ing.category,
             neededText: ing.neededText,
-            buyAmountStr: ing.defaultBuyAmount
+            buyAmountStr: ing.category === 'Gia vị' ? ing.defaultBuyAmount : undefined,
+            quantity: ing.category !== 'Gia vị' ? (ing.quantity ?? 1) : undefined,
+            unit: ing.category !== 'Gia vị' ? (ing.unit || 'g') : undefined
           }))
         );
       } else {
+        const defaultCat = availableCategories[0] || '';
         setIngredients([
           {
             name: '',
-            category: availableCategories[0] || '',
+            category: defaultCat,
             neededText: 'Nguyên liệu mới',
-            buyAmountStr: ''
+            buyAmountStr: defaultCat === 'Gia vị' ? '' : undefined,
+            quantity: defaultCat !== 'Gia vị' ? 1 : undefined,
+            unit: defaultCat !== 'Gia vị' ? 'g' : undefined
           }
         ]);
       }
     }
-  }, [isOpen, initialIngredients, availableCategories]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
-  const updateField = (index: number, field: keyof ShoppingConfirmIngredient, value: string) => {
+  const updateField = (index: number, field: keyof ShoppingConfirmIngredient, value: any) => {
     setIngredients((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const handleCategoryChange = (index: number, newCat: string) => {
+    setIngredients((prev) =>
+      prev.map((item, i) => {
+        if (i === index) {
+          const oldCat = item.category;
+          if (newCat === 'Gia vị' && oldCat !== 'Gia vị') {
+            const q = item.quantity ?? '';
+            const u = item.unit ?? '';
+            return {
+              ...item,
+              category: newCat,
+              buyAmountStr: q || u ? `${q} ${u}`.trim() : '',
+              quantity: undefined,
+              unit: undefined
+            };
+          } else if (newCat !== 'Gia vị' && oldCat === 'Gia vị') {
+            const parsed = parseQuantity(item.buyAmountStr || '');
+            return {
+              ...item,
+              category: newCat,
+              quantity: parsed.amount,
+              unit: parsed.unit,
+              buyAmountStr: undefined
+            };
+          }
+          return { ...item, category: newCat };
+        }
+        return item;
+      })
     );
   };
 
@@ -66,19 +121,30 @@ const ShoppingConfirmModal: React.FC<ShoppingConfirmModalProps> = ({
   };
 
   const addIngredient = () => {
+    const defaultCat = availableCategories[0] || '';
     setIngredients((prev) => [
       ...prev,
       {
         name: '',
-        category: availableCategories[0] || '',
+        category: defaultCat,
         neededText: 'Nguyên liệu mới',
-        buyAmountStr: ''
+        buyAmountStr: defaultCat === 'Gia vị' ? '' : undefined,
+        quantity: defaultCat !== 'Gia vị' ? 1 : undefined,
+        unit: defaultCat !== 'Gia vị' ? 'g' : undefined
       }
     ]);
   };
 
   const handleConfirm = () => {
-    const validItems = ingredients.filter(i => i.name.trim() !== '' && i.buyAmountStr.trim() !== '');
+    const validItems = ingredients.filter(i => {
+      if (i.name.trim() === '') return false;
+      if (i.category === 'Gia vị') {
+        return (i.buyAmountStr || '').trim() !== '';
+      } else {
+        return i.quantity !== undefined && !isNaN(i.quantity);
+      }
+    });
+
     if (validItems.length === 0) {
       alert('Vui lòng nhập tên và số lượng mua ít nhất một nguyên liệu!');
       return;
@@ -112,7 +178,7 @@ const ShoppingConfirmModal: React.FC<ShoppingConfirmModalProps> = ({
             Mua sắm nguyên liệu thiếu
           </div>
           <div style={{ textAlign: 'center', color: '#757575', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', marginTop: 4 }}>
-            Nhập lượng cần mua (Ví dụ: 1 lọ, 500g, 2 gói...)
+            Nhập lượng cần mua vào Shopping List
           </div>
         </div>
 
@@ -146,7 +212,7 @@ const ShoppingConfirmModal: React.FC<ShoppingConfirmModalProps> = ({
                   <div style={{ width: '100%', height: 1, position: 'relative', background: '#F0F0F0' }} />
                 </div>
 
-                {/* Row Footer: Category Select and custom amount string */}
+                {/* Row Footer: Category Select and custom inputs */}
                 <div style={{ alignSelf: 'stretch', paddingLeft: 12, paddingRight: 12, paddingTop: 6, paddingBottom: 6, justifyContent: 'flex-start', alignItems: 'center', display: 'flex', boxSizing: 'border-box' }}>
 
                   {/* Category dropdown */}
@@ -155,10 +221,24 @@ const ShoppingConfirmModal: React.FC<ShoppingConfirmModalProps> = ({
                       <select
                         style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', cursor: 'pointer' }}
                         value={item.category}
-                        onChange={(e) => updateField(index, 'category', e.target.value)}
+                        onChange={(e) => handleCategoryChange(index, e.target.value)}
                         title="Chọn danh mục"
                       >
-                        {availableCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        {availableCategories.map(cat => (
+                          <option 
+                            key={cat} 
+                            value={cat}
+                            style={{
+                              background: '#ffffff',
+                              color: '#1A1A1A',
+                              fontFamily: 'Plus Jakarta Sans',
+                              fontSize: '13px',
+                              padding: '8px 12px'
+                            }}
+                          >
+                            {cat}
+                          </option>
+                        ))}
                       </select>
                       <div style={{ width: '100%', height: '100%', paddingLeft: 6, paddingRight: 6, justifyContent: 'space-between', alignItems: 'center', display: 'flex', pointerEvents: 'none' }}>
                         <div style={{ color: '#FF8A00', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -171,15 +251,42 @@ const ShoppingConfirmModal: React.FC<ShoppingConfirmModalProps> = ({
 
                   <div style={{ width: 1, height: 16, position: 'relative', background: '#E0E0E0', margin: '0 8px', flexShrink: 0 }} />
 
-                  {/* Free text input for buy amount */}
-                  <div style={{ flex: 1, height: 26, overflow: 'hidden', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', display: 'flex' }}>
-                    <input
-                      style={{ alignSelf: 'stretch', border: 'none', outline: 'none', color: '#1A1A1A', fontSize: 12, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', background: 'transparent' }}
-                      value={item.buyAmountStr}
-                      onChange={(e) => updateField(index, 'buyAmountStr', e.target.value)}
-                      placeholder="Ví dụ: 1 lọ, 500g, 2 gói..."
-                    />
-                  </div>
+                  {/* Input style based on Category (Spice vs. Non-Spice) */}
+                  {item.category === 'Gia vị' ? (
+                    <div style={{ flex: 1, height: 26, overflow: 'hidden', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', display: 'flex' }}>
+                      <input
+                        style={{ alignSelf: 'stretch', border: 'none', outline: 'none', color: '#1A1A1A', fontSize: 12, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', background: 'transparent' }}
+                        value={item.buyAmountStr || ''}
+                        onChange={(e) => updateField(index, 'buyAmountStr', e.target.value)}
+                        placeholder="Ví dụ: 1 lọ, 500g, 2 gói..."
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ flex: 1, height: 26, overflow: 'hidden', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', display: 'flex' }}>
+                        <input
+                          style={{ alignSelf: 'stretch', textAlign: 'center', border: 'none', outline: 'none', color: '#1A1A1A', fontSize: 12, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', background: 'transparent' }}
+                          value={item.quantity ?? ''}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            const num = val === '' ? undefined : parseFloat(val);
+                            updateField(index, 'quantity', isNaN(num as any) ? undefined : num);
+                          }}
+                          placeholder="Số lượng"
+                        />
+                      </div>
+                      <div style={{ width: 1, height: 16, position: 'relative', background: '#E0E0E0', margin: '0 8px', flexShrink: 0 }} />
+                      <div style={{ width: 36, flexShrink: 0, height: 26, paddingLeft: 4, paddingRight: 4, justifyContent: 'center', alignItems: 'center', display: 'flex' }}>
+                        <input
+                          style={{ alignSelf: 'stretch', width: '100%', textAlign: 'center', border: 'none', outline: 'none', color: '#757575', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', background: 'transparent' }}
+                          value={item.unit || ''}
+                          onChange={(e) => updateField(index, 'unit', e.target.value)}
+                          placeholder="ĐVT"
+                        />
+                      </div>
+                    </>
+                  )}
+
                 </div>
 
               </div>

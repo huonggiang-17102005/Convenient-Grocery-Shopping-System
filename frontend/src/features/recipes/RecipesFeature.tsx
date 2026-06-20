@@ -15,6 +15,7 @@ import RecipeFormModal from './modals/RecipeFormModal';
 import ShareCommunityModal from './modals/ShareCommunityModal';
 import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
 import ShoppingConfirmModal from './modals/ShoppingConfirmModal';
+import Toast from '../../components/shared/Toast';
 
 import { shoppingService } from '../shopping-list/shopping-list.service';
 import './recipes.css';
@@ -57,6 +58,15 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
   const [isShoppingConfirmOpen, setIsShoppingConfirmOpen] = useState(false);
   const [shoppingConfirmIngredients, setShoppingConfirmIngredients] = useState<any[]>([]);
+
+  // Toast state
+  const [toastMsg, setToastMsg] = useState('');
+  const [toastTrigger, setToastTrigger] = useState(0);
+
+  const showToast = useCallback((msg: string) => {
+    setToastMsg(msg);
+    setToastTrigger(prev => prev + 1);
+  }, []);
 
   // ── Refs ─────────────────────────────────────────────────────
   const pendingTimeoutRef = useRef<any>(null);
@@ -215,6 +225,8 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       category: string;
       neededText: string;
       defaultBuyAmount: string;
+      quantity?: number;
+      unit?: string;
     }> = [];
     
     recipe.ingredients.forEach(ing => {
@@ -230,6 +242,8 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
             category: ing.category,
             neededText: 'Gia vị chưa có trong tủ lạnh',
             defaultBuyAmount: ing.amount > 0 ? `${ing.amount} ${ing.unit}` : '1 gói',
+            quantity: ing.amount > 0 ? ing.amount : 1,
+            unit: ing.amount > 0 ? ing.unit : 'gói',
           });
         }
       } else {
@@ -241,13 +255,17 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
             category: ing.category,
             neededText: `Cần ${ing.amount}${ing.unit} (Trong tủ: ${available}${ing.unit})`,
             defaultBuyAmount: `${diff} ${ing.unit}`,
+            quantity: diff,
+            unit: ing.unit,
           });
         }
       }
     });
 
     if (missing.length === 0) {
-      alert('Tủ lạnh đã có đủ nguyên liệu cho công thức này!');
+      showToast('Đã đủ nguyên liệu cho món ăn này');
+      setIsDetailOpen(false);
+      setIsViewingCommunity(false);
       return;
     }
 
@@ -255,7 +273,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     setIsShoppingConfirmOpen(true);
   }, [fridgeItems]);
 
-  const handleShoppingConfirmSubmit = useCallback(async (items: Array<{ name: string; category: string; buyAmountStr: string }>) => {
+  const handleShoppingConfirmSubmit = useCallback(async (items: Array<{ name: string; category: string; buyAmountStr?: string; quantity?: number; unit?: string }>) => {
     const parseQuantity = (str: string): { amount: number; unit: string } => {
       const trimmed = str.trim();
       const match = trimmed.match(/^([\d.,]+)\s*(.*)$/);
@@ -274,17 +292,27 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
     try {
       for (const item of items) {
-        const parsed = parseQuantity(item.buyAmountStr);
+        let finalQty = 1;
+        let finalUnit = 'g';
+        if (item.category === 'Gia vị') {
+          const parsed = parseQuantity(item.buyAmountStr || '');
+          finalQty = parsed.amount;
+          finalUnit = parsed.unit;
+        } else {
+          finalQty = item.quantity ?? 1;
+          finalUnit = item.unit || 'g';
+        }
+
         await shoppingService.createShoppingItem({
           name: item.name,
           category: item.category,
-          quantity: parsed.amount,
-          unit: parsed.unit,
+          quantity: finalQty,
+          unit: finalUnit,
         });
       }
 
       setIsShoppingConfirmOpen(false);
-      alert('Đã thêm các nguyên liệu thiếu vào danh sách mua sắm thành công!');
+      showToast('Đã thêm các nguyên liệu thiếu vào danh sách mua sắm thành công!');
     } catch (error) {
       console.error('Error adding custom items to shopping list:', error);
       alert('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
@@ -462,6 +490,8 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleDeleteConfirm}
       />
+
+      <Toast message={toastMsg} trigger={toastTrigger} onHide={() => {}} />
     </div>
   );
 };
