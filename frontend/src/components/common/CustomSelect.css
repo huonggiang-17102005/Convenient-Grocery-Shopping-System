@@ -76,6 +76,7 @@
   width: 100%;
   transition: background 0.15s, color 0.15s;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .custom-select-option:hover {

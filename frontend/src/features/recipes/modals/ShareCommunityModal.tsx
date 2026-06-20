@@ -330,19 +330,17 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                 
                 {/* Bottom part: Category, Amount, Unit */}
                 <div className="figma-ingredient-card-bottom">
-                  <div className="figma-category-select-wrapper">
-                    <select
-                      title="Phân loại"
-                      className="figma-category-select"
-                      value={ing.category}
-                      onChange={(e) => handleIngredientChange(ing.id, 'category', e.target.value)}
-                    >
-                      <option value="" disabled hidden>- Chọn -</option>
-                      {availableCategories.filter(c => c !== 'Gia vị').map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <CustomSelect
+                    value={ing.category}
+                    onChange={(val) => handleIngredientChange(ing.id, 'category', val)}
+                    options={availableCategories.filter(c => c !== 'Gia vị').map(c => ({ value: c, label: c }))}
+                    placeholder="- Chọn -"
+                    triggerHeight={22}
+                    fontSize={10}
+                    padding="0 6px"
+                    className="figma-category-select-wrapper-custom"
+                    style={{ width: '90px' }}
+                  />
                   
                   <div className="figma-card-v-divider" />
                   
@@ -358,21 +356,18 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                   
                   <div className="figma-card-v-divider" />
                   
-                  <div className="figma-category-select-wrapper">
-                    <select
-                      title="Đơn vị"
-                      className="figma-category-select"
-                      style={{ width: '60px' }}
-                      value={ing.unit}
-                      onChange={(e) => handleIngredientChange(ing.id, 'unit', e.target.value)}
-                      disabled={ing.category !== 'Khác'}
-                    >
-                      <option value="" disabled hidden>-</option>
-                      {getAvailableUnits(ing.category).map((u) => (
-                        <option key={u} value={u}>{u}</option>
-                      ))}
-                    </select>
-                  </div>
+                  <CustomSelect
+                    value={ing.unit}
+                    onChange={(val) => handleIngredientChange(ing.id, 'unit', val)}
+                    options={getAvailableUnits(ing.category).map(u => ({ value: u, label: u }))}
+                    placeholder="-"
+                    disabled={ing.category !== 'Khác'}
+                    triggerHeight={22}
+                    fontSize={10}
+                    padding="0 6px"
+                    className="figma-category-select-wrapper-custom"
+                    style={{ width: '60px' }}
+                  />
                 </div>
               </div>
             ))}

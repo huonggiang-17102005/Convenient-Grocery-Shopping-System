@@ -320,9 +320,9 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       showToast('Đã thêm các nguyên liệu thiếu vào danh sách mua sắm thành công!');
     } catch (error) {
       console.error('Error adding custom items to shopping list:', error);
-      alert('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
+      showToast('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
     }
-  }, []);
+  }, [showToast]);
 
   const handleCommunityPostClick = useCallback((post: CommunityPost) => {
     setIsViewingCommunity(true);

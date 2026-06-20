@@ -89,7 +89,10 @@ export const createRecipe = async (recipe: Partial<Recipe>): Promise<Recipe> => 
   const { data, error } = await supabase
     .from('recipes')
     .insert([recipe])
-    .select()
+    .select(`
+      *,
+      author:users!author_id(id, full_name, avatar)
+    `)
     .single();
 
   if (error) {
@@ -105,7 +108,10 @@ export const updateRecipe = async (id: string, recipeData: Partial<Recipe>): Pro
     .from('recipes')
     .update(recipeData)
     .eq('id', id)
-    .select()
+    .select(`
+      *,
+      author:users!author_id(id, full_name, avatar)
+    `)
     .single();
 
   if (error) {

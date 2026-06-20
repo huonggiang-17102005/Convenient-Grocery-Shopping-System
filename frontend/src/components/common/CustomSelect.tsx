@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import './CustomSelect.css';
 
 interface Option {
@@ -13,6 +14,7 @@ interface CustomSelectProps {
   placeholder?: string;
   disabled?: boolean;
   triggerHeight?: number | string;
+  optionHeight?: number | string;
   fontSize?: string | number;
   padding?: string;
   className?: string;
@@ -26,26 +28,72 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   placeholder = '- Chọn -',
   disabled = false,
   triggerHeight = 52,
+  optionHeight,
   fontSize = 14,
   padding = '0 16px',
   className = '',
   style,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+  const [themeStyles, setThemeStyles] = useState<React.CSSProperties>({});
+  
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  const updateCoords = useCallback(() => {
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const triggerStyle = window.getComputedStyle(triggerRef.current);
+      
+      const primaryColor = triggerStyle.getPropertyValue('--primary-color');
+      const primaryLight = triggerStyle.getPropertyValue('--primary-light');
+      const primaryBgOpacity = triggerStyle.getPropertyValue('--primary-bg-opacity');
+
+      setThemeStyles({
+        '--primary-color': primaryColor || undefined,
+        '--primary-light': primaryLight || undefined,
+        '--primary-bg-opacity': primaryBgOpacity || undefined,
+      } as React.CSSProperties);
+
+      setCoords({
+        top: rect.bottom,
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
+    updateCoords();
+
     const handleOutsideClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      if (
+        containerRef.current && !containerRef.current.contains(e.target as Node) &&
+        !(e.target instanceof Element && e.target.closest('.custom-select-options'))
+      ) {
         setIsOpen(false);
       }
     };
+
+    const handleScrollResize = () => {
+      updateCoords();
+    };
+
     document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
-  }, [isOpen]);
+    window.addEventListener('resize', handleScrollResize);
+    window.addEventListener('scroll', handleScrollResize, true);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('resize', handleScrollResize);
+      window.removeEventListener('scroll', handleScrollResize, true);
+    };
+  }, [isOpen, updateCoords]);
 
   const selectedOption = options.find(o => o.value === value);
+  const isCompact = typeof triggerHeight === 'number' && triggerHeight <= 30;
 
   return (
     <div 
@@ -54,6 +102,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       style={style}
     >
       <button
+        ref={triggerRef}
         type="button"
         className={`custom-select-trigger ${disabled ? 'disabled' : ''}`}
         style={{ height: triggerHeight, padding, fontSize }}
@@ -64,14 +113,29 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         <span className="custom-select-arrow">▼</span>
       </button>
 
-      {isOpen && (
-        <div className="custom-select-options">
+      {isOpen && createPortal(
+        <div 
+          className={`custom-select-options ${className}`}
+          style={{
+            position: 'fixed',
+            top: `${coords.top + 4}px`,
+            left: `${coords.left}px`,
+            minWidth: `${coords.width}px`,
+            width: 'max-content',
+            zIndex: 99999,
+            ...themeStyles,
+          }}
+        >
           {options.map((opt, idx) => (
             <React.Fragment key={opt.value}>
               <button
                 type="button"
                 className={`custom-select-option ${opt.value === value ? 'selected' : ''}`}
-                style={{ fontSize }}
+                style={{ 
+                  fontSize,
+                  height: optionHeight || (isCompact ? '30px' : undefined),
+                  padding: isCompact ? '0 10px' : undefined
+                }}
                 onClick={() => {
                   onChange(opt.value);
                   setIsOpen(false);
@@ -82,7 +146,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
               {idx < options.length - 1 && <div className="custom-select-divider" />}
             </React.Fragment>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
