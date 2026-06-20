@@ -6,6 +6,7 @@ import type { UnitType } from '../components/UnitDropdown';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
 import { fridgeService } from '../fridge.service';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
+import CustomSelect from '../../../components/common/CustomSelect';
 import './IngredientFormModal.css';
 
 interface IngredientFormModalProps {
@@ -176,7 +177,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
     <div className="fridge-modal-overlay" onClick={handleOverlayClick} aria-modal="true" role="dialog">
       <div className="fridge-bottom-sheet" ref={sheetRef}>
 
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingBottom: 4 }}>
+        <div onClick={onClose} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingBottom: 12, paddingTop: 4, cursor: 'pointer', width: '100%' }}>
           <div style={{ width: 40, height: 4, background: '#E0E0E0', borderRadius: 4 }} />
         </div>
 
@@ -198,19 +199,13 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
           {/* Vị trí lưu trữ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
             <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Vị trí lưu trữ</label>
-            <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <select
-                style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: isReadOnly ? 'default' : 'pointer' }}
-                value={storageType}
-                onChange={(e) => setStorageType(e.target.value as StorageType)}
-                disabled={isReadOnly}
-              >
-                <option value="" disabled hidden>Chọn vị trí lưu trữ</option>
-                {STORAGES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <div style={{ color: storageType ? '#1A1A1A' : '#9E9E9E', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>{storageType || 'Chọn vị trí lưu trữ'}</div>
-              <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>▼</div>
-            </div>
+            <CustomSelect
+              value={storageType}
+              onChange={(val) => setStorageType(val as StorageType)}
+              options={STORAGES.map(s => ({ value: s, label: s }))}
+              placeholder="Chọn vị trí lưu trữ"
+              disabled={isReadOnly}
+            />
           </div>
 
           {/* Danh mục thực phẩm */}
@@ -219,26 +214,20 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
               <span style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Danh mục thực phẩm</span>
               <span style={{ color: '#D32F2F', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px', marginLeft: 4 }}>*</span>
             </div>
-            <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <select
-                style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: isReadOnly ? 'default' : 'pointer' }}
-                value={category}
-                onChange={(e) => {
-                  const newCat = e.target.value as FoodCategory;
-                  setCategory(newCat);
-                  const newCatData = categoriesData.find(c => c.category === newCat);
-                  if (newCatData && newCatData.units.length > 0) {
-                    setUnit(newCatData.units[0]);
-                  }
-                }}
-                disabled={isReadOnly}
-              >
-                <option value="" disabled hidden>Chọn danh mục thực phẩm</option>
-                {DYNAMIC_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <div style={{ color: category ? '#1A1A1A' : '#9E9E9E', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>{category || 'Chọn danh mục thực phẩm'}</div>
-              <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', pointerEvents: 'none' }}>▼</div>
-            </div>
+            <CustomSelect
+              value={category}
+              onChange={(val) => {
+                const newCat = val as FoodCategory;
+                setCategory(newCat);
+                const newCatData = categoriesData.find(c => c.category === newCat);
+                if (newCatData && newCatData.units.length > 0) {
+                  setUnit(newCatData.units[0]);
+                }
+              }}
+              options={DYNAMIC_CATEGORIES.map(c => ({ value: c, label: c }))}
+              placeholder="Chọn danh mục thực phẩm"
+              disabled={isReadOnly}
+            />
           </div>
 
           {/* Tên thực phẩm */}

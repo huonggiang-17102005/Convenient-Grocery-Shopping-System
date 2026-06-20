@@ -68,9 +68,27 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     [expiringFridgeItems]
   );
 
+  // Helper: sort priority first, then by newest
+  const sortRecipes = useCallback((list: Recipe[]): Recipe[] => {
+    return [...list].sort((a, b) => {
+      if (a.isPriority && !b.isPriority) return -1;
+      if (!a.isPriority && b.isPriority) return 1;
+      // Same priority group → sort by createdAt descending
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    });
+  }, []);
+
   // 3. Tính toán lại danh sách hiển thị tự động khi recipes hoặc fridgeItems thay đổi
-  const mappedRecipes = useMemo(() => recipes.map(mapRecipePriority), [recipes, mapRecipePriority]);
-  const mappedSystemRecipes = useMemo(() => systemRecipes.map(mapRecipePriority), [systemRecipes, mapRecipePriority]);
+  const mappedRecipes = useMemo(
+    () => sortRecipes(recipes.map(mapRecipePriority)),
+    [recipes, mapRecipePriority, sortRecipes]
+  );
+  const mappedSystemRecipes = useMemo(
+    () => sortRecipes(systemRecipes.map(mapRecipePriority)),
+    [systemRecipes, mapRecipePriority, sortRecipes]
+  );
   const mappedFavoriteRecipes = useMemo(() => favoriteRecipes.map(mapRecipePriority), [favoriteRecipes, mapRecipePriority]);
   const mappedCommunityPosts = useMemo(
     () =>

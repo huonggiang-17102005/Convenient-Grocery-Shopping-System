@@ -111,7 +111,7 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
       <div className="mp-overlay" onClick={handleOverlayClick} aria-modal="true" role="dialog">
         <div className="mp-bottom-sheet" ref={sheetRef} style={{ padding: 0 }}>
           <div style={{ width: '100%', paddingTop: 20, paddingBottom: 32, paddingLeft: 20, paddingRight: 20, background: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
-            <div style={{ width: '100%', justifyContent: 'center', alignItems: 'flex-start', display: 'flex' }}>
+            <div onClick={onClose} style={{ width: '100%', justifyContent: 'center', alignItems: 'flex-start', display: 'flex', cursor: 'pointer', paddingBottom: 8 }}>
               <div style={{ width: 40, height: 4, position: 'relative', background: '#E0E0E0', borderRadius: 4 }} />
             </div>
             <div style={{ paddingTop: 16, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
@@ -154,7 +154,7 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
       <div className="mp-bottom-sheet" ref={sheetRef}>
 
         {/* Drag handle */}
-        <div className="mp-sheet-handle-row" aria-hidden="true">
+        <div className="mp-sheet-handle-row" aria-hidden="true" onClick={onClose} style={{ cursor: 'pointer' }}>
           <div className="mp-sheet-handle" />
         </div>
 

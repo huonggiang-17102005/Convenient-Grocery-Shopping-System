@@ -51,7 +51,13 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
       recipesService.getFavoriteRecipes().catch(() => [])
     ]).then(([family, favs]) => {
       const map = new Map<string, Recipe>();
-      family.forEach(r => map.set(r.id, r));
+      // Chỉ lấy các công thức gia đình là Private và được tạo bởi thành viên gia đình (authorId !== null)
+      family.forEach(r => {
+        if (r.visibility === 'Private' && r.authorId !== null) {
+          map.set(r.id, r);
+        }
+      });
+      // Lấy tất cả các công thức trong danh sách yêu thích
       favs.forEach(r => map.set(r.id, r));
       setAvailableRecipes(Array.from(map.values()));
     });

@@ -10,7 +10,7 @@ import IngredientFormModal from './modals/IngredientFormModal';
 import QuantityConfirmModal from './modals/QuantityConfirmModal';
 import ConsumeConfirmModal from './modals/ConsumeConfirmModal';
 import RecipeActionBar from './components/RecipeActionBar';
-import Toast from '@/components/shared/Toast';
+import Toast from '@/components/common/Toast';
 import AiRecipeModal from './modals/AiRecipeModal';
 
 export interface FridgeFeatureProps {

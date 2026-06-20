@@ -6,12 +6,14 @@ import { Camera, Image as ImageIcon } from 'lucide-react';
 import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
 import ImageWithFallback from '../../../components/common/ImageWithFallback';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
+import CustomSelect from '../../../components/common/CustomSelect';
 import { fridgeService } from '../../fridge/fridge.service';
 
 interface RecipeFormModalProps {
   isOpen: boolean;
   mode: 'create' | 'edit';
   recipe?: Recipe | null;
+  role?: 'homemaker' | 'member';
   onClose: () => void;
   onSubmit: (data: Omit<Recipe, 'id' | 'isFavorited'>) => void;
 }
@@ -64,10 +66,12 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   isOpen,
   mode,
   recipe,
+  role = 'homemaker',
   onClose,
   onSubmit,
 }) => {
   const { categoriesData } = useCategoryContext();
+  const primaryColor = role === 'member' ? '#1E88E5' : '#FF8A00';
 
   const [name, setName] = useState(() => (mode === 'edit' && recipe ? recipe.name : ''));
   const [cookTime, setCookTime] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.cookTimeMinutes : ''));
@@ -265,18 +269,14 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
               />
             </div>
             <div className="form-group form-group--half">
-              <label className="form-label" htmlFor="recipe-form-difficulty">Độ khó <span className="form-required">*</span></label>
-              <select
-                id="recipe-form-difficulty"
-                className="form-input"
+              <label className="form-label">Độ khó <span className="form-required">*</span></label>
+              <CustomSelect
                 value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
-              >
-                <option value="">- Chọn -</option>
-                {DIFFICULTIES.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+                onChange={(v) => setDifficulty(v as DifficultyLevel)}
+                options={DIFFICULTIES.map(d => ({ value: d, label: d }))}
+                placeholder="- Chọn -"
+                triggerHeight={52}
+              />
             </div>
           </div>
 
@@ -326,26 +326,17 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                 
                 {/* Bottom part: Category, Amount, Unit */}
                 <div className="figma-ingredient-card-bottom">
-                  <div className="figma-category-select-wrapper">
-                      <select
-                        title="Phân loại"
-                        className="figma-category-select"
-                        value={ing.category}
-                        onChange={(e) => handleIngredientChange(ing.id, 'category', e.target.value)}
-                        style={{ paddingRight: '18px' }}
-                      >
-                        <option value="" disabled hidden>- Chọn -</option>
-                        {availableCategories.filter(c => c !== 'Gia vị').map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    <span style={{
-                      marginLeft: '-14px',
-                      pointerEvents: 'none',
-                      fontSize: '7px',
-                      color: 'var(--primary-color)'
-                    }}>▼</span>
-                  </div>
+                  <CustomSelect
+                    value={ing.category}
+                    onChange={(val) => handleIngredientChange(ing.id, 'category', val)}
+                    options={availableCategories.filter(c => c !== 'Gia vị').map(c => ({ value: c, label: c }))}
+                    placeholder="- Chọn -"
+                    triggerHeight={22}
+                    fontSize={10}
+                    padding="0 6px"
+                    className="figma-category-select-wrapper-custom"
+                    style={{ width: '90px' }}
+                  />
                   
                   <div className="figma-card-v-divider" />
                   
@@ -361,29 +352,18 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                   
                   <div className="figma-card-v-divider" />
                   
-                  <div className="figma-category-select-wrapper">
-                      <select
-                        title="Đơn vị"
-                        className="figma-category-select"
-                        style={{ paddingRight: '18px', width: '60px' }}
-                        value={ing.unit}
-                        onChange={(e) => handleIngredientChange(ing.id, 'unit', e.target.value)}
-                        disabled={ing.category !== 'Khác'}
-                      >
-                        <option value="" disabled hidden>-</option>
-                        {getAvailableUnits(ing.category).map((u) => (
-                          <option key={u} value={u}>{u}</option>
-                        ))}
-                      </select>
-                    {ing.category === 'Khác' && (
-                      <span style={{
-                        marginLeft: '-14px',
-                        pointerEvents: 'none',
-                        fontSize: '7px',
-                        color: 'var(--primary-color)'
-                      }}>▼</span>
-                    )}
-                  </div>
+                  <CustomSelect
+                    value={ing.unit}
+                    onChange={(val) => handleIngredientChange(ing.id, 'unit', val)}
+                    options={getAvailableUnits(ing.category).map(u => ({ value: u, label: u }))}
+                    placeholder="-"
+                    disabled={ing.category !== 'Khác'}
+                    triggerHeight={22}
+                    fontSize={10}
+                    padding="0 6px"
+                    className="figma-category-select-wrapper-custom"
+                    style={{ width: '60px' }}
+                  />
                 </div>
               </div>
             ))}
@@ -483,13 +463,13 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
 
             <div style={{ display: 'flex', gap: 12, marginBottom: '16px' }}>
               <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ flex: 1, height: 44, background: 'white', borderRadius: 8, outline: '1px solid #E0E0E0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer' }}>
-                <ImageIcon size={18} color="#FF8A00" />
+                <ImageIcon size={18} color={primaryColor} />
                 <span style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>
                   {isUploading ? 'Đang tải...' : 'Chọn ảnh'}
                 </span>
               </button>
               <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ flex: 1, height: 44, background: 'white', borderRadius: 8, outline: '1px solid #E0E0E0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer' }}>
-                <Camera size={18} color="#FF8A00" />
+                <Camera size={18} color={primaryColor} />
                 <span style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Chụp ảnh</span>
               </button>
             </div>

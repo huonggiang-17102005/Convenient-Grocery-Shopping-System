@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { ShoppingItem, FoodCategory } from '../types';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
+import CustomSelect from '../../../components/common/CustomSelect';
 
 interface ItemFormModalProps {
   isOpen: boolean;
@@ -118,24 +119,19 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
           {/* Category */}
           <div className="form-group">
             <label htmlFor="category-select" className="form-label">Danh mục thực phẩm</label>
-            <select
-              id="category-select"
-              className="form-select"
+            <CustomSelect
               value={category}
-              onChange={(e) => {
-                const newCat = e.target.value as FoodCategory;
+              onChange={(val) => {
+                const newCat = val as FoodCategory;
                 setCategory(newCat);
                 if (newCat === 'Gia vị') {
                   setUnit('');
                 }
               }}
+              options={availableCategories.map(cat => ({ value: cat, label: cat }))}
+              placeholder="- Chọn -"
               disabled={readOnly}
-            >
-              <option value="" disabled hidden>- Chọn -</option>
-              {availableCategories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+            />
           </div>
 
           {/* Name */}
@@ -191,21 +187,17 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
                   <span style={{ color: readOnly ? '#9E9E9E' : 'white', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>+</span>
                 </button>
 
-                <div style={{ width: 76, position: 'relative', height: 48, paddingLeft: 12, paddingRight: 12, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ color: unit ? '#1A1A1A' : '#9E9E9E', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>{unit || '-'}</div>
-                  <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', display: category === 'Khác' ? 'block' : 'none' }}>▼</div>
-                <select
-                  style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: (readOnly || category !== 'Khác') ? 'not-allowed' : 'pointer' }}
+                <CustomSelect
                   value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
+                  onChange={setUnit}
+                  options={availableUnits.map(u => ({ value: u, label: u }))}
+                  placeholder="-"
                   disabled={readOnly || category !== 'Khác'}
-                >
-                    <option value="" disabled hidden>-</option>
-                  {availableUnits.map(u => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
-                </select>
-                </div>
+                  triggerHeight={48}
+                  padding="0 10px"
+                  fontSize={13}
+                  className="form-unit-select-custom"
+                />
               </div>
             </div>
           )}

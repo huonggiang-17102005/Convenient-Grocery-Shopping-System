@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil, Trash2 } from 'lucide-react';
+import CustomSelect from '../../components/common/CustomSelect';
 import './Dashboard.css';
 import './MasterData.css';
 
@@ -921,15 +922,18 @@ const MasterDataAdmin: React.FC = () => {
                 </div>
                 <div className="md-form-group" style={{ flex: 1 }}>
                   <label className="md-form-label">Độ khó</label>
-                  <select 
-                    className="md-input" 
+                  <CustomSelect
                     value={recipeFormData.difficulty || 'Trung bình'}
-                    onChange={(e) => setRecipeFormData({...recipeFormData, difficulty: e.target.value as any})}
-                  >
-                    <option value="Dễ">Dễ</option>
-                    <option value="Trung bình">Trung bình</option>
-                    <option value="Khó">Khó</option>
-                  </select>
+                    onChange={(v) => setRecipeFormData({...recipeFormData, difficulty: v})}
+                    options={[
+                      { value: 'Dễ', label: 'Dễ' },
+                      { value: 'Trung bình', label: 'Trung bình' },
+                      { value: 'Khó', label: 'Khó' },
+                    ]}
+                    triggerHeight={40}
+                    fontSize={14}
+                    padding="0 12px"
+                  />
                 </div>
               </div>
 

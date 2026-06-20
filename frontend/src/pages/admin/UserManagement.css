@@ -57,6 +57,21 @@
   color: #1A1A1A;
 }
 
+/* CustomSelect container override for filter bar */
+.um-filter-select {
+  width: 190px;
+}
+
+.um-filter-select .custom-select-trigger {
+  border-radius: 8px;
+  height: 40px;
+}
+
+.um-filter-select .custom-select-options {
+  border-radius: 8px;
+  z-index: 1100;
+}
+
 .um-table-container {
   margin-top: 24px;
   width: 100%;

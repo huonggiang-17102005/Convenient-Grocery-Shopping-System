@@ -5,6 +5,9 @@
   background-color: #F9F9F9;
   font-family: 'Plus Jakarta Sans', sans-serif;
   overflow: hidden;
+  --primary-color: #7C4DFF;
+  --primary-light: #F3E5F5;
+  --primary-bg-opacity: rgba(124, 77, 255, 0.1);
 }
 
 /* Sidebar */

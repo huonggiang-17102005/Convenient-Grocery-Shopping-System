@@ -34,7 +34,7 @@ const ActionBottomSheet: React.FC<ActionBottomSheetProps> = ({
     <div className="bottom-sheet-overlay" onClick={handleOverlayClick}>
       <div className="bottom-sheet">
         {/* Drag Bar */}
-        <div className="bottom-sheet__drag-bar" />
+        <div className="bottom-sheet__drag-bar" onClick={onClose} style={{ cursor: 'pointer' }} />
 
         {/* Title */}
         <h2 className="bottom-sheet__title">Chọn hành động</h2>

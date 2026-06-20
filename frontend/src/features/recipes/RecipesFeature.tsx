@@ -15,7 +15,7 @@ import RecipeFormModal from './modals/RecipeFormModal';
 import ShareCommunityModal from './modals/ShareCommunityModal';
 import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
 import ShoppingConfirmModal from './modals/ShoppingConfirmModal';
-import Toast from '../../components/shared/Toast';
+import Toast from '../../components/common/Toast';
 
 import { shoppingService } from '../shopping-list/shopping-list.service';
 import './recipes.css';
@@ -138,9 +138,9 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
-      alert('Không thể cập nhật yêu thích');
+      showToast('Không thể cập nhật yêu thích');
     }
-  }, []);
+  }, [showToast]);
 
   const handleRecipeClick = useCallback((recipe: Recipe) => {
     setIsViewingCommunity(false);
@@ -183,7 +183,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         }
       } catch (error) {
         console.error('Error saving recipe:', error);
-        alert('Lỗi khi lưu công thức');
+        showToast('Lỗi khi lưu công thức');
       }
     },
     [formMode, formRecipe]
@@ -198,7 +198,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         setIsDeleteOpen(false);
       } catch (error) {
         console.error('Error deleting recipe:', error);
-        alert('Lỗi khi xóa công thức');
+        showToast('Lỗi khi xóa công thức');
       }
     }
   }, [deleteRecipe]);
@@ -320,9 +320,9 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       showToast('Đã thêm các nguyên liệu thiếu vào danh sách mua sắm thành công!');
     } catch (error) {
       console.error('Error adding custom items to shopping list:', error);
-      alert('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
+      showToast('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
     }
-  }, []);
+  }, [showToast]);
 
   const handleCommunityPostClick = useCallback((post: CommunityPost) => {
     setIsViewingCommunity(true);
@@ -354,14 +354,19 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       };
 
       const newRecipe = await recipesService.createRecipe(recipeData);
-      setRecipes((prev) => [newRecipe, ...prev]);
+      // Insert after priority recipes so sort stays correct
+      setRecipes((prev) => {
+        const priorityOnes = prev.filter(r => r.isPriority);
+        const rest = prev.filter(r => !r.isPriority);
+        return [...priorityOnes, newRecipe, ...rest];
+      });
       setIsDetailOpen(false);
-      alert(`Đã lưu "${recipe.name}" vào thư viện Gia đình thành công!`);
+      showToast(`Đã lưu "${recipe.name}" vào thư viện Gia đình!`);
     } catch (error) {
       console.error('Error saving recipe to family:', error);
-      alert('Lỗi khi lưu công thức vào thư viện Gia đình');
+      showToast('Lỗi khi lưu công thức vào thư viện Gia đình');
     }
-  }, [setRecipes]);
+  }, [setRecipes, showToast]);
 
   const handleCancelPending = useCallback(() => {
     if (pendingTimeoutRef.current) {
@@ -379,14 +384,13 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         await recipesService.shareToCommunity(createdRecipe.id, description);
 
         setIsShareOpen(false);
-        // Refresh data to show in community or just show success alert
-        alert('Đã gửi công thức lên cộng đồng, vui lòng chờ duyệt!');
+        showToast('Đã gửi công thức lên cộng đồng, vui lòng chờ duyệt!');
       } catch (error) {
         console.error('Error sharing recipe:', error);
-        alert('Lỗi khi chia sẻ công thức');
+        showToast('Lỗi khi chia sẻ công thức');
       }
     },
-    []
+    [showToast]
   );
 
   // ── Render ────────────────────────────────────────────────────
@@ -455,6 +459,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         recipe={detailRecipe}
         showEditDelete={!isViewingCommunity && detailRecipe?.authorId !== null}
         showShoppingAndCook={role !== 'member'}
+        role={role}
         onClose={() => {
           setIsDetailOpen(false);
           setIsViewingCommunity(false);
@@ -480,6 +485,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         isOpen={isFormOpen}
         mode={formMode}
         recipe={formRecipe}
+        role={role}
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleFormSubmit}
       />
@@ -487,6 +493,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       <ShareCommunityModal
         key={isShareOpen ? 'share-modal-open' : 'share-modal-closed'}
         isOpen={isShareOpen}
+        role={role}
         onClose={() => setIsShareOpen(false)}
         onSubmit={handleShareSubmit}
       />

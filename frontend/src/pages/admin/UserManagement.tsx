@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Lock, Unlock, Trash2, Copy, Check } from 'lucide-react';
+import CustomSelect from '../../components/common/CustomSelect';
 import './Dashboard.css';
 import './UserManagement.css';
 
@@ -150,27 +151,33 @@ const UserManagement: React.FC = () => {
               />
             </div>
             {/* Filters */}
-            <select 
-              className="um-filter-btn" 
-              style={{ width: '184px', height: '40px', appearance: 'none', paddingRight: '32px', backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%231A1A1A%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+            <CustomSelect
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-            >
-              <option value="all">Vai trò: Tất cả</option>
-              <option value="homemaker">Vai trò: Homemaker</option>
-              <option value="member">Vai trò: Member</option>
-            </select>
+              onChange={setRoleFilter}
+              options={[
+                { value: 'all', label: 'Vai trò: Tất cả' },
+                { value: 'homemaker', label: 'Vai trò: Homemaker' },
+                { value: 'member', label: 'Vai trò: Member' },
+              ]}
+              triggerHeight={40}
+              fontSize={14}
+              padding="0 16px"
+              className="um-filter-select"
+            />
 
-            <select 
-              className="um-filter-btn" 
-              style={{ width: '195px', height: '40px', appearance: 'none', paddingRight: '32px', backgroundImage: 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%231A1A1A%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+            <CustomSelect
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">Trạng thái: Tất cả</option>
-              <option value="active">Trạng thái: Hoạt động</option>
-              <option value="locked">Trạng thái: Bị khóa</option>
-            </select>
+              onChange={setStatusFilter}
+              options={[
+                { value: 'all', label: 'Trạng thái: Tất cả' },
+                { value: 'active', label: 'Trạng thái: Hoạt động' },
+                { value: 'locked', label: 'Trạng thái: Bị khóa' },
+              ]}
+              triggerHeight={40}
+              fontSize={14}
+              padding="0 16px"
+              className="um-filter-select"
+            />
           </div>
 
           {/* User Table */}
