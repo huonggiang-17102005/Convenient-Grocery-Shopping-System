@@ -27,12 +27,12 @@ const TabLibrary: React.FC<TabLibraryProps> = ({
     selectedIngredients.length === 0
       ? recipes
       : recipes.filter((r) =>
-          r.ingredients.some((ing) =>
-            selectedIngredients.some((sel) =>
-              typeof ing.name === 'string' && typeof sel === 'string' && ing.name.toLowerCase().includes(sel.toLowerCase())
-            )
+        r.ingredients.some((ing) =>
+          selectedIngredients.some((sel) =>
+            typeof ing.name === 'string' && typeof sel === 'string' && ing.name.toLowerCase().includes(sel.toLowerCase())
           )
-        );
+        )
+      );
 
   return (
     <div className="recipe-tab-content">
@@ -44,10 +44,10 @@ const TabLibrary: React.FC<TabLibraryProps> = ({
       />
 
       {/* Tip hint */}
-      <div className="recipe-library-tip">
-        <span>💡 Công thức </span>
-        <span className="recipe-priority-inline-badge">Ưu tiên</span>
-        <span> giúp tiêu thụ thực phẩm sắp hết hạn trong tủ lạnh.</span>
+      <div className="recipe-library-tip" style={{ display: 'block', lineHeight: '28px' }}>
+        <span>💡 Công thức</span>
+        <span className="recipe-priority-inline-badge" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', verticalAlign: 'middle', margin: '0 6px', transform: 'translateY(-1px)' }}>Ưu tiên</span>
+        <span>giúp tiêu thụ thực phẩm sắp hết hạn trong tủ lạnh.</span>
       </div>
 
       {/* Recipe grid */}

@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { Recipe, CommunityPost } from '../features/recipes/types';
 import { recipesService } from '../features/recipes/recipes.service';
 import { useAuth } from './AuthContext';
+import { useFridgeContext } from './FridgeContext';
+import { isIngredientMatch } from '../utils/ingredientMatcher';
 
 interface RecipesContextType {
   recipes: Recipe[];
@@ -29,10 +31,49 @@ export const useRecipesContext = () => useContext(RecipesContext);
 
 export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const { items: fridgeItems } = useFridgeContext();
+
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([]);
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 1. Lọc ra các đồ sắp hết hạn trong tủ lạnh
+  const expiringFridgeItems = useMemo(() => {
+    return (fridgeItems || []).filter((item) => item.daysRemaining != null && item.daysRemaining <= 3);
+  }, [fridgeItems]);
+
+  // 2. Hàm map cờ ưu tiên vào từng công thức
+  const mapRecipePriority = useCallback(
+    (recipe: Recipe): Recipe => {
+      let expiringCount = 0;
+      const mappedIngredients = recipe.ingredients.map((ing) => {
+        const isExp = expiringFridgeItems.some((item) => isIngredientMatch(ing.name, item.name));
+        if (isExp) expiringCount++;
+        return { ...ing, isExpiringSoon: isExp };
+      });
+
+      return {
+        ...recipe,
+        ingredients: mappedIngredients,
+        isPriority: expiringCount > 0,
+        expiringCount,
+      };
+    },
+    [expiringFridgeItems]
+  );
+
+  // 3. Tính toán lại danh sách hiển thị tự động khi recipes hoặc fridgeItems thay đổi
+  const mappedRecipes = useMemo(() => recipes.map(mapRecipePriority), [recipes, mapRecipePriority]);
+  const mappedFavoriteRecipes = useMemo(() => favoriteRecipes.map(mapRecipePriority), [favoriteRecipes, mapRecipePriority]);
+  const mappedCommunityPosts = useMemo(
+    () =>
+      communityPosts.map((post) => ({
+        ...post,
+        recipe: mapRecipePriority(post.recipe),
+      })),
+    [communityPosts, mapRecipePriority]
+  );
 
   const refreshRecipes = useCallback(async () => {
     if (!user) return;
@@ -68,9 +109,9 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <RecipesContext.Provider 
       value={{ 
-        recipes, setRecipes, 
-        favoriteRecipes, setFavoriteRecipes, 
-        communityPosts, setCommunityPosts, 
+        recipes: mappedRecipes, setRecipes, 
+        favoriteRecipes: mappedFavoriteRecipes, setFavoriteRecipes, 
+        communityPosts: mappedCommunityPosts, setCommunityPosts, 
         refreshRecipes, isLoading 
       }}
     >
