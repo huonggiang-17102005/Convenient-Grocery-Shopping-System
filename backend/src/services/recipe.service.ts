@@ -19,6 +19,20 @@ export const getFamilyRecipes = async (familyId: string, userId: string) => {
 };
 
 /**
+ * Get all system recipes, mapped with isFavorited for the current user
+ */
+export const getSystemRecipes = async (userId: string) => {
+  const recipes = await RecipeRepo.getSystemRecipes();
+  const favorites = userId ? await RecipeRepo.getUserFavoriteRecipes(userId) : [];
+  const favIds = new Set(favorites.map(r => r.id));
+
+  return recipes.map(recipe => ({
+    ...recipe,
+    isFavorited: favIds.has(recipe.id),
+  }));
+};
+
+/**
  * Get all public community recipes
  */
 export const getCommunityRecipes = async (userId: string) => {

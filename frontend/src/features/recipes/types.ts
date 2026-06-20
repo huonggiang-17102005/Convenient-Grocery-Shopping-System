@@ -31,6 +31,7 @@ export interface Recipe {
   isFavorited: boolean;
   expiringCount?: number; // Số nguyên liệu sắp hết hạn
   isPriority?: boolean;   // Công thức "Ưu tiên" (có nguyên liệu sắp hết hạn)
+  authorId?: string | null;
 }
 
 // Dùng cho tab Cộng đồng

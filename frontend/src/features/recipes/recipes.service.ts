@@ -41,12 +41,18 @@ const mapBackendToFrontendRecipe = (item: any): Recipe => {
       description: inst,
     })),
     isFavorited: !!item.isFavorited,
+    authorId: item.author_id,
   };
 };
 
 export const recipesService = {
   getFamilyRecipes: async (): Promise<Recipe[]> => {
     const response = await api.get('/family');
+    return response.data.map(mapBackendToFrontendRecipe);
+  },
+
+  getSystemRecipes: async (): Promise<Recipe[]> => {
+    const response = await api.get('/system');
     return response.data.map(mapBackendToFrontendRecipe);
   },
 

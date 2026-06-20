@@ -8,6 +8,8 @@ import { isIngredientMatch } from '../utils/ingredientMatcher';
 interface RecipesContextType {
   recipes: Recipe[];
   setRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>;
+  systemRecipes: Recipe[];
+  setSystemRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>;
   favoriteRecipes: Recipe[];
   setFavoriteRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>;
   communityPosts: CommunityPost[];
@@ -19,6 +21,8 @@ interface RecipesContextType {
 const RecipesContext = createContext<RecipesContextType>({
   recipes: [],
   setRecipes: () => {},
+  systemRecipes: [],
+  setSystemRecipes: () => {},
   favoriteRecipes: [],
   setFavoriteRecipes: () => {},
   communityPosts: [],
@@ -34,6 +38,7 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const { items: fridgeItems } = useFridgeContext();
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [systemRecipes, setSystemRecipes] = useState<Recipe[]>([]);
   const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([]);
   const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +70,7 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // 3. Tính toán lại danh sách hiển thị tự động khi recipes hoặc fridgeItems thay đổi
   const mappedRecipes = useMemo(() => recipes.map(mapRecipePriority), [recipes, mapRecipePriority]);
+  const mappedSystemRecipes = useMemo(() => systemRecipes.map(mapRecipePriority), [systemRecipes, mapRecipePriority]);
   const mappedFavoriteRecipes = useMemo(() => favoriteRecipes.map(mapRecipePriority), [favoriteRecipes, mapRecipePriority]);
   const mappedCommunityPosts = useMemo(
     () =>
@@ -80,11 +86,12 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     try {
       setIsLoading(true);
-      const [familyRecipes, favRecipes, posts] = (await Promise.all([
+      const [familyRecipes, sysRecipes, favRecipes, posts] = (await Promise.all([
         user.family_id ? recipesService.getFamilyRecipes().catch(() => []) : Promise.resolve([]),
+        recipesService.getSystemRecipes().catch(() => []),
         recipesService.getFavoriteRecipes().catch(() => []),
         recipesService.getCommunityRecipes().catch(() => []),
-      ])) as [Recipe[], Recipe[], CommunityPost[]];
+      ])) as [Recipe[], Recipe[], Recipe[], CommunityPost[]];
       
       const favMap = new Map<string, boolean>(favRecipes.map(r => [r.id, true]));
       const allRecipes = familyRecipes.map(r => ({
@@ -92,7 +99,13 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isFavorited: r.isFavorited || favMap.has(r.id),
       }));
       
+      const allSystemRecipes = sysRecipes.map(r => ({
+        ...r,
+        isFavorited: r.isFavorited || favMap.has(r.id),
+      }));
+      
       setRecipes(allRecipes);
+      setSystemRecipes(allSystemRecipes);
       setFavoriteRecipes(favRecipes);
       setCommunityPosts(posts);
     } catch (error) {
@@ -110,6 +123,7 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <RecipesContext.Provider 
       value={{ 
         recipes: mappedRecipes, setRecipes, 
+        systemRecipes: mappedSystemRecipes, setSystemRecipes,
         favoriteRecipes: mappedFavoriteRecipes, setFavoriteRecipes, 
         communityPosts: mappedCommunityPosts, setCommunityPosts, 
         refreshRecipes, isLoading 

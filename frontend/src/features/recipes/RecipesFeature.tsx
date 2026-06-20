@@ -23,6 +23,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   // ── Data state ──────────────────────────────────────────────
   const { 
     recipes, setRecipes, 
+    systemRecipes, setSystemRecipes,
     favoriteRecipes, setFavoriteRecipes, 
     communityPosts, setCommunityPosts, 
     refreshRecipes 
@@ -30,6 +31,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
   // ── UI state ─────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<ActiveTab>('library');
+  const [subTab, setSubTab] = useState<'family' | 'system'>('family');
   const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<FilterIngredient[]>([]);
   const location = useLocation();
@@ -261,6 +263,9 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         {activeTab === 'library' && (
           <TabLibrary
             recipes={recipes}
+            systemRecipes={systemRecipes}
+            subTab={subTab}
+            onChangeSubTab={setSubTab}
             selectedIngredients={selectedIngredients}
             availableIngredients={availableIngredients}
             onChangeIngredients={setSelectedIngredients}
@@ -289,7 +294,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       </div>
 
       {/* FAB: Thêm công thức (homemaker & member cho cả thư viện và cộng đồng) */}
-      {(activeTab === 'library' || activeTab === 'community') && (
+      {((activeTab === 'library' && subTab === 'family') || activeTab === 'community') && (
         <button
           id="recipe-fab-btn"
           type="button"
@@ -305,7 +310,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       <RecipeDetailModal
         isOpen={isDetailOpen}
         recipe={detailRecipe}
-        showEditDelete={!isViewingCommunity}
+        showEditDelete={!isViewingCommunity && detailRecipe?.authorId !== null}
         onClose={() => {
           setIsDetailOpen(false);
           setIsViewingCommunity(false);

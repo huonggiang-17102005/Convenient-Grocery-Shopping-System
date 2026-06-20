@@ -34,6 +34,21 @@ export const getFamilyRecipes = async (familyId: string): Promise<Recipe[]> => {
   return data as Recipe[];
 };
 
+export const getSystemRecipes = async (): Promise<Recipe[]> => {
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('*')
+    .is('author_id', null)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching system recipes:', error);
+    throw new InternalServerError('Không thể lấy danh sách công thức hệ thống.');
+  }
+
+  return data as Recipe[];
+};
+
 export const getCommunityRecipes = async (): Promise<any[]> => {
   // Fetch public recipes with author info
   const { data, error } = await supabase
