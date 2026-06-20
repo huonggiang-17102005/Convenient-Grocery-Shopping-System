@@ -1,9 +1,12 @@
 // src/features/recipes/modals/ShareCommunityModal.tsx
 // Full-form community share modal, same as RecipeFormModal but with description + "Gửi bài viết" action
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Camera, Image as ImageIcon } from 'lucide-react';
 import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
+import ImageWithFallback from '../../../components/common/ImageWithFallback';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
+import { fridgeService } from '../../fridge/fridge.service';
 
 interface ShareCommunityModalProps {
   isOpen: boolean;
@@ -83,6 +86,10 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   const [difficulty, setDifficulty] = useState<DifficultyLevel | ''>('');
   const [servings, setServings] = useState<number | ''>('');
   const [emoji] = useState('🍽️');
+  const [imageUrl, setImageUrl] = useState('');
+  const [imagePublicId, setImagePublicId] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [spices, setSpices] = useState<Ingredient[]>([]);
   const [steps, setSteps] = useState<CookingStep[]>([emptyStep()]);
@@ -107,6 +114,25 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   }, [isOpen, categoriesData, ingredients.length, spices.length]);
 
   if (!isOpen) return null;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const data = await fridgeService.uploadImage(file);
+      if (data.imageUrl) {
+        setImageUrl(data.imageUrl);
+        setImagePublicId(data.imagePublicId || '');
+      }
+    } catch (err) {
+      console.error('Lỗi tải ảnh:', err);
+      alert('Không thể tải ảnh lên. Vui lòng thử lại.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleIngredientChange = (id: string, field: keyof Ingredient, value: string | number) => {
     setIngredients((prev) =>
@@ -173,6 +199,8 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
     onSubmit(description.trim(), {
       name: name.trim(),
       emoji: finalEmoji,
+      imageUrl: imageUrl.trim() || undefined,
+      imagePublicId: imagePublicId.trim() || undefined,
       cookTimeMinutes: Number(cookTime),
       difficulty: difficulty as DifficultyLevel,
       servings: Number(servings),
@@ -438,19 +466,47 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
             </button>
           </div>
 
-          {/* Image upload (UI only) */}
+          {/* Image upload */}
           <div className="form-group">
-            <label className="form-label">Hình ảnh món ăn</label>
-            <div className="form-image-preview">
-              <span style={{ fontSize: 64 }}>{emoji}</span>
+            <label className="form-label">Hình ảnh món ăn (Đường dẫn URL hoặc Tải lên)</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Nhập đường dẫn ảnh từ Unsplash, Pexels..."
+              value={imageUrl}
+              onChange={(e) => { setImageUrl(e.target.value); setImagePublicId(''); }}
+              style={{ marginBottom: '12px' }}
+            />
+
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              onChange={handleFileChange}
+            />
+
+            <div style={{ display: 'flex', gap: 12, marginBottom: '16px' }}>
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ flex: 1, height: 44, background: 'white', borderRadius: 8, outline: '1px solid #E0E0E0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer' }}>
+                <ImageIcon size={18} color="#FF8A00" />
+                <span style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>
+                  {isUploading ? 'Đang tải...' : 'Chọn ảnh'}
+                </span>
+              </button>
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ flex: 1, height: 44, background: 'white', borderRadius: 8, outline: '1px solid #E0E0E0', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: 'pointer' }}>
+                <Camera size={18} color="#FF8A00" />
+                <span style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Chụp ảnh</span>
+              </button>
             </div>
-            <div className="form-image-actions">
-              <button id="share-form-pick-image-btn" type="button" className="form-image-btn">
-                📷 Chọn ảnh
-              </button>
-              <button id="share-form-take-photo-btn" type="button" className="form-image-btn">
-                📷 Chụp ảnh
-              </button>
+
+            <div className="form-image-preview">
+              {imageUrl ? (
+                <ImageWithFallback src={imageUrl} fallbackType="recipe" alt="Preview" style={{ width: '100%', height: '150px', borderRadius: '8px', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '150px', background: '#F5F5F5', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <span style={{ fontSize: 64 }}>{emoji}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
