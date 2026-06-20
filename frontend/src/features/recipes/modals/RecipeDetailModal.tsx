@@ -8,22 +8,26 @@ interface RecipeDetailModalProps {
   isOpen: boolean;
   recipe: Recipe | null;
   showEditDelete?: boolean;
+  showShoppingAndCook?: boolean;
   onClose: () => void;
   onEdit: (recipe: Recipe) => void;
   onDelete: (recipe: Recipe) => void;
   onToggleFavorite: (recipeId: string) => void;
   onAddToShoppingList: (recipe: Recipe) => void;
+  onSaveToFamily?: (recipe: Recipe) => void;
 }
 
 const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   isOpen,
   recipe,
   showEditDelete = true,
+  showShoppingAndCook = true,
   onClose,
   onEdit,
   onDelete,
   onToggleFavorite,
   onAddToShoppingList,
+  onSaveToFamily,
 }) => {
   if (!isOpen || !recipe) return null;
 
@@ -94,14 +98,16 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
               ))}
             </ul>
 
-            <button
-              id="recipe-detail-shopping-btn"
-              type="button"
-              className="recipe-detail-primary-btn"
-              onClick={() => onAddToShoppingList(recipe)}
-            >
-              Gom đồ thiếu vào Shopping List
-            </button>
+            {showShoppingAndCook && (
+              <button
+                id="recipe-detail-shopping-btn"
+                type="button"
+                className="recipe-detail-primary-btn"
+                onClick={() => onAddToShoppingList(recipe)}
+              >
+                Gom đồ thiếu vào Shopping List
+              </button>
+            )}
           </div>
 
           {/* Cooking steps */}
@@ -119,14 +125,27 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
 
           {/* Action buttons */}
           <div className="recipe-detail-actions">
-            <button
-              id="recipe-detail-cook-btn"
-              type="button"
-              className="recipe-detail-primary-btn"
-              onClick={() => {/* Lưu vào thực đơn - placeholder */}}
-            >
-              Lưu vào thực đơn hôm nay
-            </button>
+            {recipe.authorId === null ? (
+              <button
+                id="recipe-detail-save-family-btn"
+                type="button"
+                className="recipe-detail-primary-btn"
+                onClick={() => onSaveToFamily && onSaveToFamily(recipe)}
+              >
+                Lưu vào thư viện Gia đình
+              </button>
+            ) : (
+              showShoppingAndCook && (
+                <button
+                  id="recipe-detail-cook-btn"
+                  type="button"
+                  className="recipe-detail-primary-btn"
+                  onClick={() => {/* Lưu vào thực đơn - placeholder */}}
+                >
+                  Lưu vào thực đơn hôm nay
+                </button>
+              )
+            )}
 
             {/* Action buttons (show edit/delete for both roles only if showEditDelete is true) */}
             {showEditDelete && (

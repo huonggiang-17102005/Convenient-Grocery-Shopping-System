@@ -14,7 +14,9 @@ import RecipeDetailModal from './modals/RecipeDetailModal';
 import RecipeFormModal from './modals/RecipeFormModal';
 import ShareCommunityModal from './modals/ShareCommunityModal';
 import ConfirmDeleteModal from './modals/ConfirmDeleteModal';
+import ShoppingConfirmModal from './modals/ShoppingConfirmModal';
 
+import { shoppingService } from '../shopping-list/shopping-list.service';
 import './recipes.css';
 
 type ActiveTab = 'library' | 'favorites' | 'community';
@@ -52,6 +54,9 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
   const [deleteRecipe, setDeleteRecipe] = useState<Recipe | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const [isShoppingConfirmOpen, setIsShoppingConfirmOpen] = useState(false);
+  const [shoppingConfirmIngredients, setShoppingConfirmIngredients] = useState<any[]>([]);
 
   // ── Refs ─────────────────────────────────────────────────────
   const pendingTimeoutRef = useRef<any>(null);
@@ -205,12 +210,84 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   }, []);
 
   const handleAddToShoppingList = useCallback(async (recipe: Recipe) => {
+    const missing: Array<{
+      name: string;
+      category: string;
+      neededText: string;
+      defaultBuyAmount: string;
+    }> = [];
+    
+    recipe.ingredients.forEach(ing => {
+      const inFridge = (fridgeItems || []).find(f => 
+        (f.category || 'Khác').toLowerCase() === (ing.category || 'Khác').toLowerCase() &&
+        f.name.toLowerCase() === ing.name.toLowerCase()
+      );
+      
+      if (ing.category === 'Gia vị') {
+        if (!inFridge) {
+          missing.push({
+            name: ing.name,
+            category: ing.category,
+            neededText: 'Gia vị chưa có trong tủ lạnh',
+            defaultBuyAmount: ing.amount > 0 ? `${ing.amount} ${ing.unit}` : '1 gói',
+          });
+        }
+      } else {
+        const available = inFridge ? inFridge.quantity : 0;
+        if (available < ing.amount) {
+          const diff = ing.amount - available;
+          missing.push({
+            name: ing.name,
+            category: ing.category,
+            neededText: `Cần ${ing.amount}${ing.unit} (Trong tủ: ${available}${ing.unit})`,
+            defaultBuyAmount: `${diff} ${ing.unit}`,
+          });
+        }
+      }
+    });
+
+    if (missing.length === 0) {
+      alert('Tủ lạnh đã có đủ nguyên liệu cho công thức này!');
+      return;
+    }
+
+    setShoppingConfirmIngredients(missing);
+    setIsShoppingConfirmOpen(true);
+  }, [fridgeItems]);
+
+  const handleShoppingConfirmSubmit = useCallback(async (items: Array<{ name: string; category: string; buyAmountStr: string }>) => {
+    const parseQuantity = (str: string): { amount: number; unit: string } => {
+      const trimmed = str.trim();
+      const match = trimmed.match(/^([\d.,]+)\s*(.*)$/);
+      if (match) {
+        const num = parseFloat(match[1].replace(',', '.'));
+        return {
+          amount: isNaN(num) ? 1 : num,
+          unit: match[2] || 'g',
+        };
+      }
+      return {
+        amount: 1,
+        unit: trimmed || 'g',
+      };
+    };
+
     try {
-      const result = await recipesService.addToShoppingList(recipe.id);
-      alert(result.message);
+      for (const item of items) {
+        const parsed = parseQuantity(item.buyAmountStr);
+        await shoppingService.createShoppingItem({
+          name: item.name,
+          category: item.category,
+          quantity: parsed.amount,
+          unit: parsed.unit,
+        });
+      }
+
+      setIsShoppingConfirmOpen(false);
+      alert('Đã thêm các nguyên liệu thiếu vào danh sách mua sắm thành công!');
     } catch (error) {
-      console.error('Error adding to shopping list:', error);
-      alert('Lỗi khi kiểm tra nguyên liệu hoặc thêm vào giỏ hàng.');
+      console.error('Error adding custom items to shopping list:', error);
+      alert('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
     }
   }, []);
 
@@ -219,6 +296,37 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     setDetailRecipe(post.recipe);
     setIsDetailOpen(true);
   }, []);
+
+  const handleSaveToFamily = useCallback(async (recipe: Recipe) => {
+    try {
+      const recipeData = {
+        name: recipe.name,
+        emoji: recipe.emoji,
+        imageUrl: recipe.imageUrl || undefined,
+        imagePublicId: recipe.imagePublicId || undefined,
+        cookTimeMinutes: recipe.cookTimeMinutes,
+        difficulty: recipe.difficulty,
+        servings: recipe.servings,
+        ingredients: recipe.ingredients.map(ing => ({
+          category: ing.category,
+          name: ing.name,
+          amount: ing.amount,
+          unit: ing.unit,
+        })),
+        steps: recipe.steps.map(step => ({
+          description: step.description,
+        })),
+      };
+
+      const newRecipe = await recipesService.createRecipe(recipeData);
+      setRecipes((prev) => [newRecipe, ...prev]);
+      setIsDetailOpen(false);
+      alert(`Đã lưu "${recipe.name}" vào thư viện Gia đình thành công!`);
+    } catch (error) {
+      console.error('Error saving recipe to family:', error);
+      alert('Lỗi khi lưu công thức vào thư viện Gia đình');
+    }
+  }, [setRecipes]);
 
   const handleCancelPending = useCallback(() => {
     if (pendingTimeoutRef.current) {
@@ -311,6 +419,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         isOpen={isDetailOpen}
         recipe={detailRecipe}
         showEditDelete={!isViewingCommunity && detailRecipe?.authorId !== null}
+        showShoppingAndCook={role !== 'member'}
         onClose={() => {
           setIsDetailOpen(false);
           setIsViewingCommunity(false);
@@ -319,7 +428,17 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         onDelete={handleOpenDelete}
         onToggleFavorite={handleToggleFavorite}
         onAddToShoppingList={handleAddToShoppingList}
+        onSaveToFamily={handleSaveToFamily}
       />
+
+      {isShoppingConfirmOpen && (
+        <ShoppingConfirmModal
+          isOpen={isShoppingConfirmOpen}
+          onClose={() => setIsShoppingConfirmOpen(false)}
+          onConfirm={handleShoppingConfirmSubmit}
+          initialIngredients={shoppingConfirmIngredients}
+        />
+      )}
 
       <RecipeFormModal
         key={isFormOpen ? `recipe-form-${formRecipe?.id ?? 'new'}` : 'recipe-form-closed'}

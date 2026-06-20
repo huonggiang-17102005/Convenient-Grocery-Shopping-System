@@ -42,6 +42,8 @@ const mapBackendToFrontendRecipe = (item: any): Recipe => {
     })),
     isFavorited: !!item.isFavorited,
     authorId: item.author_id,
+    authorName: item.author?.full_name || null,
+    visibility: item.visibility,
   };
 };
 

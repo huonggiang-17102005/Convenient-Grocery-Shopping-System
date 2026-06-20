@@ -56,6 +56,17 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       <div className="recipe-card-info">
         <h3 className="recipe-card-name">{recipe.name}</h3>
 
+        {(recipe.authorName || recipe.visibility === 'Public' || recipe.authorId === null) && (
+          <div className="recipe-card-author" style={{ fontSize: '11px', color: '#757575', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>👤</span>
+            <span>
+              {recipe.visibility === 'Public'
+                ? 'Cộng đồng'
+                : (recipe.authorName || (recipe.authorId === null ? 'Hệ thống' : 'Gia đình'))}
+            </span>
+          </div>
+        )}
+
         <div className="recipe-card-tags">
           {/* Expiring soon badge */}
           {recipe.expiringCount && recipe.expiringCount > 0 ? (

@@ -84,7 +84,13 @@ export const createRecipe = async (authorId: string, data: any) => {
     cooking_time: data.cookingTimeMinutes || data.cooking_time,
     difficulty: data.difficulty || 'Dễ',
     servings: data.servings || 1,
-    ingredients: data.ingredients || [],
+    ingredients: (data.ingredients || []).map((ing: any) => ({
+      name: ing.name,
+      quantity: ing.quantity !== undefined ? Number(ing.quantity) : Number(ing.amount || 0),
+      amount: ing.quantity !== undefined ? Number(ing.quantity) : Number(ing.amount || 0),
+      category: ing.category,
+      unit: ing.unit,
+    })),
     instructions: data.steps ? data.steps.map((s: any) => s.description || s) : data.instructions || [],
     visibility: 'Private',
     likes_count: 0,
@@ -111,7 +117,13 @@ export const updateRecipe = async (recipeId: string, authorId: string, data: any
     cooking_time: data.cookingTimeMinutes || data.cooking_time,
     difficulty: data.difficulty,
     servings: data.servings,
-    ingredients: data.ingredients,
+    ingredients: data.ingredients ? data.ingredients.map((ing: any) => ({
+      name: ing.name,
+      quantity: ing.quantity !== undefined ? Number(ing.quantity) : Number(ing.amount || 0),
+      amount: ing.quantity !== undefined ? Number(ing.quantity) : Number(ing.amount || 0),
+      category: ing.category,
+      unit: ing.unit,
+    })) : undefined,
     instructions: data.steps ? data.steps.map((s: any) => s.description || s) : data.instructions,
   };
 
