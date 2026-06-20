@@ -23,7 +23,13 @@ export const useCategoryContext = () => useContext(CategoryContext);
 export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [categoriesData, setCategoriesData] = useState<CategoryData[]>(() => {
     const cached = localStorage.getItem('cached_categories');
-    return cached ? JSON.parse(cached) : [];
+    if (!cached) return [];
+    try {
+      const parsed = JSON.parse(cached);
+      return Array.isArray(parsed) ? parsed.filter((item: any) => item.category !== '__UNIT__' && !item.category.startsWith('__')) : [];
+    } catch (e) {
+      return [];
+    }
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -41,7 +47,8 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const result = await res.json();
 
       if (result.success) {
-        setCategoriesData(result.data);
+        const filtered = (result.data || []).filter((item: any) => item.category !== '__UNIT__' && !item.category.startsWith('__'));
+        setCategoriesData(filtered);
       }
     } catch (error) {
       console.error('Lỗi khi tải danh mục thực phẩm:', error);

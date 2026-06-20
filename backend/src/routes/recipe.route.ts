@@ -7,6 +7,9 @@ const router = Router();
 // Lấy danh sách công thức gia đình
 router.get('/family', authenticateToken, RecipeController.getFamilyRecipes);
 
+// Lấy danh sách công thức hệ thống
+router.get('/system', authenticateToken, RecipeController.getSystemRecipes);
+
 // Lấy danh sách công thức cộng đồng
 router.get('/community', authenticateToken, RecipeController.getCommunityRecipes);
 

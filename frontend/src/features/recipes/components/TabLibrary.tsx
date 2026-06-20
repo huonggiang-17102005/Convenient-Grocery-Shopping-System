@@ -7,6 +7,9 @@ import RecipeCard from './RecipeCard';
 
 interface TabLibraryProps {
   recipes: Recipe[];
+  systemRecipes: Recipe[];
+  subTab: 'family' | 'system';
+  onChangeSubTab: (subTab: 'family' | 'system') => void;
   selectedIngredients: FilterIngredient[];
   availableIngredients: string[];
   onChangeIngredients: (ingredients: FilterIngredient[]) => void;
@@ -16,17 +19,22 @@ interface TabLibraryProps {
 
 const TabLibrary: React.FC<TabLibraryProps> = ({
   recipes,
+  systemRecipes,
+  subTab,
+  onChangeSubTab,
   selectedIngredients,
   availableIngredients,
   onChangeIngredients,
   onRecipeClick,
   onToggleFavorite,
 }) => {
+  const activeRecipes = subTab === 'family' ? recipes : systemRecipes;
+
   // Filter recipes by selected ingredients
   const displayedRecipes =
     selectedIngredients.length === 0
-      ? recipes
-      : recipes.filter((r) =>
+      ? activeRecipes
+      : activeRecipes.filter((r) =>
         r.ingredients.some((ing) =>
           selectedIngredients.some((sel) =>
             typeof ing.name === 'string' && typeof sel === 'string' && ing.name.toLowerCase().includes(sel.toLowerCase())
@@ -36,6 +44,24 @@ const TabLibrary: React.FC<TabLibraryProps> = ({
 
   return (
     <div className="recipe-tab-content">
+      {/* Sub-tab Toggle */}
+      <div className="recipe-sub-tabs">
+        <button
+          type="button"
+          className={`recipe-sub-tab-btn ${subTab === 'family' ? 'active' : 'inactive'}`}
+          onClick={() => onChangeSubTab('family')}
+        >
+          Gia đình
+        </button>
+        <button
+          type="button"
+          className={`recipe-sub-tab-btn ${subTab === 'system' ? 'active' : 'inactive'}`}
+          onClick={() => onChangeSubTab('system')}
+        >
+          Hệ thống
+        </button>
+      </div>
+
       {/* Ingredient filter dropdown */}
       <SearchAndFilter
         selectedIngredients={selectedIngredients}

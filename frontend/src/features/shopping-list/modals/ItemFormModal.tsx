@@ -41,13 +41,16 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
   // Auto update unit when category changes
   useEffect(() => {
-    if (isOpen && mode === 'create') {
+    if (isOpen) {
+      if (category === 'Gia vị') return;
       const newAvailableUnits = categoriesData.find(c => c.category === category)?.units;
-      if (newAvailableUnits && newAvailableUnits.length > 0 && !newAvailableUnits.includes(unit)) {
-        setUnit(newAvailableUnits[0]);
+      if (newAvailableUnits && newAvailableUnits.length > 0) {
+        if (category !== 'Khác' || !unit || !newAvailableUnits.includes(unit)) {
+          setUnit(newAvailableUnits[0]);
+        }
       }
     }
-  }, [category, isOpen, mode, categoriesData]);
+  }, [category, isOpen, categoriesData]);
 
   const [deadlineDate, setDeadlineDate] = useState(() => {
     if ((mode === 'edit' || mode === 'view') && item) return item.deadlineDate;
@@ -97,7 +100,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
       name: name.trim(),
       category,
       quantity: isGiaVi ? 0 : quantity,
-      unit: isGiaVi ? '' : unit,
+      unit: isGiaVi ? unit.trim() : unit,
       deadlineDate,
       deadlineTime,
     });
@@ -119,7 +122,13 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
               id="category-select"
               className="form-select"
               value={category}
-              onChange={(e) => setCategory(e.target.value as FoodCategory)}
+              onChange={(e) => {
+                const newCat = e.target.value as FoodCategory;
+                setCategory(newCat);
+                if (newCat === 'Gia vị') {
+                  setUnit('');
+                }
+              }}
               disabled={readOnly}
             >
               <option value="" disabled hidden>- Chọn -</option>
@@ -142,6 +151,22 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
               disabled={readOnly}
             />
           </div>
+
+          {/* Spice Amount Input */}
+          {isGiaVi && (
+            <div className="form-group" style={{ paddingTop: '8px' }}>
+              <label htmlFor="spice-amount-input" className="form-label">Lượng cần mua (tùy chọn)</label>
+              <input
+                id="spice-amount-input"
+                type="text"
+                className="form-input"
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                placeholder="Ví dụ: 1 gói, 2 chai, ..."
+                disabled={readOnly}
+              />
+            </div>
+          )}
 
           {/* Số lượng & Đơn vị */}
           {!isGiaVi && (
@@ -168,12 +193,12 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
                 <div style={{ width: 76, position: 'relative', height: 48, paddingLeft: 12, paddingRight: 12, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ color: unit ? '#1A1A1A' : '#9E9E9E', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>{unit || '-'}</div>
-                  <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>▼</div>
+                  <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', display: category === 'Khác' ? 'block' : 'none' }}>▼</div>
                 <select
-                  style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: readOnly ? 'not-allowed' : 'pointer' }}
+                  style={{ position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: (readOnly || category !== 'Khác') ? 'not-allowed' : 'pointer' }}
                   value={unit}
                   onChange={(e) => setUnit(e.target.value)}
-                  disabled={readOnly}
+                  disabled={readOnly || category !== 'Khác'}
                 >
                     <option value="" disabled hidden>-</option>
                   {availableUnits.map(u => (

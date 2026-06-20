@@ -149,8 +149,11 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   };
 
   const handleSave = () => {
-    // Generate daysRemaining based on expiryDate if needed, else mock it
-    const daysRemaining = 5;
+    let daysRemaining = 5;
+    if (expiryDate) {
+      const diffTime = new Date(expiryDate).getTime() - new Date().getTime();
+      daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    }
     onSave({
       storageType,
       category,
@@ -328,12 +331,12 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
 
                 <div style={{ width: 76, position: 'relative', height: 48, paddingLeft: 12, paddingRight: 12, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ color: unit ? '#1A1A1A' : '#9E9E9E', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>{unit || '-'}</div>
-                  <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>▼</div>
+                  {category === 'Khác' && <div style={{ color: '#757575', fontSize: 10, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>▼</div>}
 
                   {/* Click area for unit */}
                   <div
-                    style={{ position: 'absolute', inset: 0, cursor: isReadOnly ? 'default' : 'pointer' }}
-                    onClick={() => !isReadOnly && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
+                    style={{ position: 'absolute', inset: 0, cursor: (isReadOnly || category !== 'Khác') ? 'default' : 'pointer' }}
+                    onClick={() => !isReadOnly && category === 'Khác' && setIsUnitDropdownOpen(!isUnitDropdownOpen)}
                   />
                   <UnitDropdown
                     isOpen={isUnitDropdownOpen}

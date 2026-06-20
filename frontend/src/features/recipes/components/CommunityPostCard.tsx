@@ -92,8 +92,12 @@ const CommunityPostCard: React.FC<CommunityPostCardProps> = ({
         <div className="community-recipe-details">
           <h4 className="community-recipe-name">{post.recipe.name}</h4>
           <div className="community-recipe-tags">
-            <span className="recipe-tag recipe-tag--neutral">{post.recipe.cookTimeMinutes} phút</span>
-            <span className="recipe-tag recipe-tag--neutral">{post.recipe.difficulty}</span>
+            <span className={`recipe-tag ${post.recipe.cookTimeMinutes <= 30 ? 'recipe-tag--easy' : post.recipe.cookTimeMinutes <= 60 ? 'recipe-tag--medium' : 'recipe-tag--hard'}`}>
+              {post.recipe.cookTimeMinutes} phút
+            </span>
+            <span className={`recipe-tag ${post.recipe.difficulty?.toLowerCase() === 'dễ' ? 'recipe-tag--easy' : post.recipe.difficulty?.toLowerCase() === 'trung bình' ? 'recipe-tag--medium' : 'recipe-tag--hard'}`}>
+              {post.recipe.difficulty}
+            </span>
           </div>
         </div>
       </div>

@@ -21,7 +21,10 @@ export const getFamilyRecipes = async (familyId: string): Promise<Recipe[]> => {
   // Get recipes created by these users that are Private
   const { data, error } = await supabase
     .from('recipes')
-    .select('*')
+    .select(`
+      *,
+      author:users!author_id(id, full_name, avatar)
+    `)
     .in('author_id', userIds)
     .eq('visibility', 'Private')
     .order('created_at', { ascending: false });
@@ -29,6 +32,21 @@ export const getFamilyRecipes = async (familyId: string): Promise<Recipe[]> => {
   if (error) {
     console.error('Error fetching family recipes:', error);
     throw new InternalServerError('Không thể lấy danh sách công thức.');
+  }
+
+  return data as Recipe[];
+};
+
+export const getSystemRecipes = async (): Promise<Recipe[]> => {
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('*')
+    .is('author_id', null)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching system recipes:', error);
+    throw new InternalServerError('Không thể lấy danh sách công thức hệ thống.');
   }
 
   return data as Recipe[];
@@ -116,7 +134,7 @@ export const getUserFavoriteRecipes = async (userId: string): Promise<Recipe[]> 
     .from('user_favorite_recipes')
     .select(`
       recipe_id,
-      recipes (*)
+      recipes (*, author:users!author_id(id, full_name, avatar))
     `)
     .eq('user_id', userId);
 

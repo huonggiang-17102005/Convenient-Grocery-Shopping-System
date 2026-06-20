@@ -10,6 +10,12 @@ export const getFamilyRecipes = async (req: Request, res: Response) => {
   return res.status(200).json(recipes);
 };
 
+export const getSystemRecipes = async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const recipes = await RecipeService.getSystemRecipes(user?.id);
+  return res.status(200).json(recipes);
+};
+
 export const getCommunityRecipes = async (req: Request, res: Response) => {
   const user = (req as any).user;
   const recipes = await RecipeService.getCommunityRecipes(user?.id);

@@ -8,22 +8,26 @@ interface RecipeDetailModalProps {
   isOpen: boolean;
   recipe: Recipe | null;
   showEditDelete?: boolean;
+  showShoppingAndCook?: boolean;
   onClose: () => void;
   onEdit: (recipe: Recipe) => void;
   onDelete: (recipe: Recipe) => void;
   onToggleFavorite: (recipeId: string) => void;
   onAddToShoppingList: (recipe: Recipe) => void;
+  onSaveToFamily?: (recipe: Recipe) => void;
 }
 
 const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   isOpen,
   recipe,
   showEditDelete = true,
+  showShoppingAndCook = true,
   onClose,
   onEdit,
   onDelete,
   onToggleFavorite,
   onAddToShoppingList,
+  onSaveToFamily,
 }) => {
   if (!isOpen || !recipe) return null;
 
@@ -72,6 +76,16 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
 
           <h2 className="recipe-detail-title">{recipe.name}</h2>
 
+          {/* Cook time & difficulty badges */}
+          <div className="recipe-detail-tags" style={{ display: 'flex', gap: '8px', marginTop: '-12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <span className={`recipe-tag ${recipe.cookTimeMinutes <= 30 ? 'recipe-tag--easy' : recipe.cookTimeMinutes <= 60 ? 'recipe-tag--medium' : 'recipe-tag--hard'}`}>
+              ⏱️ {recipe.cookTimeMinutes} phút
+            </span>
+            <span className={`recipe-tag ${recipe.difficulty?.toLowerCase() === 'dễ' ? 'recipe-tag--easy' : recipe.difficulty?.toLowerCase() === 'trung bình' ? 'recipe-tag--medium' : 'recipe-tag--hard'}`}>
+              📊 {recipe.difficulty}
+            </span>
+          </div>
+
           {/* Ingredient info box */}
           <div className="recipe-detail-ingredients-box">
             <h4 className="recipe-detail-section-title">Thông tin nguyên liệu</h4>
@@ -83,25 +97,27 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
               {expiring.map((ing) => (
                 <li key={ing.id} className="recipe-detail-ingredient expiring">
                   <span className="ingredient-dot" style={{ background: '#D32F2F' }} />
-                  <strong>{ing.name} – {ing.amount}{ing.unit}</strong>
+                  <strong>{ing.name} – {Math.round(ing.amount * 100) / 100}{ing.unit}</strong>
                 </li>
               ))}
               {notExpiring.map((ing) => (
                 <li key={ing.id} className="recipe-detail-ingredient">
                   <span className="ingredient-dot" style={{ background: '#1A1A1A' }} />
-                  {ing.name} – {ing.amount}{ing.unit}
+                  {ing.name} – {Math.round(ing.amount * 100) / 100}{ing.unit}
                 </li>
               ))}
             </ul>
 
-            <button
-              id="recipe-detail-shopping-btn"
-              type="button"
-              className="recipe-detail-primary-btn"
-              onClick={() => onAddToShoppingList(recipe)}
-            >
-              Gom đồ thiếu vào Shopping List
-            </button>
+            {showShoppingAndCook && (
+              <button
+                id="recipe-detail-shopping-btn"
+                type="button"
+                className="recipe-detail-primary-btn"
+                onClick={() => onAddToShoppingList(recipe)}
+              >
+                Gom đồ thiếu vào Shopping List
+              </button>
+            )}
           </div>
 
           {/* Cooking steps */}
@@ -119,14 +135,27 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
 
           {/* Action buttons */}
           <div className="recipe-detail-actions">
-            <button
-              id="recipe-detail-cook-btn"
-              type="button"
-              className="recipe-detail-primary-btn"
-              onClick={() => {/* Lưu vào thực đơn - placeholder */}}
-            >
-              Lưu vào thực đơn hôm nay
-            </button>
+            {recipe.authorId === null ? (
+              <button
+                id="recipe-detail-save-family-btn"
+                type="button"
+                className="recipe-detail-primary-btn"
+                onClick={() => onSaveToFamily && onSaveToFamily(recipe)}
+              >
+                Lưu vào thư viện Gia đình
+              </button>
+            ) : (
+              showShoppingAndCook && (
+                <button
+                  id="recipe-detail-cook-btn"
+                  type="button"
+                  className="recipe-detail-primary-btn"
+                  onClick={() => {/* Lưu vào thực đơn - placeholder */}}
+                >
+                  Lưu vào thực đơn hôm nay
+                </button>
+              )
+            )}
 
             {/* Action buttons (show edit/delete for both roles only if showEditDelete is true) */}
             {showEditDelete && (
