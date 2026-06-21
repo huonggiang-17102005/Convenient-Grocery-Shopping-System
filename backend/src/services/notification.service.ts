@@ -1,5 +1,6 @@
 import * as notificationRepo from '../repo/notification.repo.js';
 import { BadRequestError } from '../errors/CommonError.js';
+import * as sseService from './sse.service.js';
 
 export const createNotification = async (
   familyId: string,
@@ -20,6 +21,13 @@ export const createNotification = async (
     message,
     metadata
   });
+
+  // Gửi sự kiện qua SSE
+  if (userId) {
+    sseService.broadcastToUser(familyId, userId, 'NEW_NOTIFICATION', newNotification);
+  } else {
+    sseService.broadcastToFamily(familyId, 'NEW_NOTIFICATION', newNotification);
+  }
 
   return newNotification;
 };

@@ -1,7 +1,7 @@
 import React from 'react';
 import '../profile.css';
 
-export type ConfirmVariant = 'transfer' | 'delete' | 'logout' | 'export' | 'leave';
+export type ConfirmVariant = 'transfer' | 'delete' | 'logout' | 'export' | 'leave' | 'kicked';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -164,6 +164,27 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 onClick={() => onConfirm()}
               >
                 Rời nhóm
+              </button>
+            </div>
+          </>
+        );
+
+      case 'kicked':
+        return (
+          <>
+            <h3 className="profile-modal-title profile-modal-title--danger">
+              Thông báo
+            </h3>
+            <p className="profile-modal-body profile-modal-body--dark">
+              Bạn đã bị quản trị viên xóa khỏi gia đình. Vui lòng chọn lại vai trò hoặc tham gia gia đình mới để tiếp tục.
+            </p>
+            <div className="profile-modal-actions" style={{ marginTop: '12px' }}>
+              <button
+                className="profile-modal-btn profile-modal-btn--confirm-orange"
+                onClick={() => onConfirm()}
+                style={{ width: '100%' }}
+              >
+                Đã hiểu
               </button>
             </div>
           </>

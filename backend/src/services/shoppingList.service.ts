@@ -3,6 +3,7 @@ import * as fridgeRepo from '../repo/fridge.repo.js';
 import * as notificationService from './notification.service.js';
 import * as userRepo from '../repo/user.repo.js';
 import * as familyRepo from '../repo/family.repo.js';
+import * as sseService from './sse.service.js';
 import supabase from '../config/db.config.js';
 import { ForbiddenError, InternalServerError, BadRequestError } from '../errors/CommonError.js';
 
@@ -61,6 +62,8 @@ export const createShoppingItem = async (familyId: string, currentUserId: string
       );
     }
   }
+
+  sseService.broadcastToFamily(familyId, 'SHOPPING_LIST_UPDATED', { type: 'CREATE', item: created });
 
   return mapDbToFrontendItem(created);
 };
@@ -129,6 +132,8 @@ export const updateShoppingItem = async (familyId: string, itemId: string, curre
     );
   }
 
+  sseService.broadcastToFamily(familyId, 'SHOPPING_LIST_UPDATED', { type: 'UPDATE', item: updated });
+
   return mapDbToFrontendItem(updated);
 };
 
@@ -153,6 +158,8 @@ export const deleteShoppingItem = async (familyId: string, itemId: string, curre
       existing.assignee_id
     );
   }
+
+  sseService.broadcastToFamily(familyId, 'SHOPPING_LIST_UPDATED', { type: 'DELETE', itemId });
 };
 
 // Helper function to sync a bought shopping item to fridge_items table

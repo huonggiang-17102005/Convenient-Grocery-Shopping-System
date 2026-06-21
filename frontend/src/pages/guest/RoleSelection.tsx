@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import ConfirmModal from '../../features/profile/modals/ConfirmModal';
 import './RoleSelection.css';
 
 export default function RoleSelection() {
@@ -8,7 +9,43 @@ export default function RoleSelection() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [selectedRole, setSelectedRole] = useState<'Homemaker' | 'Member' | null>(null);
-  const { refreshUser } = useAuth();
+  const [isKickedModalOpen, setIsKickedModalOpen] = useState(false);
+  const { user, refreshUser } = useAuth();
+
+  useEffect(() => {
+    const isKickedAlert = localStorage.getItem('kicked_alert') === 'true';
+    const isKickedRole = user?.role === 'Kicked';
+
+    if (isKickedAlert || isKickedRole) {
+      setIsKickedModalOpen(true);
+      localStorage.removeItem('kicked_alert');
+    }
+  }, [user]);
+
+  const handleKickedConfirm = async () => {
+    setIsKickedModalOpen(false);
+    try {
+      // Sửa trực tiếp cache để ngăn lỗi chớp popup khi refreshUser đọc lại dữ liệu cũ
+      const cachedUserStr = localStorage.getItem('user');
+      if (cachedUserStr) {
+        const cachedUser = JSON.parse(cachedUserStr);
+        cachedUser.role = null;
+        localStorage.setItem('user', JSON.stringify(cachedUser));
+      }
+
+      const token = localStorage.getItem('token');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      await fetch(`${API_URL}/users/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role: null })
+      });
+      await refreshUser();
+    } catch (err) {}
+  };
 
   const handleSelectRole = async (role: 'Homemaker' | 'Member') => {
     setSelectedRole(role);
@@ -96,6 +133,13 @@ export default function RoleSelection() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isKickedModalOpen}
+        variant="kicked"
+        onConfirm={handleKickedConfirm}
+        onCancel={handleKickedConfirm}
+      />
     </div>
   );
 }
