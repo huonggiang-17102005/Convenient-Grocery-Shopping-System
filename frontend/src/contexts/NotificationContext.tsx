@@ -19,6 +19,7 @@ interface NotificationContextProps {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   checkIsRead: (id: string) => boolean;
+  checkCategoryHasUnread: (cat: NotificationCategory) => boolean;
   handleSSENotification: () => Promise<void>;
 }
 
@@ -182,6 +183,30 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return readIds.has(id);
   }, [readIds]);
 
+  const getCategoryForType = (type: string): NotificationCategory => {
+    const familyTypes = ['FAMILY_JOIN', 'FAMILY_LEAVE', 'FAMILY_ROLE'];
+    const fridgeTypes = ['ADD', 'CONSUME', 'UPDATE', 'WASTE', 'EXPIRE'];
+    const shoppingTypes = ['TASK_ASSIGN', 'TASK_UNASSIGN', 'TASK_COMPLETE', 'TASK_DELETE', 'TASK_OVERDUE'];
+    const recipeTypes = ['LIKE'];
+
+    if (familyTypes.includes(type)) return 'family';
+    if (fridgeTypes.includes(type)) return 'fridge';
+    if (shoppingTypes.includes(type)) return 'shopping';
+    if (recipeTypes.includes(type)) return 'recipe';
+    return 'all';
+  };
+
+  const checkCategoryHasUnread = useCallback((cat: NotificationCategory) => {
+    if (cat === 'all') return categories.all.items.some(n => !readIds.has(n.id));
+    
+    // Check locally in all items first
+    const hasUnreadInAll = categories.all.items.some(n => !readIds.has(n.id) && getCategoryForType(n.type) === cat);
+    if (hasUnreadInAll) return true;
+    
+    // Fallback to checking the category's own items just in case
+    return categories[cat].items.some(n => !readIds.has(n.id));
+  }, [categories, readIds]);
+
   const unreadCount = categories.all.items.filter(n => !readIds.has(n.id)).length;
 
   return (
@@ -195,6 +220,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       markAsRead,
       markAllAsRead,
       checkIsRead,
+      checkCategoryHasUnread,
       handleSSENotification
     }}>
       {children}

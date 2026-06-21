@@ -177,6 +177,28 @@
   font-weight: 600;
 }
 
+.notif-tab {
+  position: relative; /* For absolute positioning of the dot */
+}
+
+.tab-unread-dot {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  background-color: #D32F2F;
+  border-radius: 50%;
+}
+
+.notif-bell-wrapper.role-homemaker .tab-unread-dot {
+  background-color: #FF8A00;
+}
+
+.notif-bell-wrapper.role-member .tab-unread-dot {
+  background-color: #2563EB;
+}
+
 .notif-list {
   padding: 0;
   overflow-y: auto;
