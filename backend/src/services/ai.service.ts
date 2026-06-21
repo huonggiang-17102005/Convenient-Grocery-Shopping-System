@@ -115,3 +115,99 @@ Nhu cầu của người dùng: ${userPrompt || 'Gợi ý món ăn ngon để ti
   }
   return null;
 };
+
+export const estimateRecipeNutrition = async (ingredients: any[], instructions: string[]) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('Thiếu GEMINI_API_KEY trong file .env');
+  }
+
+  let url = `https://generativelanguage.googleapis.com/v1beta/models/${cachedModelName}:generateContent?key=${apiKey}`;
+
+  const systemInstruction = `Bạn là một chuyên gia dinh dưỡng và đầu bếp chuyên nghiệp. Nhiệm vụ của bạn là phân tích danh sách nguyên liệu và các bước chế biến của một công thức để ước lượng các chỉ số dinh dưỡng (cho 1 phần ăn - per serving).
+Bạn PHẢI trả về một đối tượng JSON (JSON Object) có cấu trúc sau:
+{
+  "calories": 350,
+  "protein": 20,
+  "fat": 12,
+  "carbs": 40
+}
+Chỉ trả về định dạng JSON thuần túy (KHÔNG CÓ markdown \`\`\`json ở đầu và cuối). Số liệu là các số nguyên hoặc số thực đại diện cho lượng calo (kcal), protein (g), fat (g), carbs (g) trên 1 phần ăn. Hãy tính toán thực tế dựa trên nguyên liệu thô và phương pháp nấu ăn.`;
+
+  const promptText = `Hãy ước tính dinh dưỡng cho công thức sau:
+Nguyên liệu: ${JSON.stringify(ingredients)}
+Các bước hướng dẫn: ${JSON.stringify(instructions)}`;
+
+  const requestBody = {
+    systemInstruction: {
+      parts: [{ text: systemInstruction }]
+    },
+    contents: [
+      {
+        parts: [{ text: promptText }]
+      }
+    ],
+    generationConfig: {
+      responseMimeType: "application/json"
+    }
+  };
+
+  let response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  });
+
+  if (response.status === 404) {
+    try {
+      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      const listData = await listRes.json();
+      const validModel = listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini") && m.name.includes("flash")) 
+                        || listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini"));
+      
+      if (validModel) {
+        cachedModelName = validModel.name.replace('models/', '');
+        url = `https://generativelanguage.googleapis.com/v1beta/${validModel.name}:generateContent?key=${apiKey}`;
+        response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+      }
+    } catch (err: any) {
+      console.error("Lỗi khi tự động tìm model:", err);
+    }
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    let errorMessage = errorData.error?.message || 'Unknown error';
+    if (errorMessage.includes("high demand") || errorMessage.includes("503")) {
+        errorMessage = "Hệ thống AI hiện đang quá tải. Vui lòng thử lại sau vài giây.";
+    }
+    throw new Error(`Lỗi từ Gemini: ${errorMessage}`);
+  }
+
+  const data = await response.json();
+  const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (resultText) {
+    try {
+      const parsedData = JSON.parse(resultText);
+      return {
+        calories: Math.round(Number(parsedData.calories || 0)),
+        protein: Number(parsedData.protein || 0),
+        fat: Number(parsedData.fat || 0),
+        carbs: Number(parsedData.carbs || 0),
+      };
+    } catch (e) {
+      console.error("Lỗi parse JSON dinh dưỡng:", resultText);
+      throw new Error("AI trả về dữ liệu dinh dưỡng không đúng định dạng JSON");
+    }
+  }
+  return null;
+};

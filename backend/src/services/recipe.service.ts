@@ -94,6 +94,10 @@ export const createRecipe = async (authorId: string, data: any) => {
     instructions: data.steps ? data.steps.map((s: any) => s.description || s) : data.instructions || [],
     visibility: 'Private',
     likes_count: 0,
+    calories: data.calories !== undefined ? Number(data.calories) : 0,
+    protein: data.protein !== undefined ? Number(data.protein) : 0,
+    fat: data.fat !== undefined ? Number(data.fat) : 0,
+    carbs: data.carbs !== undefined ? Number(data.carbs) : 0,
   };
 
   return RecipeRepo.createRecipe(newRecipe);
@@ -109,30 +113,39 @@ export const updateRecipe = async (recipeId: string, authorId: string, data: any
     throw new ForbiddenError('Bạn không có quyền sửa công thức này.');
   }
 
-  const updateData: Partial<Recipe> = {
-    name: data.name,
-    description: data.description,
-    image_url: data.image_url,
-    image_public_id: data.image_public_id,
-    cooking_time: data.cookingTimeMinutes || data.cooking_time,
-    difficulty: data.difficulty,
-    servings: data.servings,
-    ingredients: data.ingredients ? data.ingredients.map((ing: any) => ({
+  const updateData: Partial<Recipe> = {};
+
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.image_url !== undefined) updateData.image_url = data.image_url;
+  if (data.image_public_id !== undefined) updateData.image_public_id = data.image_public_id;
+  
+  const cookTime = data.cookingTimeMinutes || data.cooking_time;
+  if (cookTime !== undefined) updateData.cooking_time = cookTime;
+  
+  if (data.difficulty !== undefined) updateData.difficulty = data.difficulty;
+  if (data.servings !== undefined) updateData.servings = data.servings;
+  
+  if (data.ingredients !== undefined && data.ingredients !== null) {
+    updateData.ingredients = data.ingredients.map((ing: any) => ({
       name: ing.name,
       quantity: ing.quantity !== undefined ? Number(ing.quantity) : Number(ing.amount || 0),
       amount: ing.quantity !== undefined ? Number(ing.quantity) : Number(ing.amount || 0),
       category: ing.category,
       unit: ing.unit,
-    })) : undefined,
-    instructions: data.steps ? data.steps.map((s: any) => s.description || s) : data.instructions,
-  };
+    }));
+  }
+  
+  if (data.steps !== undefined) {
+    updateData.instructions = data.steps.map((s: any) => s.description || s);
+  } else if (data.instructions !== undefined) {
+    updateData.instructions = data.instructions;
+  }
 
-  // Remove undefined fields
-  Object.keys(updateData).forEach(key => {
-    if ((updateData as any)[key] === undefined) {
-      delete (updateData as any)[key];
-    }
-  });
+  if (data.calories !== undefined) updateData.calories = Number(data.calories);
+  if (data.protein !== undefined) updateData.protein = Number(data.protein);
+  if (data.fat !== undefined) updateData.fat = Number(data.fat);
+  if (data.carbs !== undefined) updateData.carbs = Number(data.carbs);
 
   return RecipeRepo.updateRecipe(recipeId, updateData);
 };

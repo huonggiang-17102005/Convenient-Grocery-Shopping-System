@@ -88,6 +88,38 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
             </span>
           </div>
 
+          {/* Nutrition Info Row */}
+          {recipe.calories !== undefined && recipe.calories > 0 && (
+            <div className="recipe-detail-nutrition-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '8px',
+              background: '#F8FAFC',
+              borderRadius: '12px',
+              padding: '12px',
+              marginBottom: '20px',
+              border: '1px solid #E2E8F0',
+              textAlign: 'center'
+            }}>
+              <div className="nutrition-item">
+                <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 500, fontFamily: 'Plus Jakarta Sans' }}>Calories</div>
+                <div style={{ fontSize: '14px', color: '#D84315', fontWeight: 700, fontFamily: 'Plus Jakarta Sans' }}>{recipe.calories} kcal</div>
+              </div>
+              <div className="nutrition-item">
+                <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 500, fontFamily: 'Plus Jakarta Sans' }}>Protein</div>
+                <div style={{ fontSize: '14px', color: '#1E293B', fontWeight: 700, fontFamily: 'Plus Jakarta Sans' }}>{recipe.protein || 0}g</div>
+              </div>
+              <div className="nutrition-item">
+                <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 500, fontFamily: 'Plus Jakarta Sans' }}>Fat</div>
+                <div style={{ fontSize: '14px', color: '#1E293B', fontWeight: 700, fontFamily: 'Plus Jakarta Sans' }}>{recipe.fat || 0}g</div>
+              </div>
+              <div className="nutrition-item">
+                <div style={{ fontSize: '11px', color: '#64748B', fontWeight: 500, fontFamily: 'Plus Jakarta Sans' }}>Carbs</div>
+                <div style={{ fontSize: '14px', color: '#1E293B', fontWeight: 700, fontFamily: 'Plus Jakarta Sans' }}>{recipe.carbs || 0}g</div>
+              </div>
+            </div>
+          )}
+
           {/* Ingredient info box */}
           <div className="recipe-detail-ingredients-box">
             <h4 className="recipe-detail-section-title">Thông tin nguyên liệu</h4>

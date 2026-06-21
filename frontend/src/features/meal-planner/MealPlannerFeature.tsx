@@ -44,8 +44,10 @@ const MEALS: { key: MealKey; title: string }[] = [
 // ── Main Page ─────────────────────────────────────────────────────────────────
 import { mealPlannerService } from './mealPlanner.service';
 import { useMealPlannerContext } from '../../contexts/MealPlannerContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) => {
+  const { family } = useAuth();
   const navigate = useNavigate();
 
   const [weekOffset, setWeekOffset] = useState(0);
@@ -164,6 +166,23 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
   const currentDay: DayMeals = plan[activeDay] ?? { breakfast: [], lunch: [], dinner: [] };
   const activeMealTitle = MEALS.find((m) => m.key === activeMealKey)?.title ?? '';
 
+  const totalCalories = React.useMemo(() => {
+    let sum = 0;
+    const mealKeys: MealKey[] = ['breakfast', 'lunch', 'dinner'];
+    mealKeys.forEach(m => {
+      const plannedMeals = currentDay[m] || [];
+      plannedMeals.forEach(pm => {
+        if (pm.recipe && pm.recipe.calories) {
+          sum += pm.recipe.calories;
+        }
+      });
+    });
+    return sum;
+  }, [currentDay]);
+
+  const calorieTarget = family?.daily_calorie_target || 2000;
+  const isOverCalorie = totalCalories > calorieTarget;
+
   return (
     <>
       {/* Toast */}
@@ -194,6 +213,62 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
 
         {/* ── Scrollable content ── */}
         <div className="mp-content">
+          {/* Calorie Progress Bar */}
+          <div className="calorie-summary-box" style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '20px',
+            border: '1.27px solid #E0E0E0',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: '#1A1A1A', fontFamily: 'Plus Jakarta Sans', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                🔥 Năng lượng dự kiến hôm nay
+              </span>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: isOverCalorie ? '#D32F2F' : '#1A1A1A', fontFamily: 'Plus Jakarta Sans' }}>
+                {totalCalories} / {calorieTarget} kcal/người
+              </span>
+            </div>
+
+            {/* Progress bar container */}
+            <div style={{
+              width: '100%',
+              height: '10px',
+              background: '#F1F5F9',
+              borderRadius: '100px',
+              overflow: 'hidden',
+              position: 'relative',
+              marginBottom: isOverCalorie ? '12px' : '0'
+            }}>
+              <div style={{
+                width: `${Math.min(100, (totalCalories / calorieTarget) * 100)}%`,
+                height: '100%',
+                background: isOverCalorie ? '#EF5350' : '#4CAF50',
+                borderRadius: '100px',
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+
+            {isOverCalorie && (
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                background: '#FFEBEE',
+                borderRadius: '8px',
+                padding: '10px',
+                fontSize: '12px',
+                color: '#C62828',
+                fontWeight: '500',
+                lineHeight: '16px',
+                fontFamily: 'Plus Jakarta Sans'
+              }}>
+                <span>⚠️</span>
+                <span>Tổng lượng calo lên kế hoạch cho hôm nay đã vượt quá ngưỡng mục tiêu của gia đình (+{totalCalories - calorieTarget} kcal). Hãy cân nhắc điều chỉnh thực đơn để cân bằng dinh dưỡng.</span>
+              </div>
+            )}
+          </div>
+
           {MEALS.map(({ key, title }) => (
             <MealSection
               key={key}

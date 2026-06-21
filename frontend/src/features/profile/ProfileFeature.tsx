@@ -18,6 +18,7 @@ import SettingsMenu from './components/SettingsMenu';
 import AvatarModal from './modals/AvatarModal';
 import AccountModal from './modals/AccountModal';
 import ConfirmModal from './modals/ConfirmModal';
+import FamilySettingsModal from './modals/FamilySettingsModal';
 import type { ConfirmVariant } from './modals/ConfirmModal';
 import Toast from '@/components/common/Toast';
 import useRealtimeNoti from '../../hooks/useRealtimeNoti';
@@ -26,7 +27,7 @@ import { useAuth } from '../../contexts/AuthContext';
 
 export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   const navigate = useNavigate();
-  const { user: authUser, logout, refreshUser } = useAuth();
+  const { user: authUser, family, logout, refreshUser, refreshFamily } = useAuth();
 
   const user = {
     name: authUser?.full_name || '',
@@ -77,9 +78,29 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
   // Modal open states
   const [isAvatarOpen, setIsAvatarOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isFamilySettingsOpen, setIsFamilySettingsOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [confirmVariant, setConfirmVariant] = useState<ConfirmVariant>('logout');
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(null);
+
+  const handleUpdateFamilySettings = async (name: string, dailyCalorieTarget: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/families/info`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ name, dailyCalorieTarget })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Lỗi cập nhật cấu hình nhóm');
+      
+      await refreshFamily();
+      triggerToast('Cập nhật cấu hình nhóm gia đình thành công!');
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
 
   // Toast feedback state
   const [toastMessage, setToastMessage] = useState('');
@@ -310,6 +331,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
           <SettingsMenu
             role={role}
             onOpenAccount={() => setIsAccountOpen(true)}
+            onOpenFamilySettings={() => setIsFamilySettingsOpen(true)}
             onLogout={handleOpenLogout}
             onLeaveGroup={handleOpenLeaveGroup}
           />
@@ -321,6 +343,14 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
           currentAvatar={user.avatar}
           onSelectAvatar={handleSelectAvatar}
           onClose={() => setIsAvatarOpen(false)}
+        />
+
+        <FamilySettingsModal
+          isOpen={isFamilySettingsOpen}
+          name={family?.name || ''}
+          dailyCalorieTarget={family?.daily_calorie_target || 2000}
+          onUpdateFamilySettings={handleUpdateFamilySettings}
+          onClose={() => setIsFamilySettingsOpen(false)}
         />
 
         <AccountModal

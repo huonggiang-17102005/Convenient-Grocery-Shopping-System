@@ -97,7 +97,7 @@ export const getFamilyInfo = async (req: AuthRequest, res: Response): Promise<vo
     // 2. Lấy thông tin family
     const { data: family, error: familyError } = await supabase
       .from('families')
-      .select('id, name, invite_code')
+      .select('id, name, invite_code, daily_calorie_target')
       .eq('id', userData.family_id)
       .single();
 
@@ -109,6 +109,62 @@ export const getFamilyInfo = async (req: AuthRequest, res: Response): Promise<vo
     res.status(200).json({ family });
   } catch (error: any) {
     console.error('Lỗi lấy thông tin gia đình:', error);
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+export const updateFamilyInfo = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.user;
+    const { name, dailyCalorieTarget } = req.body;
+
+    if (!user || !user.id || !user.family_id) {
+      res.status(401).json({ message: 'Không tìm thấy thông tin nhóm gia đình của người dùng.' });
+      return;
+    }
+
+    // Kiểm tra quyền: Chỉ Homemaker (chủ gia đình) mới được sửa thông tin nhóm
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (userError || !userData || userData.role !== 'Homemaker') {
+      res.status(403).json({ message: 'Chỉ Người nội trợ (Chủ gia đình) mới có quyền chỉnh sửa cài đặt nhóm.' });
+      return;
+    }
+
+    const updateFields: any = {};
+    if (name !== undefined) updateFields.name = name;
+    if (dailyCalorieTarget !== undefined) {
+      updateFields.daily_calorie_target = Number(dailyCalorieTarget);
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      res.status(400).json({ message: 'Không có dữ liệu chỉnh sửa.' });
+      return;
+    }
+
+    const { data: updatedFamily, error: updateError } = await supabase
+      .from('families')
+      .update(updateFields)
+      .eq('id', user.family_id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Lỗi cập nhật family:', updateError);
+      res.status(500).json({ message: 'Lỗi khi cập nhật cài đặt nhóm trên database.' });
+      return;
+    }
+
+    res.status(200).json({
+      message: 'Cập nhật cài đặt nhóm thành công',
+      family: updatedFamily
+    });
+  } catch (error: any) {
+    console.error('Lỗi khi cập nhật cài đặt nhóm:', error);
     res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
 };

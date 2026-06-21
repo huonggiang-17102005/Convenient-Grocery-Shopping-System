@@ -44,6 +44,10 @@ const mapBackendToFrontendRecipe = (item: any): Recipe => {
     authorId: item.author_id,
     authorName: item.author?.full_name || null,
     visibility: item.visibility,
+    calories: item.calories,
+    protein: item.protein,
+    fat: item.fat,
+    carbs: item.carbs,
     createdAt: item.created_at || undefined,
   };
 };
@@ -119,5 +123,21 @@ export const recipesService = {
   addToShoppingList: async (id: string): Promise<{ message: string; missingItems: any[] }> => {
     const response = await api.post(`/${id}/shopping-list`);
     return response.data;
+  },
+
+  estimateNutrition: async (
+    ingredients: { name: string; quantity: number; unit: string }[], 
+    instructions: string[]
+  ): Promise<{ calories: number; protein: number; fat: number; carbs: number }> => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_URL}/ai/estimate-nutrition`, {
+      ingredients,
+      instructions
+    }, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : ''
+      }
+    });
+    return response.data.data;
   },
 };

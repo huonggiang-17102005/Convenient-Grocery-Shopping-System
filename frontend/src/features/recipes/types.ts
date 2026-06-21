@@ -34,6 +34,10 @@ export interface Recipe {
   authorId?: string | null;
   authorName?: string | null;
   visibility?: 'Private' | 'Public' | 'Pending';
+  calories?: number;
+  protein?: number;
+  fat?: number;
+  carbs?: number;
   createdAt?: string; // ISO date string
 }
 

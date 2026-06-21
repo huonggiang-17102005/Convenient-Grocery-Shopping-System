@@ -19,6 +19,10 @@ export interface Recipe {
   instructions: string[];
   visibility: 'Private' | 'Public' | 'Pending' | null;
   likes_count: number | null;
+  calories?: number;
+  protein?: number;
+  fat?: number;
+  carbs?: number;
   created_at?: string;
   updated_at?: string;
 }
