@@ -34,17 +34,28 @@
     gap: 24px;
 }
 
-/* Header Animation */
-.modal-header {
-    padding-right: 40px; /* Make room for the absolute close button */
-    position: relative;
-    border-bottom: none !important;
+.ai-modal-content .modal-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 20px 30px;
+    margin: 0;
+    border-bottom: 1px solid rgba(124, 77, 255, 0.15) !important;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .ai-modal-content .close-button {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 50%;
+    right: 30px;
+    transform: translateY(-50%);
     background: #ff4757;
     color: white;
     border: none;
@@ -61,7 +72,7 @@
 
 .ai-modal-content .close-button:hover {
     background: #ff6b81;
-    transform: scale(1.1) rotate(90deg);
+    transform: translateY(-50%) scale(1.1) rotate(90deg);
 }
 
 .ai-modal-content .close-button svg {

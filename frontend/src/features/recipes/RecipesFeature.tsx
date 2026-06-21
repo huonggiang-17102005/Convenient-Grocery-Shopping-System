@@ -675,6 +675,10 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       <AiRecipeModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
+        onRecipeSaved={(newRecipe) => {
+          setRecipes(prev => [newRecipe, ...prev]);
+          showToast('Đã lưu công thức vào thư viện!');
+        }}
       />
 
       <Toast message={toastMsg} trigger={toastTrigger} onHide={() => { }} />

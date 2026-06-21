@@ -7,9 +7,10 @@ import './AiRecipeModal.css';
 interface AiRecipeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onRecipeSaved?: (newRecipe: any) => void;
 }
 
-const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose }) => {
+const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose, onRecipeSaved }) => {
   const { user } = useAuth();
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
@@ -80,7 +81,7 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose }) => {
 
       const cookTime = parseInt(aiRecipe.prepTime?.replace(/[^0-9]/g, '')) || 30;
 
-      await recipesService.createRecipe({
+      const saved = await recipesService.createRecipe({
         name: aiRecipe.title,
         emoji: '🍽️',
         cookTimeMinutes: cookTime,
@@ -97,6 +98,10 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose }) => {
         carbs: aiRecipe.carbs || 0,
         visibility: 'Private'
       });
+
+      if (onRecipeSaved) {
+        onRecipeSaved(saved);
+      }
 
       setSavedIndexes((prev) => {
         const next = new Set(prev);
@@ -134,8 +139,14 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal-content ai-modal-content">
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

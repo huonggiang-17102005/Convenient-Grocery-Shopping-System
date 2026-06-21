@@ -64,7 +64,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     return ['mon','tue','wed','thu','fri','sat','sun'].includes(key) ? key : 'mon';
   });
 
-  const { plansByWeek, setPlansByWeek, availableRecipes, fetchWeekPlan } = useMealPlannerContext();
+  const { plansByWeek, setPlansByWeek, availableRecipes, setAvailableRecipes, fetchWeekPlan } = useMealPlannerContext();
 
   const getCacheKey = () => {
     const startDateStr = weekDays[0].date;
@@ -515,6 +515,9 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
       <AiRecipeModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
+        onRecipeSaved={(newRecipe) => {
+          setAvailableRecipes(prev => [newRecipe, ...prev]);
+        }}
       />
 
       {isRecipeModalOpen && selectedRecipe && (
