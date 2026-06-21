@@ -44,6 +44,7 @@ const mapBackendToFrontendRecipe = (item: any): Recipe => {
     authorId: item.author_id,
     authorName: item.author?.full_name || null,
     visibility: item.visibility,
+    description: item.description || null,
     calories: item.calories,
     protein: item.protein,
     fat: item.fat,
@@ -108,6 +109,11 @@ export const recipesService = {
   shareToCommunity: async (id: string, description: string): Promise<Recipe> => {
     const response = await api.post(`/${id}/share`, { description });
     return response.data;
+  },
+
+  getUserPendingRecipes: async (): Promise<Recipe[]> => {
+    const response = await api.get('/user-pending');
+    return response.data.map(mapBackendToFrontendRecipe);
   },
 
   toggleFavorite: async (id: string): Promise<{ isFavorited: boolean }> => {

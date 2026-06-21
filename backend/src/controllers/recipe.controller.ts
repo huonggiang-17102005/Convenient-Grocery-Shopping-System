@@ -79,3 +79,9 @@ export const addToShoppingList = async (req: Request, res: Response) => {
   const result = await RecipeService.addToShoppingList(id, user.family_id, user.id);
   return res.status(200).json(result);
 };
+
+export const getUserPendingRecipes = async (req: Request, res: Response) => {
+  const user = (req as any).user;
+  const recipes = await RecipeService.getUserPendingRecipes(user.id);
+  return res.status(200).json(recipes);
+};

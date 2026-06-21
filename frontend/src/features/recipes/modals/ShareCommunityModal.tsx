@@ -8,10 +8,12 @@ import ImageWithFallback from '../../../components/common/ImageWithFallback';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
 import CustomSelect from '../../../components/common/CustomSelect';
 import { fridgeService } from '../../fridge/fridge.service';
+import { recipesService } from '../recipes.service';
 
 interface ShareCommunityModalProps {
   isOpen: boolean;
   role?: 'homemaker' | 'member';
+  recipe?: Recipe | null;
   onClose: () => void;
   onSubmit: (description: string, recipeData: Omit<Recipe, 'id' | 'isFavorited'>) => void;
 }
@@ -78,6 +80,7 @@ const matchFoodEmoji = (nameStr: string): string => {
 const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   isOpen,
   role = 'homemaker',
+  recipe,
   onClose,
   onSubmit,
 }) => {
@@ -89,7 +92,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   const [cookTime, setCookTime] = useState<number | ''>('');
   const [difficulty, setDifficulty] = useState<DifficultyLevel | ''>('');
   const [servings, setServings] = useState<number | ''>('');
-  const [emoji] = useState('🍽️');
+  const [emoji, setEmoji] = useState('🍽️');
   const [imageUrl, setImageUrl] = useState('');
   const [imagePublicId, setImagePublicId] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -97,6 +100,41 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [spices, setSpices] = useState<Ingredient[]>([]);
   const [steps, setSteps] = useState<CookingStep[]>([emptyStep()]);
+
+  const [calories, setCalories] = useState<number | ''>('');
+  const [protein, setProtein] = useState<number | ''>('');
+  const [fat, setFat] = useState<number | ''>('');
+  const [carbs, setCarbs] = useState<number | ''>('');
+  const [isEstimating, setIsEstimating] = useState(false);
+
+  const handleEstimateNutrition = async () => {
+    const validIngredients = ingredients.filter((i) => i.name.trim() && i.amount > 0);
+    const validSpices = spices.filter((s) => s.name.trim());
+    const allIngs = [
+      ...validIngredients.map(i => ({ name: i.name, quantity: i.amount, unit: i.unit })),
+      ...validSpices.map(s => ({ name: s.name, quantity: s.amount || 0, unit: s.unit }))
+    ];
+    const validSteps = steps.filter((s) => s.description.trim()).map(s => s.description);
+
+    if (allIngs.length === 0) {
+      alert('Vui lòng nhập nguyên liệu trước khi tính toán dinh dưỡng!');
+      return;
+    }
+
+    setIsEstimating(true);
+    try {
+      const res = await recipesService.estimateNutrition(allIngs, validSteps.length > 0 ? validSteps : ['Nấu món ăn']);
+      setCalories(res.calories);
+      setProtein(res.protein);
+      setFat(res.fat);
+      setCarbs(res.carbs);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Không thể tính toán dinh dưỡng bằng AI. Vui lòng thử lại sau.');
+    } finally {
+      setIsEstimating(false);
+    }
+  };
 
   const availableCategories = categoriesData.map(c => c.category);
 
@@ -107,10 +145,46 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
 
   useEffect(() => {
     if (isOpen && categoriesData.length > 0) {
-      if (ingredients.length === 0) setIngredients([createEmptyIngredient()]);
-      if (spices.length === 0) setSpices([createEmptySpice(categoriesData)]);
+      if (recipe) {
+        setName(recipe.name || '');
+        setCookTime(recipe.cookTimeMinutes || '');
+        setDifficulty(recipe.difficulty || '');
+        setServings(recipe.servings || '');
+        setEmoji(recipe.emoji || '🍽️');
+        setImageUrl(recipe.imageUrl || '');
+        setImagePublicId(recipe.imagePublicId || '');
+        setDescription('');
+        setCalories(recipe.calories || '');
+        setProtein(recipe.protein || '');
+        setFat(recipe.fat || '');
+        setCarbs(recipe.carbs || '');
+        
+        const allIngs = recipe.ingredients || [];
+        const normalIngs = allIngs.filter(i => i.category !== 'Gia vị');
+        const spiceIngs = allIngs.filter(i => i.category === 'Gia vị');
+        
+        setIngredients(normalIngs.length > 0 ? normalIngs.map(i => ({ ...i })) : [createEmptyIngredient()]);
+        setSpices(spiceIngs.length > 0 ? spiceIngs.map(s => ({ ...s })) : [createEmptySpice(categoriesData)]);
+        setSteps(recipe.steps && recipe.steps.length > 0 ? recipe.steps.map(s => ({ ...s })) : [emptyStep()]);
+      } else {
+        setName('');
+        setCookTime('');
+        setDifficulty('');
+        setServings('');
+        setEmoji('🍽️');
+        setImageUrl('');
+        setImagePublicId('');
+        setDescription('');
+        setCalories('');
+        setProtein('');
+        setFat('');
+        setCarbs('');
+        setIngredients([createEmptyIngredient()]);
+        setSpices([createEmptySpice(categoriesData)]);
+        setSteps([emptyStep()]);
+      }
     }
-  }, [isOpen, categoriesData, ingredients.length, spices.length]);
+  }, [isOpen, recipe, categoriesData]);
 
   if (!isOpen) return null;
 
@@ -184,6 +258,11 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
       return;
     }
 
+    if (calories === '' || protein === '' || fat === '' || carbs === '') {
+      alert('Vui lòng điền đầy đủ thông tin dinh dưỡng (hoặc bấm AI tính toán)!');
+      return;
+    }
+
     if (hasIncompleteIngredient) {
       alert('Vui lòng điền đầy đủ Tên, Phân loại và Đơn vị cho các nguyên liệu đã nhập!');
       return;
@@ -205,6 +284,10 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
       servings: Number(servings),
       ingredients: finalIngredients,
       steps: validSteps,
+      calories: Number(calories),
+      protein: Number(protein),
+      fat: Number(fat),
+      carbs: Number(carbs),
     });
     onClose();
   };
@@ -304,6 +387,77 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                   setServings(parseInt(val) || 0);
                 }}
               />
+            </div>
+
+            {/* Nutrition inputs */}
+            <div style={{ marginTop: '16px', background: '#F8FAFC', padding: '12px', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#1A1A1A', fontFamily: 'Plus Jakarta Sans' }}>
+                  Dinh dưỡng (trên 1 phần) <span className="form-required">*</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleEstimateNutrition}
+                  disabled={isEstimating}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: 'white',
+                    background: primaryColor,
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    opacity: isEstimating ? 0.7 : 1,
+                    fontFamily: 'Plus Jakarta Sans'
+                  }}
+                >
+                  {isEstimating ? '⚡ Đang tính...' : '⚡ AI tính dinh dưỡng'}
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', color: '#64748B', fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Calo (kcal)</label>
+                  <input
+                    type="number"
+                    style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid #CBD5E1', padding: '0 6px', fontSize: '12px', textAlign: 'center' }}
+                    placeholder="Calo"
+                    value={calories}
+                    onChange={(e) => setCalories(e.target.value === '' ? '' : Number(e.target.value))}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', color: '#64748B', fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Protein (g)</label>
+                  <input
+                    type="number"
+                    style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid #CBD5E1', padding: '0 6px', fontSize: '12px', textAlign: 'center' }}
+                    placeholder="Prot"
+                    value={protein}
+                    onChange={(e) => setProtein(e.target.value === '' ? '' : Number(e.target.value))}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', color: '#64748B', fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Fat (g)</label>
+                  <input
+                    type="number"
+                    style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid #CBD5E1', padding: '0 6px', fontSize: '12px', textAlign: 'center' }}
+                    placeholder="Béo"
+                    value={fat}
+                    onChange={(e) => setFat(e.target.value === '' ? '' : Number(e.target.value))}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', color: '#64748B', fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Carbs (g)</label>
+                  <input
+                    type="number"
+                    style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid #CBD5E1', padding: '0 6px', fontSize: '12px', textAlign: 'center' }}
+                    placeholder="Carb"
+                    value={carbs}
+                    onChange={(e) => setCarbs(e.target.value === '' ? '' : Number(e.target.value))}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Ingredient list */}

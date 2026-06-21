@@ -16,6 +16,7 @@ interface RecipeDetailModalProps {
   onToggleFavorite: (recipeId: string) => void;
   onAddToShoppingList: (recipe: Recipe) => void;
   onSaveToFamily?: (recipe: Recipe) => void;
+  onShare?: (recipe: Recipe) => void;
 }
 
 const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
@@ -30,6 +31,7 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   onToggleFavorite,
   onAddToShoppingList,
   onSaveToFamily,
+  onShare,
 }) => {
   if (!isOpen || !recipe) return null;
 
@@ -191,6 +193,16 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
                 >
                   Sửa công thức
                 </button>
+                {onShare && (
+                  <button
+                    id="recipe-detail-share-btn"
+                    type="button"
+                    className="recipe-detail-share-btn"
+                    onClick={() => onShare(recipe)}
+                  >
+                    📢 Chia sẻ cho Cộng đồng
+                  </button>
+                )}
                 <button
                   id="recipe-detail-delete-btn"
                   type="button"

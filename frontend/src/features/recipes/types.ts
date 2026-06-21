@@ -34,6 +34,7 @@ export interface Recipe {
   authorId?: string | null;
   authorName?: string | null;
   visibility?: 'Private' | 'Public' | 'Pending';
+  description?: string | null;
   calories?: number;
   protein?: number;
   fat?: number;

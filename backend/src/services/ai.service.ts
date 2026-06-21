@@ -129,6 +129,7 @@ export const estimateRecipeNutrition = async (ingredients: any[], instructions: 
   let url = `https://generativelanguage.googleapis.com/v1beta/models/${cachedModelName}:generateContent?key=${apiKey}`;
 
   const systemInstruction = `Bạn là một chuyên gia dinh dưỡng và đầu bếp chuyên nghiệp. Nhiệm vụ của bạn là phân tích danh sách nguyên liệu và các bước chế biến của một công thức để ước lượng các chỉ số dinh dưỡng (cho 1 phần ăn - per serving).
+Bạn phải tự nhận diện và quy đổi các đơn vị đo lường phi tiêu chuẩn hoặc đơn vị dân gian (ví dụ: "thìa cà phê", "thìa canh", "nhúm", "chén", "bát", "lát", "củ", "quả", v.v.) sang khối lượng gam hoặc ml thực tế để tính toán chính xác nhất (ví dụ: 1 thìa cà phê đường khoảng 4g carbs, 1 thìa canh dầu ăn khoảng 14g chất béo).
 Bạn PHẢI trả về một đối tượng JSON (JSON Object) có cấu trúc sau:
 {
   "calories": 350,
