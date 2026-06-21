@@ -116,39 +116,57 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   // ── Handlers ─────────────────────────────────────────────────
 
   const handleToggleFavorite = useCallback(async (recipeId: string) => {
+    const originalRecipes = recipes;
+    const originalFavs = favoriteRecipes;
+    const originalCommunity = communityPosts;
+    const originalDetail = detailRecipe;
+
+    // Find current state
+    const currentItem = recipes.find(r => r.id === recipeId) || 
+                        favoriteRecipes.find(r => r.id === recipeId) || 
+                        communityPosts.find(p => p.recipe.id === recipeId)?.recipe ||
+                        (detailRecipe?.id === recipeId ? detailRecipe : null);
+    if (!currentItem) return;
+    const newFavState = !currentItem.isFavorited;
+
+    // Optimistic Update
+    setRecipes((prev) =>
+      prev.map((r) => (r.id === recipeId ? { ...r, isFavorited: newFavState } : r))
+    );
+    setCommunityPosts((prev) =>
+      prev.map((post) =>
+        post.recipe.id === recipeId
+          ? { ...post, recipe: { ...post.recipe, isFavorited: newFavState } }
+          : post
+      )
+    );
+    setDetailRecipe((prev) =>
+      prev && prev.id === recipeId ? { ...prev, isFavorited: newFavState } : prev
+    );
+
+    if (newFavState) {
+      const added = recipes.find(r => r.id === recipeId) || currentItem;
+      setFavoriteRecipes(prev => {
+        if (prev.some(r => r.id === recipeId)) return prev;
+        return [...prev, { ...added, isFavorited: true }];
+      });
+    } else {
+      setFavoriteRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+    }
+
     try {
-      const { isFavorited } = await recipesService.toggleFavorite(recipeId);
-
-      // Update family/library recipes
-      setRecipes((prev) =>
-        prev.map((r) => (r.id === recipeId ? { ...r, isFavorited } : r))
-      );
-
-      // Update community posts
-      setCommunityPosts((prev) =>
-        prev.map((post) =>
-          post.recipe.id === recipeId
-            ? { ...post, recipe: { ...post.recipe, isFavorited } }
-            : post
-        )
-      );
-
-      // Update detailRecipe if open
-      setDetailRecipe((prev) =>
-        prev && prev.id === recipeId ? { ...prev, isFavorited } : prev
-      );
-
-      // Refresh/update favorite recipes list
-      if (isFavorited) {
-        refreshRecipes(); // Mới thêm favorited, có thể lấy lại danh sách
-      } else {
-        setFavoriteRecipes((prev) => prev.filter((r) => r.id !== recipeId));
-      }
+      await recipesService.toggleFavorite(recipeId);
+      refreshRecipes(); // Sync in background
     } catch (error) {
       console.error('Error toggling favorite:', error);
       showToast('Không thể cập nhật yêu thích');
+      // Rollback
+      setRecipes(originalRecipes);
+      setFavoriteRecipes(originalFavs);
+      setCommunityPosts(originalCommunity);
+      setDetailRecipe(originalDetail);
     }
-  }, [showToast]);
+  }, [recipes, favoriteRecipes, communityPosts, detailRecipe, refreshRecipes, showToast]);
 
   const handleRecipeClick = useCallback((recipe: Recipe) => {
     setIsViewingCommunity(false);
@@ -183,57 +201,95 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
   const handleFormSubmit = useCallback(
     async (data: Omit<Recipe, 'id' | 'isFavorited'>) => {
-      try {
-        if (formMode === 'create') {
+      const originalRecipes = recipes;
+      setIsFormOpen(false);
+
+      if (formMode === 'create') {
+        const tempId = `temp_${Date.now()}`;
+        const tempRecipe: Recipe = {
+          id: tempId,
+          isFavorited: false,
+          ...data
+        } as Recipe;
+        setRecipes((prev) => [tempRecipe, ...prev]);
+        showToast(`Đã lưu công thức "${data.name}" thành công!`);
+
+        try {
           const newRecipe = await recipesService.createRecipe(data);
-          setRecipes((prev) => [newRecipe, ...prev]);
-          showToast(`Đã lưu công thức "${newRecipe.name}" thành công!`);
-        } else if (formMode === 'edit' && formRecipe) {
+          setRecipes((prev) => prev.map(r => r.id === tempId ? newRecipe : r));
+        } catch (error) {
+          console.error('Error saving recipe:', error);
+          showToast('Lỗi khi lưu công thức');
+          setRecipes(originalRecipes); // Rollback
+        }
+      } else if (formMode === 'edit' && formRecipe) {
+        setRecipes((prev) =>
+          prev.map((r) =>
+            r.id === formRecipe.id ? { ...r, ...data } : r
+          )
+        );
+        showToast(`Đã cập nhật công thức "${data.name}" thành công!`);
+
+        try {
           const updatedRecipe = await recipesService.updateRecipe(formRecipe.id, data);
           setRecipes((prev) =>
             prev.map((r) =>
               r.id === formRecipe.id ? { ...r, ...updatedRecipe } : r
             )
           );
-          showToast(`Đã cập nhật công thức "${updatedRecipe.name}" thành công!`);
+        } catch (error) {
+          console.error('Error saving recipe:', error);
+          showToast('Lỗi khi lưu công thức');
+          setRecipes(originalRecipes); // Rollback
         }
-      } catch (error) {
-        console.error('Error saving recipe:', error);
-        showToast('Lỗi khi lưu công thức');
       }
     },
-    [formMode, formRecipe, showToast]
+    [formMode, formRecipe, showToast, recipes]
   );
 
   const handleDeleteConfirm = useCallback(async () => {
     if (deleteRecipe) {
+      const originalRecipes = recipes;
+      
+      // Optimistic Update
+      setRecipes((prev) => prev.filter((r) => r.id !== deleteRecipe.id));
+      setIsDeleteOpen(false);
+      const toDelete = deleteRecipe;
+      setDeleteRecipe(null);
+
       try {
-        await recipesService.deleteRecipe(deleteRecipe.id);
-        setRecipes((prev) => prev.filter((r) => r.id !== deleteRecipe.id));
-        setDeleteRecipe(null);
-        setIsDeleteOpen(false);
+        await recipesService.deleteRecipe(toDelete.id);
       } catch (error) {
         console.error('Error deleting recipe:', error);
         showToast('Lỗi khi xóa công thức');
+        setRecipes(originalRecipes); // Rollback
       }
     }
-  }, [deleteRecipe]);
+  }, [deleteRecipe, recipes, showToast]);
 
   const handleToggleCommunityLike = useCallback(async (postId: string) => {
+    const originalCommunity = communityPosts;
+    const currentPost = communityPosts.find(p => p.id === postId);
+    if (!currentPost) return;
+
+    // Optimistic Update
+    const nextIsLiked = !currentPost.isLiked;
+    const nextLikes = nextIsLiked ? currentPost.likes + 1 : Math.max(0, currentPost.likes - 1);
+    setCommunityPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId
+          ? { ...p, isLiked: nextIsLiked, likes: nextLikes }
+          : p
+      )
+    );
+
     try {
-      // Pass recipe id to like (since post ID here is mapped to recipe id)
-      const result = await recipesService.toggleLike(postId);
-      setCommunityPosts((prev) =>
-        prev.map((p) =>
-          p.id === postId
-            ? { ...p, isLiked: result.isLiked, likes: result.likes }
-            : p
-        )
-      );
+      await recipesService.toggleLike(postId);
     } catch (error) {
       console.error('Error toggling like:', error);
+      setCommunityPosts(originalCommunity); // Rollback
     }
-  }, []);
+  }, [communityPosts]);
 
   const handleAddToShoppingList = useCallback(async (recipe: Recipe) => {
     const missing: Array<{

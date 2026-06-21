@@ -46,15 +46,23 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
 
   // Filtered recipe list
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const removeDiacritics = (str: string) => {
+      return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'd');
+    };
+
+    const q = removeDiacritics(query.trim().toLowerCase());
     if (!q) return availableRecipes;
     
     return availableRecipes.filter((r) => {
       if (filterMode === 'name') {
-        return r.name.toLowerCase().includes(q);
+        return removeDiacritics(r.name.toLowerCase()).includes(q);
       } else {
         // filterMode === 'ingredient'
-        return r.ingredients?.some(ing => ing.name.toLowerCase().includes(q));
+        return r.ingredients?.some(ing => removeDiacritics(ing.name.toLowerCase()).includes(q));
       }
     });
   }, [query, availableRecipes, filterMode]);

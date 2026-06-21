@@ -221,17 +221,44 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
-  color: #D32F2F;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #EF5350;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.mp-dish-card__remove:hover {
+  background: #FFEBEE;
+  color: #D32F2F;
+}
+
+.mp-consolidate-btn {
+  width: 100%;
+  margin-top: 16px;
+  height: 40px;
+  background: var(--primary-color);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
 }
 
-.mp-dish-card__remove:hover {
-  background: #FFEBEE;
+.mp-consolidate-btn:hover {
+  background: #E67E00;
 }
 
 /* ── Content ── */

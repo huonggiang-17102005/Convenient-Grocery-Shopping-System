@@ -71,6 +71,16 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
 
   const handleSaveToFridge = async (itemData: any) => {
     if (!itemToSaveFridge || !user?.family_id) return;
+    const originalItems = items;
+
+    // Optimistic Update
+    setItems(prev => prev.map(i => i.id === itemToSaveFridge.id ? { ...i, isBought: true } : i));
+    showToast('Đã mua xong và lưu vào tủ lạnh!');
+    setIsFridgeModalOpen(false);
+    
+    const savedItem = itemToSaveFridge;
+    setItemToSaveFridge(null);
+
     try {
       // 1. Lưu vào tủ lạnh
       await fridgeService.addFridgeItem({
@@ -86,72 +96,100 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
       });
       
       // 2. Đánh dấu đã mua ở Shopping List
-      const updatedItem = await shoppingService.updateShoppingItem(itemToSaveFridge.id, { isBought: true });
+      const updatedItem = await shoppingService.updateShoppingItem(savedItem.id, { isBought: true });
       
-      setItems(prev => prev.map(i => i.id === itemToSaveFridge.id ? updatedItem : i));
-      
-      showToast('Đã mua xong và lưu vào tủ lạnh!');
-      setIsFridgeModalOpen(false);
-      setItemToSaveFridge(null);
+      setItems(prev => prev.map(i => i.id === savedItem.id ? updatedItem : i));
     } catch (error) {
       console.error('Error saving to fridge:', error);
       showToast('Lỗi khi lưu vào tủ lạnh');
+      setItems(originalItems); // Rollback
     }
   };
 
   // Add or edit item submit
   const handleFormSubmit = async (itemData: Omit<ShoppingItem, 'id' | 'isBought' | 'assigneeId'>) => {
-    try {
-      if (formMode === 'create') {
+    const originalItems = items;
+    setIsFormModalOpen(false);
+
+    if (formMode === 'create') {
+      const tempId = `temp_${Date.now()}`;
+      const tempItem: ShoppingItem = {
+        id: tempId,
+        isBought: false,
+        assigneeId: null,
+        ...itemData
+      };
+
+      setItems(prev => [...prev, tempItem]);
+      showToast('Đã thêm vào danh sách mua sắm');
+
+      try {
         const newItem = await shoppingService.createShoppingItem(itemData);
-        setItems(prev => [...prev, newItem]);
-        showToast('Đã thêm vào danh sách mua sắm');
-      } else if (formMode === 'edit' && selectedItem) {
+        setItems(prev => prev.map(i => i.id === tempId ? newItem : i));
+      } catch (error) {
+        console.error('Error saving item:', error);
+        showToast('Lỗi khi lưu mặt hàng');
+        setItems(originalItems); // Rollback
+      }
+    } else if (formMode === 'edit' && selectedItem) {
+      setItems(prev => prev.map(i => i.id === selectedItem.id ? { ...i, ...itemData } : i));
+      showToast('Đã cập nhật mặt hàng thành công!');
+
+      try {
         const updatedItem = await shoppingService.updateShoppingItem(selectedItem.id, itemData);
         setItems(prev => prev.map(i => i.id === selectedItem.id ? updatedItem : i));
-        showToast('Đã cập nhật mặt hàng thành công!');
+      } catch (error) {
+        console.error('Error saving item:', error);
+        showToast('Lỗi khi lưu mặt hàng');
+        setItems(originalItems); // Rollback
       }
-      setIsFormModalOpen(false);
-    } catch (error) {
-      console.error('Error saving item:', error);
-      showToast('Lỗi khi lưu mặt hàng');
     }
   };
 
   // Assign member
   const handleAssignMember = async (itemId: string, assigneeId: string | null) => {
+    const originalItems = items;
+
+    // Optimistic Update
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, assigneeId } : i));
+    if (assigneeId) {
+      const assignedMember = familyMembers.find(m => m.id === assigneeId);
+      showToast(`Đã giao cho ${assignedMember?.name || assigneeId}`);
+    } else {
+      showToast('Đã hủy giao việc thành công!');
+    }
+    setIsBottomSheetOpen(false);
+    setSelectedItem(null);
+
     try {
       const updatedItem = await shoppingService.updateShoppingItem(itemId, { assigneeId });
       setItems(prev => prev.map(i => i.id === itemId ? updatedItem : i));
-      if (assigneeId) {
-        const assignedMember = familyMembers.find(m => m.id === assigneeId);
-        showToast(`Đã giao cho ${assignedMember?.name || assigneeId}`);
-      } else {
-        showToast('Đã hủy giao việc thành công!');
-      }
     } catch (error) {
       console.error('Error assigning member:', error);
       showToast('Lỗi khi phân công');
+      setItems(originalItems); // Rollback
     }
-
-    // Close bottom sheet and clear selection
-    setIsBottomSheetOpen(false);
-    setSelectedItem(null);
   };
 
   // Delete item confirm
   const handleDeleteConfirm = async () => {
     if (selectedItem) {
+      const originalItems = items;
+      const toDelete = selectedItem;
+
+      // Optimistic Update
+      setItems(prev => prev.filter(item => item.id !== toDelete.id));
+      showToast('Đã xóa mặt hàng thành công!');
+      setIsDeleteModalOpen(false);
+      setSelectedItem(null);
+
       try {
-        await shoppingService.deleteShoppingItem(selectedItem.id);
-        setItems(prev => prev.filter(item => item.id !== selectedItem.id));
-        showToast('Đã xóa mặt hàng thành công!');
+        await shoppingService.deleteShoppingItem(toDelete.id);
       } catch (error) {
         console.error('Error deleting item:', error);
         showToast('Lỗi khi xóa mặt hàng');
+        setItems(originalItems); // Rollback
       }
-      setSelectedItem(null);
-      setIsDeleteModalOpen(false);
     }
   };
 
@@ -195,13 +233,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
 
   const filteredItems = items.filter(item => {
     if (activeTab === 'today') {
-      // Show if due today OR overdue
-      const isToday = item.deadlineDate === todayStr;
-      const isOverdue = !item.isBought && item.deadlineDate < todayStr;
-      
-      // If due today, verify if it was overdue due to hour as well
-      if (!isToday && !isOverdue) return false;
-      return true;
+      return item.deadlineDate === todayStr;
     }
     // "Trong tuần" - show all items
     return true;

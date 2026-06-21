@@ -102,13 +102,17 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
               id: p.recipes.id,
               name: p.recipes.name,
               emoji: p.recipes.emoji || '🍽️',
-              cookTimeMinutes: p.recipes.cooking_time || 0,
+              cookTimeMinutes: p.recipes.cooking_time || 30,
               imageUrl: p.recipes.image_url,
               difficulty: (p.recipes.difficulty as 'Dễ' | 'Trung bình' | 'Khó') || ('Dễ' as 'Dễ'),
               servings: p.recipes.servings || 1,
               ingredients: p.recipes.ingredients || [],
               steps: p.recipes.instructions ? p.recipes.instructions.map((desc: string, i: number) => ({ id: `s_${i}`, description: desc })) : [],
-              isFavorited: false
+              isFavorited: false,
+              calories: p.recipes.calories || 0,
+              protein: p.recipes.protein || 0,
+              fat: p.recipes.fat || 0,
+              carbs: p.recipes.carbs || 0
             }
           });
         }

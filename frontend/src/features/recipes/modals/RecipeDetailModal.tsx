@@ -47,15 +47,17 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
       >
         {/* Favorite & Close header */}
         <div className="recipe-detail-header-row">
-          <button
-            id="recipe-detail-fav-btn"
-            type="button"
-            className="recipe-detail-fav-btn"
-            onClick={() => onToggleFavorite(recipe.id)}
-            aria-label={recipe.isFavorited ? 'Bỏ yêu thích' : 'Thêm yêu thích'}
-          >
-            {recipe.isFavorited ? '❤️' : '🤍'}
-          </button>
+          {showShoppingAndCook && (
+            <button
+              id="recipe-detail-fav-btn"
+              type="button"
+              className="recipe-detail-fav-btn"
+              onClick={() => onToggleFavorite(recipe.id)}
+              aria-label={recipe.isFavorited ? 'Bỏ yêu thích' : 'Thêm yêu thích'}
+            >
+              {recipe.isFavorited ? '❤️' : '🤍'}
+            </button>
+          )}
           <button
             id="recipe-detail-close-btn"
             type="button"
@@ -171,7 +173,7 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
 
           {/* Action buttons */}
           <div className="recipe-detail-actions">
-            {recipe.authorId === null && (
+            {showEditDelete && recipe.authorId === null && (
               <button
                 id="recipe-detail-save-family-btn"
                 type="button"

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { PlannedMeal } from '../types';
+import type { Recipe } from '../../recipes/types';
 import SelectedDishCard from './SelectedDishCard';
 
 interface MealSectionProps {
@@ -10,6 +11,7 @@ interface MealSectionProps {
   showRemove?: boolean;
   onAddDish: () => void;
   onRemoveDish: (id: string) => void;
+  onClickCard: (recipe: Recipe) => void;
 }
 
 const MealSection: React.FC<MealSectionProps> = ({
@@ -20,6 +22,7 @@ const MealSection: React.FC<MealSectionProps> = ({
   showRemove = true,
   onAddDish,
   onRemoveDish,
+  onClickCard,
 }) => {
   return (
     <section className="mp-meal-section" aria-label={title}>
@@ -33,6 +36,7 @@ const MealSection: React.FC<MealSectionProps> = ({
               plannedMeal={plannedMeal}
               showRemove={showRemove}
               onRemove={() => onRemoveDish(plannedMeal.id)}
+              onClickCard={onClickCard}
             />
           ))}
         </ul>
