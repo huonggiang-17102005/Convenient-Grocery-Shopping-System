@@ -129,15 +129,23 @@ export const recipesService = {
     ingredients: { name: string; quantity: number; unit: string }[], 
     instructions: string[]
   ): Promise<{ calories: number; protein: number; fat: number; carbs: number }> => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/ai/estimate-nutrition`, {
-      ingredients,
-      instructions
-    }, {
-      headers: {
-        Authorization: token ? `Bearer ${token}` : ''
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API_URL}/ai/estimate-nutrition`, {
+        ingredients,
+        instructions
+      }, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : ''
+        }
+      });
+      return response.data.data;
+    } catch (err: any) {
+      const serverMessage = err.response?.data?.message;
+      if (serverMessage) {
+        throw new Error(serverMessage);
       }
-    });
-    return response.data.data;
+      throw err;
+    }
   },
 };

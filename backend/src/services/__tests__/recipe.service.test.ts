@@ -17,6 +17,7 @@ const { mockQueryChain } = vi.hoisted(() => {
       eq: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
       update: vi.fn().mockReturnThis(),
+      single: vi.fn().mockReturnThis(),
       then: vi.fn().mockImplementation((onFulfilled) => {
         return Promise.resolve({ data: [], error: null }).then(onFulfilled);
       })

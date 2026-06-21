@@ -100,7 +100,11 @@ Nhu cầu của người dùng: ${userPrompt || 'Gợi ý món ăn ngon để ti
 
   if (resultText) {
       try {
-        const parsedData = JSON.parse(resultText);
+        let cleanText = resultText.trim();
+        if (cleanText.startsWith('```')) {
+          cleanText = cleanText.replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+        }
+        const parsedData = JSON.parse(cleanText);
         // Ensure the result is an array
         if (Array.isArray(parsedData)) {
             return parsedData;
@@ -197,7 +201,11 @@ Các bước hướng dẫn: ${JSON.stringify(instructions)}`;
 
   if (resultText) {
     try {
-      const parsedData = JSON.parse(resultText);
+      let cleanText = resultText.trim();
+      if (cleanText.startsWith('```')) {
+        cleanText = cleanText.replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+      }
+      const parsedData = JSON.parse(cleanText);
       return {
         calories: Math.round(Number(parsedData.calories || 0)),
         protein: Number(parsedData.protein || 0),

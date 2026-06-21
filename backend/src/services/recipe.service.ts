@@ -109,7 +109,17 @@ export const createRecipe = async (authorId: string, data: any) => {
 export const updateRecipe = async (recipeId: string, authorId: string, data: any) => {
   const recipe = await RecipeRepo.getRecipeById(recipeId);
   
-  if (recipe.author_id !== authorId) {
+  let canEdit = recipe.author_id === authorId;
+  if (!canEdit && recipe.author_id && authorId) {
+    const { data: recipeAuthor } = await supabase.from('users').select('family_id').eq('id', recipe.author_id).single();
+    const { data: currentUser } = await supabase.from('users').select('family_id, role').eq('id', authorId).single();
+    
+    if (recipeAuthor?.family_id && currentUser?.family_id && recipeAuthor.family_id === currentUser.family_id) {
+      canEdit = true;
+    }
+  }
+
+  if (!canEdit) {
     throw new ForbiddenError('Bạn không có quyền sửa công thức này.');
   }
 
@@ -156,7 +166,19 @@ export const updateRecipe = async (recipeId: string, authorId: string, data: any
 export const deleteRecipe = async (recipeId: string, authorId: string) => {
   const recipe = await RecipeRepo.getRecipeById(recipeId);
   
-  if (recipe.author_id !== authorId) {
+  let canDelete = recipe.author_id === authorId;
+  if (!canDelete && recipe.author_id && authorId) {
+    const { data: recipeAuthor } = await supabase.from('users').select('family_id').eq('id', recipe.author_id).single();
+    const { data: currentUser } = await supabase.from('users').select('family_id, role').eq('id', authorId).single();
+    
+    if (recipeAuthor?.family_id && currentUser?.family_id && recipeAuthor.family_id === currentUser.family_id) {
+      if (currentUser.role === 'Homemaker') {
+        canDelete = true;
+      }
+    }
+  }
+
+  if (!canDelete) {
     throw new ForbiddenError('Bạn không có quyền xóa công thức này.');
   }
 
