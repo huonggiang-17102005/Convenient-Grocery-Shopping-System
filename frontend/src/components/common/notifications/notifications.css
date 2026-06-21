@@ -73,6 +73,7 @@
   border-bottom: 1px solid #f0f0f0;
   background-color: #fff;
   z-index: 2;
+  flex-shrink: 0;
 }
 
 .notif-title {
@@ -108,6 +109,11 @@
   background-color: #FF8A00;
 }
 
+.notif-bell-wrapper.role-homemaker .notif-tab.active {
+  color: #FF8A00;
+  border-bottom-color: #FF8A00;
+}
+
 /* Member colors */
 .notif-bell-wrapper.role-member .notif-mark-all {
   color: #2563EB;
@@ -125,8 +131,50 @@
   background-color: #2563EB;
 }
 
+.notif-bell-wrapper.role-member .notif-tab.active {
+  color: #2563EB;
+  border-bottom-color: #2563EB;
+}
+
 .notif-mark-all:hover {
   text-decoration: underline;
+}
+
+/* Tabs Styling */
+.notif-tabs {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #fff;
+  z-index: 1;
+  flex-shrink: 0;
+  /* Hide scrollbar for cleaner look */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.notif-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.notif-tab {
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: #757575;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.notif-tab:hover {
+  color: #333;
+}
+
+.notif-tab.active {
+  font-weight: 600;
 }
 
 .notif-list {

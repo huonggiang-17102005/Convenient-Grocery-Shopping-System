@@ -32,10 +32,10 @@ export const createNotification = async (
   return newNotification;
 };
 
-export const getFamilyNotifications = async (familyId: string, userId: string, limit: number = 20, offset: number = 0) => {
+export const getFamilyNotifications = async (familyId: string, userId: string, limit: number = 20, offset: number = 0, category?: string) => {
   if (!familyId) throw new BadRequestError('Thiếu thông tin gia đình (familyId)');
   if (!userId) throw new BadRequestError('Thiếu ID người dùng');
   
-  const notifications = await notificationRepo.fetchNotifications(familyId, userId, limit, offset);
+  const notifications = await notificationRepo.fetchNotifications(familyId, userId, limit, offset, category);
   return notifications;
 };

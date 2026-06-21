@@ -17,12 +17,38 @@ export const insertNotification = async (notificationData: Omit<Notification, 'i
   return data;
 };
 
-export const fetchNotifications = async (familyId: string, userId: string, limit: number = 20, offset: number = 0) => {
-  const { data, error } = await supabase
+export const fetchNotifications = async (familyId: string, userId: string, limit: number = 20, offset: number = 0, category?: string) => {
+  let query = supabase
     .from('notifications')
     .select('*')
     .eq('family_id', familyId)
-    .or(`user_id.is.null,user_id.eq.${userId}`)
+    .or(`user_id.is.null,user_id.eq.${userId}`);
+
+  if (category && category !== 'all') {
+    let types: string[] = [];
+    switch (category) {
+      case 'family':
+        types = ['FAMILY_JOIN', 'FAMILY_LEAVE', 'FAMILY_ROLE'];
+        break;
+      case 'fridge':
+        types = ['ADD', 'CONSUME', 'UPDATE', 'WASTE', 'EXPIRE'];
+        break;
+      case 'shopping':
+        types = ['TASK_ASSIGN', 'TASK_UNASSIGN', 'TASK_COMPLETE', 'TASK_DELETE', 'TASK_OVERDUE'];
+        break;
+      case 'recipe':
+        types = ['LIKE'];
+        break;
+      case 'meal':
+        types = ['NONE']; // Placeholder for future meal notifications
+        break;
+    }
+    if (types.length > 0) {
+      query = query.in('type', types);
+    }
+  }
+
+  const { data, error } = await query
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 

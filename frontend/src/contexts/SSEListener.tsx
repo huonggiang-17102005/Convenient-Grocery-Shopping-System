@@ -6,7 +6,7 @@ import { useFamilyContext } from './FamilyContext';
 
 export const SSEListener: React.FC = () => {
   const { user, family } = useAuth();
-  const { refreshNotifications } = useNotifications();
+  const { handleSSENotification } = useNotifications();
   const { refreshShoppingList } = useShoppingListContext();
   const { refreshMembers } = useFamilyContext();
 
@@ -19,7 +19,7 @@ export const SSEListener: React.FC = () => {
 
     evtSource.addEventListener('NEW_NOTIFICATION', (event) => {
       console.log('🔔 [SSE] Nhận thông báo mới:', event.data);
-      refreshNotifications();
+      handleSSENotification();
       
       try {
         const payload = JSON.parse(event.data);
@@ -82,7 +82,7 @@ export const SSEListener: React.FC = () => {
       console.log('🔌 [SSE] Đóng kết nối');
       evtSource.close();
     };
-  }, [user?.id, family?.id, refreshNotifications, refreshShoppingList, refreshMembers]);
+  }, [user?.id, family?.id, handleSSENotification, refreshShoppingList, refreshMembers]);
 
   return null;
 };
