@@ -12,7 +12,7 @@ export const streamEvents = async (req: Request, res: Response) => {
 
   // Setup SSE Headers
   res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders(); // Đảm bảo headers được gửi đi ngay lập tức
 
