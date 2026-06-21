@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import './meal-planner.css';
 import AiRecipeModal from '../fridge/modals/AiRecipeModal';
-
+import RecipeDetailModal from '../recipes/modals/RecipeDetailModal';
+import ShoppingConfirmModal from '../recipes/modals/ShoppingConfirmModal';
+import { useFridgeContext } from '../../contexts/FridgeContext';
+import { shoppingService } from '../shopping-list/shopping-list.service';
 
 export interface MealPlannerFeatureProps {
   role: 'homemaker' | 'member';
@@ -61,7 +64,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     return ['mon','tue','wed','thu','fri','sat','sun'].includes(key) ? key : 'mon';
   });
 
-  const { plansByWeek, availableRecipes, fetchWeekPlan } = useMealPlannerContext();
+  const { plansByWeek, setPlansByWeek, availableRecipes, fetchWeekPlan } = useMealPlannerContext();
 
   const getCacheKey = () => {
     const startDateStr = weekDays[0].date;
@@ -95,15 +98,30 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     fetchWeekPlan(parseDate(startDateStr!), parseDate(endDateStr!));
   }, [weekDays, fetchWeekPlan]);
 
+  const { items: fridgeItems } = useFridgeContext();
+
   // Bottom sheet state
   const [sheetOpen,     setSheetOpen]     = useState(false);
   const [activeMealKey, setActiveMealKey] = useState<MealKey>('breakfast');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
+  // Recipe detail modal state
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
+
+  // Shopping confirm modal state
+  const [isShoppingConfirmOpen, setIsShoppingConfirmOpen] = useState(false);
+  const [shoppingConfirmIngredients, setShoppingConfirmIngredients] = useState<any[]>([]);
+
   // Toast
   const [toastMsg,     setToastMsg]     = useState('');
   const [toastTrigger, setToastTrigger] = useState(0);
   const hideToast = useCallback(() => {}, []);
+
+  const handleCardClick = useCallback((recipe: Recipe) => {
+    setSelectedRecipe(recipe);
+    setIsRecipeModalOpen(true);
+  }, []);
 
   const openSheet = (mealKey: MealKey) => {
     setActiveMealKey(mealKey);
@@ -119,16 +137,45 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     const [d, m] = activeDayTab.date!.split('/');
     const dateStr = `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
 
+    const cacheKey = getCacheKey();
+    const originalPlans = plansByWeek;
+
+    // 1. Optimistic Update (add to local state immediately with temporary IDs)
+    const tempPlannedMeals = selected.map((recipe, idx) => ({
+      id: `temp_${Date.now()}_${idx}`,
+      people_count: peopleCount,
+      recipe: recipe
+    }));
+
+    setPlansByWeek(prev => {
+      const currentWeek = prev[cacheKey];
+      if (!currentWeek) return prev;
+
+      const updatedDayMeals = { ...currentWeek[activeDay] };
+      updatedDayMeals[activeMealKey] = [
+        ...(updatedDayMeals[activeMealKey] || []),
+        ...tempPlannedMeals
+      ];
+
+      return {
+        ...prev,
+        [cacheKey]: {
+          ...currentWeek,
+          [activeDay]: updatedDayMeals
+        }
+      };
+    });
+
+    const mealLabel = MEALS.find((m) => m.key === activeMealKey)?.title ?? '';
+    const count     = selected.length;
+    if (count > 0) {
+      setToastMsg(`Đã thêm ${count} món ăn vào ${mealLabel.toLowerCase()}`);
+      setToastTrigger(prev => prev + 1);
+    }
+
     try {
       for (const recipe of selected) {
         await mealPlannerService.addMealPlan(recipe.id, dateStr, activeMealKey, peopleCount);
-      }
-      
-      const mealLabel = MEALS.find((m) => m.key === activeMealKey)?.title ?? '';
-      const count     = selected.length;
-      if (count > 0) {
-        setToastMsg(`Đã thêm ${count} món ăn vào ${mealLabel.toLowerCase()}`);
-        setToastTrigger(prev => prev + 1);
       }
       
       // Reload plans via context (force reload)
@@ -143,13 +190,35 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
       console.error('Lỗi thêm món:', err);
       setToastMsg('Có lỗi xảy ra khi thêm món');
       setToastTrigger(prev => prev + 1);
+      // Rollback on error
+      setPlansByWeek(originalPlans);
     }
   };
 
-  const handleRemoveDish = async (_mealKey: MealKey, plannedMealId: string) => {
+  const handleRemoveDish = async (mealKey: MealKey, plannedMealId: string) => {
+    const cacheKey = getCacheKey();
+    const originalPlans = plansByWeek;
+
+    // 1. Optimistic Update (remove from local state immediately)
+    setPlansByWeek(prev => {
+      const currentWeek = prev[cacheKey];
+      if (!currentWeek) return prev;
+
+      const updatedDayMeals = { ...currentWeek[activeDay] };
+      updatedDayMeals[mealKey] = (updatedDayMeals[mealKey] || []).filter(pm => pm.id !== plannedMealId);
+
+      return {
+        ...prev,
+        [cacheKey]: {
+          ...currentWeek,
+          [activeDay]: updatedDayMeals
+        }
+      };
+    });
+
     try {
       await mealPlannerService.removeMealPlan(plannedMealId);
-      // Force update context cache
+      // Reload plans via context (force reload)
       const startDateStr = weekDays[0].date;
       const endDateStr = weekDays[6].date;
       const year = new Date().getFullYear();
@@ -162,11 +231,143 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
       console.error('Lỗi xóa món:', err);
       setToastMsg('Có lỗi xảy ra khi xóa món');
       setToastTrigger(prev => prev + 1);
+      // Rollback on error
+      setPlansByWeek(originalPlans);
     }
   };
 
   const currentDay: DayMeals = plan[activeDay] ?? { breakfast: [], lunch: [], dinner: [] };
   const activeMealTitle = MEALS.find((m) => m.key === activeMealKey)?.title ?? '';
+
+  const hasDishes = React.useMemo(() => {
+    return MEALS.some(({ key }) => currentDay[key] && currentDay[key].length > 0);
+  }, [currentDay]);
+
+  const handleConsolidateMissing = useCallback(() => {
+    const missing: Array<{
+      name: string;
+      category: string;
+      neededText: string;
+      defaultBuyAmount: string;
+      quantity?: number;
+      unit?: string;
+    }> = [];
+
+    const neededMap = new Map<string, { name: string; category: string; amount: number; unit: string }>();
+
+    MEALS.forEach(({ key }) => {
+      const plannedMeals = currentDay[key] || [];
+      plannedMeals.forEach(pm => {
+        const recipe = pm.recipe;
+        if (!recipe || !recipe.ingredients) return;
+        const multiplier = (pm.people_count || 1) / (recipe.servings || 1);
+        recipe.ingredients.forEach(ing => {
+          const nameLower = ing.name.toLowerCase().trim();
+          const catLower = (ing.category || 'Khác').toLowerCase().trim();
+          const mapKey = `${nameLower}_${catLower}`;
+          const current = neededMap.get(mapKey);
+          const parsedAmount = ing.amount || 0;
+          const scaledAmount = parsedAmount * multiplier;
+          if (current) {
+            current.amount += scaledAmount;
+          } else {
+            neededMap.set(mapKey, {
+              name: ing.name,
+              category: ing.category || 'Khác',
+              amount: scaledAmount,
+              unit: ing.unit || '',
+            });
+          }
+        });
+      });
+    });
+
+    neededMap.forEach((neededItem) => {
+      const inFridge = (fridgeItems || []).find(f =>
+        (f.category || 'Khác').toLowerCase().trim() === (neededItem.category || 'Khác').toLowerCase().trim() &&
+        f.name.toLowerCase().trim() === neededItem.name.toLowerCase().trim()
+      );
+
+      if (neededItem.category === 'Gia vị') {
+        if (!inFridge) {
+          const roundedAmount = Math.round(neededItem.amount * 100) / 100;
+          missing.push({
+            name: neededItem.name,
+            category: neededItem.category,
+            neededText: 'Gia vị chưa có trong tủ lạnh',
+            defaultBuyAmount: neededItem.amount > 0 ? `${roundedAmount} ${neededItem.unit}` : '1 gói',
+            quantity: neededItem.amount > 0 ? roundedAmount : 1,
+            unit: neededItem.amount > 0 ? neededItem.unit : 'gói',
+          });
+        }
+      } else {
+        const available = inFridge ? inFridge.quantity : 0;
+        if (available < neededItem.amount) {
+          const diff = neededItem.amount - available;
+          const roundedAmount = Math.round(neededItem.amount * 100) / 100;
+          const roundedAvailable = Math.round(available * 100) / 100;
+          const roundedDiff = Math.round(diff * 100) / 100;
+          missing.push({
+            name: neededItem.name,
+            category: neededItem.category,
+            neededText: `Cần ${roundedAmount}${neededItem.unit} (Trong tủ: ${roundedAvailable}${neededItem.unit})`,
+            defaultBuyAmount: `${roundedDiff} ${neededItem.unit}`,
+            quantity: roundedDiff,
+            unit: neededItem.unit,
+          });
+        }
+      }
+    });
+
+    if (missing.length === 0) {
+      setToastMsg('Gia đình đã có đầy đủ nguyên liệu trong tủ lạnh cho các món ăn ngày hôm nay!');
+      setToastTrigger(prev => prev + 1);
+      return;
+    }
+
+    setShoppingConfirmIngredients(missing);
+    setIsShoppingConfirmOpen(true);
+  }, [currentDay, fridgeItems]);
+
+  const handleShoppingConfirmSubmit = useCallback(async (items: Array<{ name: string; category: string; buyAmountStr?: string; quantity?: number; unit?: string }>) => {
+    try {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const date = String(today.getDate()).padStart(2, '0');
+      const localTodayDateStr = `${year}-${month}-${date}`;
+
+      for (const item of items) {
+        let finalQty = 1;
+        let finalUnit = 'g';
+        if (item.category === 'Gia vị') {
+          finalQty = 0;
+          finalUnit = (item.buyAmountStr || '').trim();
+        } else {
+          finalQty = item.quantity ?? 1;
+          finalUnit = item.unit || 'g';
+        }
+
+        await shoppingService.createShoppingItem({
+          name: item.name,
+          category: item.category,
+          quantity: finalQty,
+          unit: finalUnit,
+          deadlineDate: localTodayDateStr,
+          deadlineTime: '23:59'
+        });
+      }
+
+      setIsShoppingConfirmOpen(false);
+      setToastMsg('Đã thêm các nguyên liệu thiếu của ngày vào danh sách mua sắm thành công!');
+      setToastTrigger(prev => prev + 1);
+      navigate(`/${role}/shopping-list`);
+    } catch (error) {
+      console.error('Error adding custom items to shopping list:', error);
+      setToastMsg('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
+      setToastTrigger(prev => prev + 1);
+    }
+  }, [role, navigate]);
 
   const totalCalories = React.useMemo(() => {
     let sum = 0;
@@ -281,6 +482,17 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
                 <span>Tổng lượng calo lên kế hoạch cho hôm nay đã vượt quá ngưỡng mục tiêu của gia đình (+{totalCalories - calorieTarget} kcal). Hãy cân nhắc điều chỉnh thực đơn để cân bằng dinh dưỡng.</span>
               </div>
             )}
+
+            {role === 'homemaker' && hasDishes && (
+              <button
+                id="mp-consolidate-missing-btn"
+                type="button"
+                className="mp-consolidate-btn"
+                onClick={handleConsolidateMissing}
+              >
+                Gom tất cả đồ thiếu vào Shopping list
+              </button>
+            )}
           </div>
 
           {MEALS.map(({ key, title }) => (
@@ -293,6 +505,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
               showRemove={role !== 'member'}
               onAddDish={() => openSheet(key)}
               onRemoveDish={(dishId) => handleRemoveDish(key, dishId)}
+              onClickCard={handleCardClick}
             />
           ))}
         </div>
@@ -315,6 +528,32 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
       />
+
+      {isRecipeModalOpen && selectedRecipe && (
+        <RecipeDetailModal
+          isOpen={isRecipeModalOpen}
+          recipe={selectedRecipe}
+          showEditDelete={false}
+          showShoppingAndCook={false}
+          onClose={() => {
+            setIsRecipeModalOpen(false);
+            setSelectedRecipe(null);
+          }}
+          onEdit={() => {}}
+          onDelete={() => {}}
+          onToggleFavorite={() => {}}
+          onAddToShoppingList={() => {}}
+        />
+      )}
+
+      {isShoppingConfirmOpen && (
+        <ShoppingConfirmModal
+          isOpen={isShoppingConfirmOpen}
+          onClose={() => setIsShoppingConfirmOpen(false)}
+          onConfirm={handleShoppingConfirmSubmit}
+          initialIngredients={shoppingConfirmIngredients}
+        />
+      )}
     </>
   );
 };

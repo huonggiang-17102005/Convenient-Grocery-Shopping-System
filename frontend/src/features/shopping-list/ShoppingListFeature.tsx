@@ -195,13 +195,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
 
   const filteredItems = items.filter(item => {
     if (activeTab === 'today') {
-      // Show if due today OR overdue
-      const isToday = item.deadlineDate === todayStr;
-      const isOverdue = !item.isBought && item.deadlineDate < todayStr;
-      
-      // If due today, verify if it was overdue due to hour as well
-      if (!isToday && !isOverdue) return false;
-      return true;
+      return item.deadlineDate === todayStr;
     }
     // "Trong tuần" - show all items
     return true;

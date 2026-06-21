@@ -108,7 +108,11 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
               servings: p.recipes.servings || 1,
               ingredients: p.recipes.ingredients || [],
               steps: p.recipes.instructions ? p.recipes.instructions.map((desc: string, i: number) => ({ id: `s_${i}`, description: desc })) : [],
-              isFavorited: false
+              isFavorited: false,
+              calories: p.recipes.calories || 0,
+              protein: p.recipes.protein || 0,
+              fat: p.recipes.fat || 0,
+              carbs: p.recipes.carbs || 0
             }
           });
         }

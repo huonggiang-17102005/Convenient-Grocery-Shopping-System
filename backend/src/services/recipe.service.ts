@@ -81,7 +81,7 @@ export const createRecipe = async (authorId: string, data: any) => {
     description: data.description || null,
     image_url: data.image_url || null,
     image_public_id: data.image_public_id || null,
-    cooking_time: data.cookingTimeMinutes || data.cooking_time,
+    cooking_time: data.cookTimeMinutes || data.cookingTimeMinutes || data.cooking_time,
     difficulty: data.difficulty || 'Dễ',
     servings: data.servings || 1,
     ingredients: (data.ingredients || []).map((ing: any) => ({
@@ -120,7 +120,7 @@ export const updateRecipe = async (recipeId: string, authorId: string, data: any
   if (data.image_url !== undefined) updateData.image_url = data.image_url;
   if (data.image_public_id !== undefined) updateData.image_public_id = data.image_public_id;
   
-  const cookTime = data.cookingTimeMinutes || data.cooking_time;
+  const cookTime = data.cookTimeMinutes || data.cookingTimeMinutes || data.cooking_time;
   if (cookTime !== undefined) updateData.cooking_time = cookTime;
   
   if (data.difficulty !== undefined) updateData.difficulty = data.difficulty;
