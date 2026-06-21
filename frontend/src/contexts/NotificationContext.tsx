@@ -50,7 +50,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const token = localStorage.getItem('token');
     if (!token) return [];
     try {
-      const res = await fetch(`http://localhost:5000/api/notifications?limit=${limit}&offset=${offset}`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/notifications?limit=${limit}&offset=${offset}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const json = await res.json();
