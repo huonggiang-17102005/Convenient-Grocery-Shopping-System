@@ -92,7 +92,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     };
   }, [isOpen, updateCoords]);
 
-  const selectedOption = options.find(o => o.value === value);
+  const normalize = (str: any) => String(str || '').normalize('NFC').trim().toLowerCase();
+  const selectedOption = options.find(o => normalize(o.value) === normalize(value));
   const isCompact = typeof triggerHeight === 'number' && triggerHeight <= 30;
 
   return (
@@ -109,13 +110,14 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
       >
-        <span>{selectedOption ? selectedOption.label : placeholder}</span>
+        <span>{selectedOption ? selectedOption.label : (value || placeholder)}</span>
         <span className="custom-select-arrow">▼</span>
       </button>
 
       {isOpen && createPortal(
         <div 
           className={`custom-select-options ${className}`}
+          onClick={(e) => e.stopPropagation()}
           style={{
             position: 'fixed',
             top: `${coords.top + 4}px`,
@@ -130,7 +132,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             <React.Fragment key={opt.value}>
               <button
                 type="button"
-                className={`custom-select-option ${opt.value === value ? 'selected' : ''}`}
+                className={`custom-select-option ${normalize(opt.value) === normalize(value) ? 'selected' : ''}`}
                 style={{ 
                   fontSize,
                   height: optionHeight || (isCompact ? '30px' : undefined),
