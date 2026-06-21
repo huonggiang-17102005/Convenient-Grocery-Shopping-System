@@ -282,6 +282,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
         mode={qtyModalMode}
         item={qtyModalItem}
         totalOtherLotsQuantity={totalOtherLotsQuantity}
+        role={role}
         onClose={() => setIsQtyModalOpen(false)}
         onConfirm={handleConfirmQty}
         onDifferentExpiry={handleDifferentExpiry}
@@ -290,6 +291,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
       <ConsumeConfirmModal
         isOpen={isConsumeModalOpen}
         itemName={consumeModalItem?.name || ''}
+        role={role}
         onClose={() => setIsConsumeModalOpen(false)}
         onConfirm={handleConfirmConsume}
       />
