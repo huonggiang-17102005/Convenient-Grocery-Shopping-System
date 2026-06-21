@@ -6,6 +6,7 @@ interface QuantityConfirmModalProps {
   mode: 'add' | 'subtract';
   item: FoodItem | null;
   totalOtherLotsQuantity: number;
+  role?: 'homemaker' | 'member';
   onClose: () => void;
   onConfirm: (delta: number) => void;
   onDifferentExpiry?: () => void;
@@ -25,11 +26,13 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
   isOpen,
   mode,
   item,
+  role = 'homemaker',
   onClose,
   onConfirm,
   onDifferentExpiry
 }) => {
   const [delta, setDelta] = useState<number | ''>(1);
+  const primaryColor = role === 'member' ? '#1E88E5' : '#FF8A00';
 
   useEffect(() => {
     if (isOpen) {
@@ -110,7 +113,7 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
                   setDelta(Number(delta) + 1);
                 }
               }}
-              style={{ width: 48, height: 48, background: '#FF8A00', borderRadius: 12, border: 'none', fontSize: 24, color: 'white', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+              style={{ width: 48, height: 48, background: primaryColor, borderRadius: 12, border: 'none', fontSize: 24, color: 'white', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
             >
               +
             </button>
@@ -119,12 +122,12 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
           <div style={{ alignSelf: 'stretch', padding: 12, background: '#F9FAFB', borderRadius: 8, border: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {mode === 'add' ? (
               <div style={{ color: '#4B5563', fontSize: 13, fontFamily: 'Plus Jakarta Sans', lineHeight: '18px' }}>
-                💡 Nếu thêm vào <strong>{delta} {unit}</strong>, lô {item.name} hạn {expiryText} sẽ có tổng cộng là <strong style={{color: '#FF8A00'}}>{Math.round((item.quantity + Number(delta)) * 100) / 100} {unit}</strong>.
+                💡 Nếu thêm vào <strong>{delta} {unit}</strong>, lô {item.name} hạn {expiryText} sẽ có tổng cộng là <strong style={{color: primaryColor}}>{Math.round((item.quantity + Number(delta)) * 100) / 100} {unit}</strong>.
               </div>
             ) : (
               <>
                 <div style={{ color: '#4B5563', fontSize: 13, fontFamily: 'Plus Jakarta Sans', lineHeight: '18px' }}>
-                  📌 Sử dụng từ lô <strong>{item.name}</strong> hạn {expiryText}. Lô này sẽ còn lại <strong style={{color: '#FF8A00'}}>{Math.round((item.quantity - Number(delta)) * 100) / 100} {unit}</strong>.
+                  📌 Sử dụng từ lô <strong>{item.name}</strong> hạn {expiryText}. Lô này sẽ còn lại <strong style={{color: primaryColor}}>{Math.round((item.quantity - Number(delta)) * 100) / 100} {unit}</strong>.
                 </div>
               </>
             )}
@@ -137,7 +140,7 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
             <>
               <button 
                 onClick={handleConfirm}
-                style={{ alignSelf: 'stretch', height: 48, background: '#FF8A00', borderRadius: 100, border: 'none', color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', cursor: 'pointer' }}
+                style={{ alignSelf: 'stretch', height: 48, background: primaryColor, borderRadius: 100, border: 'none', color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', cursor: 'pointer' }}
               >
                 Cùng hạn (Cộng dồn)
               </button>
@@ -146,7 +149,7 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
                   onClose();
                   onDifferentExpiry?.();
                 }}
-                style={{ alignSelf: 'stretch', height: 48, background: 'white', borderRadius: 100, border: '1.27px solid #FF8A00', color: '#FF8A00', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', cursor: 'pointer' }}
+                style={{ alignSelf: 'stretch', height: 48, background: 'white', borderRadius: 100, border: `1.27px solid ${primaryColor}`, color: primaryColor, fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', cursor: 'pointer' }}
               >
                 Khác hạn (Tạo thẻ mới)
               </button>
@@ -161,7 +164,7 @@ const QuantityConfirmModal: React.FC<QuantityConfirmModalProps> = ({
             <>
               <button 
                 onClick={handleConfirm}
-                style={{ alignSelf: 'stretch', height: 48, background: '#FF8A00', borderRadius: 100, border: 'none', color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', cursor: 'pointer' }}
+                style={{ alignSelf: 'stretch', height: 48, background: primaryColor, borderRadius: 100, border: 'none', color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', cursor: 'pointer' }}
               >
                 {Number(delta) === item.quantity ? 'Dùng hết & Xóa thẻ' : 'Xác nhận dùng'}
               </button>

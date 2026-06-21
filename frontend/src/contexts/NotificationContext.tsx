@@ -20,7 +20,7 @@ interface NotificationContextProps {
   markAllAsRead: () => void;
   checkIsRead: (id: string) => boolean;
   checkCategoryHasUnread: (cat: NotificationCategory) => boolean;
-  handleSSENotification: () => Promise<void>;
+  handleSSENotification: (payload?: any) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextProps | undefined>(undefined);
@@ -111,11 +111,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const fridgeTypes = ['ADD', 'CONSUME', 'UPDATE', 'WASTE', 'EXPIRE'];
     const shoppingTypes = ['TASK_ASSIGN', 'TASK_UNASSIGN', 'TASK_COMPLETE', 'TASK_DELETE', 'TASK_OVERDUE'];
     const recipeTypes = ['LIKE'];
+    const mealTypes = ['MEAL_PLAN', 'MEAL_PLAN_ADD', 'MEAL_PLAN_REMOVE'];
 
     if (familyTypes.includes(type)) return 'family';
     if (fridgeTypes.includes(type)) return 'fridge';
     if (shoppingTypes.includes(type)) return 'shopping';
     if (recipeTypes.includes(type)) return 'recipe';
+    if (mealTypes.includes(type)) return 'meal';
     return 'all';
   };
 

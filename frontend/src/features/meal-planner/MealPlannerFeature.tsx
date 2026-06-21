@@ -174,8 +174,9 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     }
 
     try {
-      for (const recipe of selected) {
-        await mealPlannerService.addMealPlan(recipe.id, dateStr, activeMealKey, peopleCount);
+      const recipeIds = selected.map(r => r.id);
+      if (recipeIds.length > 0) {
+        await mealPlannerService.addMealPlan(recipeIds, dateStr, activeMealKey, peopleCount);
       }
       
       // Reload plans via context (force reload)
