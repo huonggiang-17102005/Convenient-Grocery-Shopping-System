@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';
 import { useShoppingListContext } from './ShoppingListContext';
@@ -10,6 +10,16 @@ export const SSEListener: React.FC = () => {
   const { refreshShoppingList } = useShoppingListContext();
   const { refreshMembers } = useFamilyContext();
 
+  const handleNotifRef = useRef(handleSSENotification);
+  const refreshShoppingRef = useRef(refreshShoppingList);
+  const refreshMembersRef = useRef(refreshMembers);
+
+  useEffect(() => {
+    handleNotifRef.current = handleSSENotification;
+    refreshShoppingRef.current = refreshShoppingList;
+    refreshMembersRef.current = refreshMembers;
+  }, [handleSSENotification, refreshShoppingList, refreshMembers]);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token || !user?.id || !family?.id) return;
@@ -19,20 +29,19 @@ export const SSEListener: React.FC = () => {
 
     evtSource.addEventListener('NEW_NOTIFICATION', (event) => {
       console.log('🔔 [SSE] Nhận thông báo mới:', event.data);
-      handleSSENotification();
       
       try {
         const payload = JSON.parse(event.data);
+        handleNotifRef.current(payload);
         
         if (payload.type === 'FAMILY_JOIN' || payload.type === 'FAMILY_LEAVE') {
           console.log('👨‍👩‍👧 [SSE] Có sự thay đổi nhân sự, tải lại danh sách...');
-          refreshMembers();
+          refreshMembersRef.current();
         }
 
         if (payload.type === 'ROLE_CHANGED' || payload.type === 'FAMILY_ROLE') {
           console.log('👑 [SSE] Quyền hạn thay đổi, đang kiểm tra quyền mới...');
           
-          // Gọi API lấy user mới nhất để kiểm tra cho chắc chắn 100%
           fetch(`${API_URL}/users/me`, {
             headers: { 'Authorization': `Bearer ${token}` }
           })
@@ -40,8 +49,6 @@ export const SSEListener: React.FC = () => {
           .then(data => {
             if (data.success && data.data) {
               const freshUser = data.data;
-              
-              // Nếu Role của mình thực sự bị thay đổi so với hiện tại
               if (freshUser.role !== user?.role) {
                 if (freshUser.role === 'Homemaker') {
                   window.location.href = '/homemaker/dashboard';
@@ -49,7 +56,6 @@ export const SSEListener: React.FC = () => {
                   window.location.href = '/member/dashboard';
                 }
               } else {
-                // Nếu Role không đổi (mình là người ngoài cuộc đứng xem)
                 window.location.reload();
               }
             } else {
@@ -65,7 +71,7 @@ export const SSEListener: React.FC = () => {
 
     evtSource.addEventListener('SHOPPING_LIST_UPDATED', (event) => {
       console.log('🛒 [SSE] Danh sách đi chợ thay đổi:', event.data);
-      refreshShoppingList();
+      refreshShoppingRef.current();
     });
 
     evtSource.addEventListener('KICKED_FROM_FAMILY', (event) => {
@@ -82,7 +88,7 @@ export const SSEListener: React.FC = () => {
       console.log('🔌 [SSE] Đóng kết nối');
       evtSource.close();
     };
-  }, [user?.id, family?.id, handleSSENotification, refreshShoppingList, refreshMembers]);
+  }, [user?.id, family?.id]); // Only reconnect if user or family changes
 
   return null;
 };

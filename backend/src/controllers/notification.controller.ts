@@ -8,10 +8,11 @@ export const getNotifications = async (req: Request, res: Response) => {
   const offset = parseInt(req.query.offset as string) || 0;
   const category = req.query.category as string | undefined;
 
-  const notifications = await notificationService.getFamilyNotifications(familyId, userId, limit, offset, category);
+  const { data, count } = await notificationService.getFamilyNotifications(familyId, userId, limit, offset, category);
 
   return res.status(200).json({
     success: true,
-    data: notifications
+    data,
+    totalCount: count
   });
 };

@@ -62,20 +62,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     localStorage.setItem('read_notification_ids', JSON.stringify(Array.from(readIds)));
   }, [readIds]);
 
+  const [serverTotalCount, setServerTotalCount] = useState<number>(0);
+
   const fetchApi = async (offset: number, cat: NotificationCategory) => {
     const token = localStorage.getItem('token');
-    if (!token) return [];
+    if (!token) return { data: [], totalCount: 0 };
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      // Truyền category xuống BE (hiện tại BE có thể chưa lọc, nhưng chuẩn bị sẵn)
       const res = await fetch(`${API_URL}/notifications?limit=${limit}&offset=${offset}&category=${cat}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const json = await res.json();
-      return json.success ? json.data : [];
+      return json.success ? { data: json.data, totalCount: json.totalCount || 0 } : { data: [], totalCount: 0 };
     } catch (err) {
       console.error('Lỗi khi fetch notifications', err);
-      return [];
+      return { data: [], totalCount: 0 };
     }
   };
 
@@ -88,7 +89,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const refreshNotifications = useCallback(async (cat: NotificationCategory = activeCategory) => {
     updateCategoryState(cat, prev => ({ ...prev, isLoading: true }));
-    const data = await fetchApi(0, cat);
+    const { data, totalCount } = await fetchApi(0, cat);
+    if (cat === 'all') {
+      setServerTotalCount(totalCount);
+    }
     updateCategoryState(cat, prev => ({
       ...prev,
       items: data,
@@ -97,28 +101,40 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }));
   }, [activeCategory, updateCategoryState]);
 
-  const refreshForSSE = useCallback(async () => {
-    // Luôn refresh 'all' để update số đếm chuông
-    await refreshNotifications('all');
-    // Nếu đang đứng ở tab khác thì refresh tab đó để user thấy luôn thông báo mới
-    setCategories(prev => {
-      // Dùng setState callback để lấy activeCategory mới nhất mà không cần đưa vào deps
-      // Wait, useCallback cannot access latest state without ref or deps, but we can just use the state.
-      return prev; 
-    });
-  }, [refreshNotifications]);
-
-  // Sửa lại refreshForSSE dùng useRef cho activeCategory
   const activeCategoryRef = React.useRef(activeCategory);
   useEffect(() => {
     activeCategoryRef.current = activeCategory;
   }, [activeCategory]);
 
-  const handleSSENotification = useCallback(async () => {
+  const getCategoryForType = (type: string): NotificationCategory => {
+    const familyTypes = ['FAMILY_JOIN', 'FAMILY_LEAVE', 'FAMILY_ROLE'];
+    const fridgeTypes = ['ADD', 'CONSUME', 'UPDATE', 'WASTE', 'EXPIRE'];
+    const shoppingTypes = ['TASK_ASSIGN', 'TASK_UNASSIGN', 'TASK_COMPLETE', 'TASK_DELETE', 'TASK_OVERDUE'];
+    const recipeTypes = ['LIKE'];
+
+    if (familyTypes.includes(type)) return 'family';
+    if (fridgeTypes.includes(type)) return 'fridge';
+    if (shoppingTypes.includes(type)) return 'shopping';
+    if (recipeTypes.includes(type)) return 'recipe';
+    return 'all';
+  };
+
+  const handleSSENotification = useCallback(async (payload?: any) => {
     const currentActive = activeCategoryRef.current;
     await refreshNotifications('all');
-    if (currentActive !== 'all') {
-      await refreshNotifications(currentActive);
+    
+    if (payload && payload.type) {
+      const targetCat = getCategoryForType(payload.type);
+      if (targetCat !== 'all') {
+        await refreshNotifications(targetCat);
+      }
+      if (currentActive !== 'all' && currentActive !== targetCat) {
+        await refreshNotifications(currentActive);
+      }
+    } else {
+      if (currentActive !== 'all') {
+        await refreshNotifications(currentActive);
+      }
     }
   }, [refreshNotifications]);
 
@@ -127,7 +143,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (catData.isLoading || !catData.hasMore) return;
     
     updateCategoryState(cat, prev => ({ ...prev, isLoading: true }));
-    const data = await fetchApi(catData.items.length, cat);
+    const { data } = await fetchApi(catData.items.length, cat);
     
     if (data.length > 0) {
       updateCategoryState(cat, prev => {
@@ -183,19 +199,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return readIds.has(id);
   }, [readIds]);
 
-  const getCategoryForType = (type: string): NotificationCategory => {
-    const familyTypes = ['FAMILY_JOIN', 'FAMILY_LEAVE', 'FAMILY_ROLE'];
-    const fridgeTypes = ['ADD', 'CONSUME', 'UPDATE', 'WASTE', 'EXPIRE'];
-    const shoppingTypes = ['TASK_ASSIGN', 'TASK_UNASSIGN', 'TASK_COMPLETE', 'TASK_DELETE', 'TASK_OVERDUE'];
-    const recipeTypes = ['LIKE'];
-
-    if (familyTypes.includes(type)) return 'family';
-    if (fridgeTypes.includes(type)) return 'fridge';
-    if (shoppingTypes.includes(type)) return 'shopping';
-    if (recipeTypes.includes(type)) return 'recipe';
-    return 'all';
-  };
-
   const checkCategoryHasUnread = useCallback((cat: NotificationCategory) => {
     if (cat === 'all') return categories.all.items.some(n => !readIds.has(n.id));
     
@@ -207,7 +210,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return categories[cat].items.some(n => !readIds.has(n.id));
   }, [categories, readIds]);
 
-  const unreadCount = categories.all.items.filter(n => !readIds.has(n.id)).length;
+  // Calculate true unread count by subtracting local readIds size from server total count
+  // If serverTotalCount is less than the loaded unread count (unlikely), fallback to local calculate
+  const loadedUnreadCount = categories.all.items.filter(n => !readIds.has(n.id)).length;
+  const unreadCount = Math.max(loadedUnreadCount, serverTotalCount - readIds.size);
 
   return (
     <NotificationContext.Provider value={{

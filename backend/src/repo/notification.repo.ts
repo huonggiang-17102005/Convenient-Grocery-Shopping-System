@@ -20,7 +20,7 @@ export const insertNotification = async (notificationData: Omit<Notification, 'i
 export const fetchNotifications = async (familyId: string, userId: string, limit: number = 20, offset: number = 0, category?: string) => {
   let query = supabase
     .from('notifications')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq('family_id', familyId)
     .or(`user_id.is.null,user_id.eq.${userId}`);
 
@@ -48,7 +48,7 @@ export const fetchNotifications = async (familyId: string, userId: string, limit
     }
   }
 
-  const { data, error } = await query
+  const { data, error, count } = await query
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -57,5 +57,5 @@ export const fetchNotifications = async (familyId: string, userId: string, limit
     throw new InternalServerError('Lỗi truy vấn DB khi lấy danh sách thông báo');
   }
 
-  return data as Notification[];
+  return { data: data as Notification[], count: count || 0 };
 };
