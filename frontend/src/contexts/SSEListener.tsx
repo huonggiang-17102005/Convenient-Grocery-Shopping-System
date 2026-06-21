@@ -2,11 +2,13 @@ import React, { useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';
 import { useShoppingListContext } from './ShoppingListContext';
+import { useFamilyContext } from './FamilyContext';
 
 export const SSEListener: React.FC = () => {
   const { user, family } = useAuth();
   const { refreshNotifications } = useNotifications();
   const { refreshShoppingList } = useShoppingListContext();
+  const { refreshMembers } = useFamilyContext();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -21,6 +23,12 @@ export const SSEListener: React.FC = () => {
       
       try {
         const payload = JSON.parse(event.data);
+        
+        if (payload.type === 'FAMILY_JOIN' || payload.type === 'FAMILY_LEAVE') {
+          console.log('👨‍👩‍👧 [SSE] Có sự thay đổi nhân sự, tải lại danh sách...');
+          refreshMembers();
+        }
+
         if (payload.type === 'ROLE_CHANGED' || payload.type === 'FAMILY_ROLE') {
           console.log('👑 [SSE] Quyền hạn thay đổi, đang kiểm tra quyền mới...');
           
@@ -74,7 +82,7 @@ export const SSEListener: React.FC = () => {
       console.log('🔌 [SSE] Đóng kết nối');
       evtSource.close();
     };
-  }, [user?.id, family?.id, refreshNotifications, refreshShoppingList]);
+  }, [user?.id, family?.id, refreshNotifications, refreshShoppingList, refreshMembers]);
 
   return null;
 };
