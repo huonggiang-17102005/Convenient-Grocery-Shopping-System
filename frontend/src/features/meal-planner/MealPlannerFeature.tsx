@@ -64,7 +64,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     return ['mon','tue','wed','thu','fri','sat','sun'].includes(key) ? key : 'mon';
   });
 
-  const { plansByWeek, setPlansByWeek, availableRecipes, fetchWeekPlan } = useMealPlannerContext();
+  const { plansByWeek, setPlansByWeek, availableRecipes, setAvailableRecipes, fetchWeekPlan } = useMealPlannerContext();
 
   const getCacheKey = () => {
     const startDateStr = weekDays[0].date;
@@ -403,18 +403,6 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
             <ArrowLeft size={22} color="#1A1A1A" />
           </button>
           <h1 className="mp-header__title">Thực đơn tuần</h1>
-          {role === 'homemaker' && (
-            <button
-              id="mp-ai-suggest-btn"
-              type="button"
-              className="mp-header__ai"
-              onClick={() => setIsAiModalOpen(true)}
-              aria-label="AI Gợi ý nấu ăn"
-              title="AI Gợi ý nấu ăn"
-            >
-              <Sparkles size={22} color="var(--primary-color)" />
-            </button>
-          )}
         </header>
 
         {/* ── Day tabs ── */}
@@ -527,6 +515,9 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
       <AiRecipeModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
+        onRecipeSaved={(newRecipe) => {
+          setAvailableRecipes(prev => [newRecipe, ...prev]);
+        }}
       />
 
       {isRecipeModalOpen && selectedRecipe && (
@@ -553,6 +544,19 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           onConfirm={handleShoppingConfirmSubmit}
           initialIngredients={shoppingConfirmIngredients}
         />
+      )}
+
+      {role === 'homemaker' && (
+        <button
+          id="mp-ai-fab-btn"
+          type="button"
+          className="mp-ai-fab"
+          onClick={() => setIsAiModalOpen(true)}
+          aria-label="AI Gợi ý nấu ăn"
+          title="AI Gợi ý nấu ăn"
+        >
+          <Sparkles size={24} />
+        </button>
       )}
     </>
   );

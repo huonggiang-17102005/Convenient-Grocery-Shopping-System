@@ -21,6 +21,7 @@ interface MealPlannerContextType {
   plansByWeek: Record<string, WeekPlan>;
   setPlansByWeek: React.Dispatch<React.SetStateAction<Record<string, WeekPlan>>>;
   availableRecipes: Recipe[];
+  setAvailableRecipes: React.Dispatch<React.SetStateAction<Recipe[]>>;
   fetchWeekPlan: (startDate: string, endDate: string, force?: boolean) => Promise<WeekPlan | null>;
   getTodayPlan: () => { todayMeals: MealItem[], todayIngredients: CookIngredient[] };
   isLoading: boolean;
@@ -30,6 +31,7 @@ const MealPlannerContext = createContext<MealPlannerContextType>({
   plansByWeek: {},
   setPlansByWeek: () => {},
   availableRecipes: [],
+  setAvailableRecipes: () => {},
   fetchWeekPlan: async () => null,
   getTodayPlan: () => ({ todayMeals: [], todayIngredients: [] }),
   isLoading: false,
@@ -223,7 +225,7 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [user, fetchWeekPlan]);
 
   return (
-    <MealPlannerContext.Provider value={{ plansByWeek, setPlansByWeek, availableRecipes, fetchWeekPlan, getTodayPlan, isLoading }}>
+    <MealPlannerContext.Provider value={{ plansByWeek, setPlansByWeek, availableRecipes, setAvailableRecipes, fetchWeekPlan, getTodayPlan, isLoading }}>
       {children}
     </MealPlannerContext.Provider>
   );

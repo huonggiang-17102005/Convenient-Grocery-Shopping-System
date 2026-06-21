@@ -520,17 +520,6 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       <div className="recipes-page-header">
         <div className="recipes-header-title-row">
           <h1 className="recipes-page-title">Công thức nấu ăn</h1>
-          <button
-            id="recipes-ai-suggest-btn"
-            type="button"
-            className={`recipes-header-ai-btn role-${role}`}
-            onClick={() => setIsAiModalOpen(true)}
-            aria-label="AI Gợi ý nấu ăn"
-            title="AI Gợi ý nấu ăn"
-          >
-            <Sparkles size={16} />
-            <span>AI Gợi ý</span>
-          </button>
         </div>
         <RecipeTabs
           activeTab={activeTab}
@@ -672,9 +661,24 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         onConfirm={handleDeleteConfirm}
       />
 
+      <button
+        id="recipes-ai-fab-btn"
+        type="button"
+        className="recipes-ai-fab"
+        onClick={() => setIsAiModalOpen(true)}
+        aria-label="AI Gợi ý nấu ăn"
+        title="AI Gợi ý nấu ăn"
+      >
+        <Sparkles size={24} />
+      </button>
+
       <AiRecipeModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
+        onRecipeSaved={(newRecipe) => {
+          setRecipes(prev => [newRecipe, ...prev]);
+          showToast('Đã lưu công thức vào thư viện!');
+        }}
       />
 
       <Toast message={toastMsg} trigger={toastTrigger} onHide={() => { }} />

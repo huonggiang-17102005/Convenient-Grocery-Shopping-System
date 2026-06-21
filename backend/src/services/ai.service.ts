@@ -3,15 +3,39 @@ dotenv.config({ override: true });
 
 let cachedModelName = 'gemini-1.5-flash';
 
-export const generateRecipe = async (fridgeItems: any[], userPrompt: string) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('Thiếu GEMINI_API_KEY trong file .env');
+// API Key Rotation Config
+let activeKeyIndex = 0;
+
+const getApiKeys = (): string[] => {
+  const keysStr = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
+  return keysStr.split(',').map(k => k.trim()).filter(Boolean);
+};
+
+const getApiKey = (indexOffset = 0): string => {
+  const keys = getApiKeys();
+  if (keys.length === 0) {
+    throw new Error('Thiếu GEMINI_API_KEY hoặc GEMINI_API_KEYS trong file .env');
   }
+  const idx = (activeKeyIndex + indexOffset) % keys.length;
+  return keys[idx] as string;
+};
 
-  let url = `https://generativelanguage.googleapis.com/v1beta/models/${cachedModelName}:generateContent?key=${apiKey}`;
+const markKeySuccess = (indexOffset: number) => {
+  const keys = getApiKeys();
+  if (keys.length > 0) {
+    activeKeyIndex = (activeKeyIndex + indexOffset) % keys.length;
+  }
+};
 
-  const systemInstruction = `Bạn là một đầu bếp thông minh và chuyên gia dinh dưỡng. Dựa vào danh sách nguyên liệu và nhu cầu của người dùng, hãy gợi ý món ăn phù hợp.
+export const generateRecipe = async (fridgeItems: any[], userPrompt: string) => {
+  const keys = getApiKeys();
+  let attempts = 0;
+
+  while (attempts < Math.max(1, keys.length)) {
+    const apiKey = getApiKey(attempts);
+    let url = `https://generativelanguage.googleapis.com/v1beta/models/${cachedModelName}:generateContent?key=${apiKey}`;
+
+    const systemInstruction = `Bạn là một đầu bếp thông minh và chuyên gia dinh dưỡng. Dựa vào danh sách nguyên liệu và nhu cầu của người dùng, hãy gợi ý món ăn phù hợp.
 Bạn PHẢI trả về một MẢNG JSON (JSON Array) chứa tối đa 3 món ăn tốt nhất. Nếu người dùng yêu cầu số lượng cụ thể, hãy trả về đúng số lượng đó (tối đa 3).
 Ưu tiên sử dụng các nguyên liệu sắp hết hạn (nếu có).
 Chỉ trả về định dạng JSON thuần túy (KHÔNG CÓ markdown \`\`\`json ở đầu và cuối) với cấu trúc SAU LÀ MỘT MẢNG:
@@ -23,112 +47,159 @@ Chỉ trả về định dạng JSON thuần túy (KHÔNG CÓ markdown \`\`\`jso
     "protein": 20,
     "fat": 10,
     "carbs": 30,
-    "ingredients": ["100g thịt bò", "1 củ hành tây"],
+    "ingredients": [
+      {
+        "name": "thịt bò",
+        "amount": 100,
+        "unit": "g",
+        "category": "Thịt cá"
+      },
+      {
+        "name": "hành tây",
+        "amount": 1,
+        "unit": "củ",
+        "category": "Rau củ quả"
+      }
+    ],
     "instructions": ["Bước 1: Thái thịt", "Bước 2: Xào"]
   }
-]`;
+]
 
-  const promptText = `Danh sách nguyên liệu trong tủ lạnh:
+Quy định về phân loại (category) của nguyên liệu (ingredients):
+Mỗi nguyên liệu PHẢI được xếp vào chính xác một trong 7 danh mục sau:
+1. 'Thịt cá' (ví dụ: thịt heo, thịt bò, cá rô phi, gà, tôm, mực, hải sản...)
+2. 'Rau củ quả' (ví dụ: hành tây, tỏi, cà chua, cà rốt, rau muống, nấm, táo, chuối...)
+3. 'Trứng' (ví dụ: trứng gà, trứng vịt, trứng cút...)
+4. 'Chất lỏng' (ví dụ: sữa tươi, nước cốt dừa, bia, nước dùng, nước lọc...)
+5. 'Đồ khô' (ví dụ: mì gói, bún khô, nấm mèo khô, các loại hạt, đậu...)
+6. 'Gia vị' (ví dụ: đường, muối, hạt nêm, nước mắm, tiêu, dầu ăn, rượu vang đỏ, tương ớt, dấm...)
+7. 'Khác' (nếu không thuộc các nhóm trên)
+
+Quy định về đơn vị (unit) của nguyên liệu:
+- 'Thịt cá', 'Rau củ quả', 'Đồ khô', 'Khác': dùng các đơn vị đo lường thông thường, ưu tiên khối lượng là 'g' nếu có thể xác định được (hoặc 'quả', 'củ', 'tép', 'nhành' tùy loại).
+- 'Chất lỏng': dùng đơn vị đo thể tích là 'ml' (hoặc 'hộp', 'lon' nếu phù hợp).
+- 'Trứng': dùng đơn vị 'quả'.
+- 'Gia vị': để người dùng dễ xác định, đơn vị có thể dùng bất kỳ từ ngữ dân gian / ước lượng nào như 'thìa cà phê', 'thìa canh', 'chén', 'cốc', 'lát', 'nhúm', 'chút', 'tép' hoặc bất kỳ chuỗi ký tự mô tả nào phù hợp, không bắt buộc là g/ml.`;
+
+    const promptText = `Danh sách nguyên liệu trong tủ lạnh:
 ${JSON.stringify(fridgeItems.map(i => ({ name: i.name, quantity: i.quantity, unit: i.unit, expiration_date: i.expiration_date })))}
 
 Nhu cầu của người dùng: ${userPrompt || 'Gợi ý món ăn ngon để tiêu thụ đồ trong tủ lạnh, ưu tiên đồ sắp hết hạn.'}`;
 
-  const requestBody = {
-    systemInstruction: {
-      parts: [{ text: systemInstruction }]
-    },
-    contents: [
-      {
-        parts: [{ text: promptText }]
+    const requestBody = {
+      systemInstruction: {
+        parts: [{ text: systemInstruction }]
+      },
+      contents: [
+        {
+          parts: [{ text: promptText }]
+        }
+      ],
+      generationConfig: {
+        responseMimeType: "application/json"
       }
-    ],
-    generationConfig: {
-      responseMimeType: "application/json"
-    }
-  };
+    };
 
-  let response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestBody)
-  });
-
-  if (response.status === 404) {
-    console.log("Model not found. Fetching available models...");
     try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      const listData = await listRes.json();
-      const validModel = listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini") && m.name.includes("flash")) 
-                        || listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini"));
-      
-      if (validModel) {
-        console.log("Fallback to model:", validModel.name);
-        cachedModelName = validModel.name.replace('models/', '');
-        url = `https://generativelanguage.googleapis.com/v1beta/${validModel.name}:generateContent?key=${apiKey}`;
-        response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(requestBody)
-        });
-      } else {
-        throw new Error("Không tìm thấy model nào hỗ trợ generateContent trong tài khoản của bạn.");
-      }
-    } catch (err: any) {
-      console.error("Lỗi khi tự động tìm model:", err);
-    }
-  }
+      let response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error("Gemini API Error:", errorData);
-    let errorMessage = errorData.error?.message || 'Unknown error';
-    
-    // Translate common errors
-    if (errorMessage.includes("high demand") || errorMessage.includes("503")) {
-        errorMessage = "Hệ thống AI của Google hiện đang quá tải. Vui lòng chờ vài giây và thử lại nhé!";
-    }
-    
-    throw new Error(`Lỗi từ Gemini: ${errorMessage}`);
-  }
-
-  const data = await response.json();
-  const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (resultText) {
-      try {
-        let cleanText = resultText.trim();
-        if (cleanText.startsWith('```')) {
-          cleanText = cleanText.replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+      if (response.status === 404) {
+        console.log("Model not found. Fetching available models...");
+        try {
+          const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+          const listData = await listRes.json();
+          const validModel = listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini") && m.name.includes("flash")) 
+                            || listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini"));
+          
+          if (validModel) {
+            console.log("Fallback to model:", validModel.name);
+            cachedModelName = validModel.name.replace('models/', '');
+            url = `https://generativelanguage.googleapis.com/v1beta/${validModel.name}:generateContent?key=${apiKey}`;
+            response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(requestBody)
+            });
+          }
+        } catch (err: any) {
+          console.error("Lỗi khi tự động tìm model:", err);
         }
-        const parsedData = JSON.parse(cleanText);
-        // Ensure the result is an array
-        if (Array.isArray(parsedData)) {
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(`Gemini API Error with key index ${(activeKeyIndex + attempts) % keys.length}:`, errorData);
+        const errorMessage = errorData.error?.message || 'Unknown error';
+        const isQuotaError = response.status === 429 || errorMessage.toLowerCase().includes("quota") || errorMessage.toLowerCase().includes("limit") || errorMessage.toLowerCase().includes("exhausted");
+        
+        if (isQuotaError && keys.length > 1 && attempts < keys.length - 1) {
+          console.warn(`Key index ${(activeKeyIndex + attempts) % keys.length} hit quota limit. Rotating and retrying...`);
+          attempts++;
+          continue;
+        }
+
+        let translatedMessage = errorMessage;
+        if (errorMessage.includes("high demand") || errorMessage.includes("503")) {
+          translatedMessage = "Hệ thống AI của Google hiện đang quá tải. Vui lòng chờ vài giây và thử lại nhé!";
+        }
+        throw new Error(`Lỗi từ Gemini: ${translatedMessage}`);
+      }
+
+      const data = await response.json();
+      const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      markKeySuccess(attempts);
+
+      if (resultText) {
+        try {
+          let cleanText = resultText.trim();
+          if (cleanText.startsWith('```')) {
+            cleanText = cleanText.replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+          }
+          const parsedData = JSON.parse(cleanText);
+          if (Array.isArray(parsedData)) {
             return parsedData;
-        } else if (typeof parsedData === 'object' && parsedData !== null) {
+          } else if (typeof parsedData === 'object' && parsedData !== null) {
             return [parsedData];
+          }
+          return [];
+        } catch (e) {
+          console.error("Lỗi parse JSON từ Gemini:", resultText);
+          throw new Error("Gemini trả về dữ liệu không đúng định dạng JSON");
         }
-        return [];
-      } catch (e) {
-        console.error("Lỗi parse JSON từ Gemini:", resultText);
-        throw new Error("Gemini trả về dữ liệu không đúng định dạng JSON");
       }
+      return null;
+
+    } catch (err: any) {
+      const isQuotaOrNetwork = err.message?.includes("fetch") || err.message?.includes("quota") || err.message?.includes("limit") || err.message?.includes("exhausted");
+      if (isQuotaOrNetwork && keys.length > 1 && attempts < keys.length - 1) {
+        console.warn(`Attempt failed with key index ${(activeKeyIndex + attempts) % keys.length}. Retrying...`, err.message);
+        attempts++;
+        continue;
+      }
+      throw err;
+    }
   }
-  return null;
+  throw new Error('Tất cả các API key của bạn đều đã hết quota hoặc bị lỗi.');
 };
 
 export const estimateRecipeNutrition = async (ingredients: any[], instructions: string[]) => {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('Thiếu GEMINI_API_KEY trong file .env');
-  }
+  const keys = getApiKeys();
+  let attempts = 0;
 
-  let url = `https://generativelanguage.googleapis.com/v1beta/models/${cachedModelName}:generateContent?key=${apiKey}`;
+  while (attempts < Math.max(1, keys.length)) {
+    const apiKey = getApiKey(attempts);
+    let url = `https://generativelanguage.googleapis.com/v1beta/models/${cachedModelName}:generateContent?key=${apiKey}`;
 
-  const systemInstruction = `Bạn là một chuyên gia dinh dưỡng và đầu bếp chuyên nghiệp. Nhiệm vụ của bạn là phân tích danh sách nguyên liệu và các bước chế biến của một công thức để ước lượng các chỉ số dinh dưỡng (cho 1 phần ăn - per serving).
+    const systemInstruction = `Bạn là một chuyên gia dinh dưỡng và đầu bếp chuyên nghiệp. Nhiệm vụ của bạn là phân tích danh sách nguyên liệu và các bước chế biến của một công thức để ước lượng các chỉ số dinh dưỡng (cho 1 phần ăn - per serving).
 Bạn phải tự nhận diện và quy đổi các đơn vị đo lường phi tiêu chuẩn hoặc đơn vị dân gian (ví dụ: "thìa cà phê", "thìa canh", "nhúm", "chén", "bát", "lát", "củ", "quả", v.v.) sang khối lượng gam hoặc ml thực tế để tính toán chính xác nhất (ví dụ: 1 thìa cà phê đường khoảng 4g carbs, 1 thìa canh dầu ăn khoảng 14g chất béo).
 Bạn PHẢI trả về một đối tượng JSON (JSON Object) có cấu trúc sau:
 {
@@ -139,84 +210,108 @@ Bạn PHẢI trả về một đối tượng JSON (JSON Object) có cấu trúc
 }
 Chỉ trả về định dạng JSON thuần túy (KHÔNG CÓ markdown \`\`\`json ở đầu và cuối). Số liệu là các số nguyên hoặc số thực đại diện cho lượng calo (kcal), protein (g), fat (g), carbs (g) trên 1 phần ăn. Hãy tính toán thực tế dựa trên nguyên liệu thô và phương pháp nấu ăn.`;
 
-  const promptText = `Hãy ước tính dinh dưỡng cho công thức sau:
+    const promptText = `Hãy ước tính dinh dưỡng cho công thức sau:
 Nguyên liệu: ${JSON.stringify(ingredients)}
 Các bước hướng dẫn: ${JSON.stringify(instructions)}`;
 
-  const requestBody = {
-    systemInstruction: {
-      parts: [{ text: systemInstruction }]
-    },
-    contents: [
-      {
-        parts: [{ text: promptText }]
+    const requestBody = {
+      systemInstruction: {
+        parts: [{ text: systemInstruction }]
+      },
+      contents: [
+        {
+          parts: [{ text: promptText }]
+        }
+      ],
+      generationConfig: {
+        responseMimeType: "application/json"
       }
-    ],
-    generationConfig: {
-      responseMimeType: "application/json"
-    }
-  };
+    };
 
-  let response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestBody)
-  });
-
-  if (response.status === 404) {
     try {
-      const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-      const listData = await listRes.json();
-      const validModel = listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini") && m.name.includes("flash")) 
-                        || listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini"));
-      
-      if (validModel) {
-        cachedModelName = validModel.name.replace('models/', '');
-        url = `https://generativelanguage.googleapis.com/v1beta/${validModel.name}:generateContent?key=${apiKey}`;
-        response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(requestBody)
-        });
+      let response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (response.status === 404) {
+        try {
+          const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+          const listData = await listRes.json();
+          const validModel = listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini") && m.name.includes("flash")) 
+                            || listData.models?.find((m: any) => m.supportedGenerationMethods?.includes("generateContent") && m.name.includes("gemini"));
+          
+          if (validModel) {
+            cachedModelName = validModel.name.replace('models/', '');
+            url = `https://generativelanguage.googleapis.com/v1beta/${validModel.name}:generateContent?key=${apiKey}`;
+            response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(requestBody)
+            });
+          }
+        } catch (err: any) {
+          console.error("Lỗi khi tự động tìm model:", err);
+        }
       }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(`Gemini API Error with key index ${(activeKeyIndex + attempts) % keys.length}:`, errorData);
+        let errorMessage = errorData.error?.message || 'Unknown error';
+        const isQuotaError = response.status === 429 || errorMessage.toLowerCase().includes("quota") || errorMessage.toLowerCase().includes("limit") || errorMessage.toLowerCase().includes("exhausted");
+        
+        if (isQuotaError && keys.length > 1 && attempts < keys.length - 1) {
+          console.warn(`Key index ${(activeKeyIndex + attempts) % keys.length} hit quota limit. Rotating and retrying...`);
+          attempts++;
+          continue;
+        }
+
+        if (errorMessage.includes("high demand") || errorMessage.includes("503")) {
+            errorMessage = "Hệ thống AI hiện đang quá tải. Vui lòng thử lại sau vài giây.";
+        }
+        throw new Error(`Lỗi từ Gemini: ${errorMessage}`);
+      }
+
+      const data = await response.json();
+      const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      markKeySuccess(attempts);
+
+      if (resultText) {
+        try {
+          let cleanText = resultText.trim();
+          if (cleanText.startsWith('```')) {
+            cleanText = cleanText.replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+          }
+          const parsedData = JSON.parse(cleanText);
+          return {
+            calories: Math.round(Number(parsedData.calories || 0)),
+            protein: Number(parsedData.protein || 0),
+            fat: Number(parsedData.fat || 0),
+            carbs: Number(parsedData.carbs || 0),
+          };
+        } catch (e) {
+          console.error("Lỗi parse JSON dinh dưỡng:", resultText);
+          throw new Error("AI trả về dữ liệu dinh dưỡng không đúng định dạng JSON");
+        }
+      }
+      return null;
+
     } catch (err: any) {
-      console.error("Lỗi khi tự động tìm model:", err);
-    }
-  }
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    let errorMessage = errorData.error?.message || 'Unknown error';
-    if (errorMessage.includes("high demand") || errorMessage.includes("503")) {
-        errorMessage = "Hệ thống AI hiện đang quá tải. Vui lòng thử lại sau vài giây.";
-    }
-    throw new Error(`Lỗi từ Gemini: ${errorMessage}`);
-  }
-
-  const data = await response.json();
-  const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-  if (resultText) {
-    try {
-      let cleanText = resultText.trim();
-      if (cleanText.startsWith('```')) {
-        cleanText = cleanText.replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
+      const isQuotaOrNetwork = err.message?.includes("fetch") || err.message?.includes("quota") || err.message?.includes("limit") || err.message?.includes("exhausted");
+      if (isQuotaOrNetwork && keys.length > 1 && attempts < keys.length - 1) {
+        console.warn(`Attempt failed with key index ${(activeKeyIndex + attempts) % keys.length}. Retrying...`, err.message);
+        attempts++;
+        continue;
       }
-      const parsedData = JSON.parse(cleanText);
-      return {
-        calories: Math.round(Number(parsedData.calories || 0)),
-        protein: Number(parsedData.protein || 0),
-        fat: Number(parsedData.fat || 0),
-        carbs: Number(parsedData.carbs || 0),
-      };
-    } catch (e) {
-      console.error("Lỗi parse JSON dinh dưỡng:", resultText);
-      throw new Error("AI trả về dữ liệu dinh dưỡng không đúng định dạng JSON");
+      throw err;
     }
   }
-  return null;
+  throw new Error('Tất cả các API key của bạn đều đã hết quota hoặc bị lỗi.');
 };

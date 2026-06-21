@@ -834,24 +834,28 @@
   cursor: not-allowed;
 }
 
-.mp-header__ai {
-  position: absolute;
+.mp-ai-fab {
+  position: fixed;
+  bottom: 100px;
   right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 8px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%);
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s;
-  z-index: 10;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.10), 0 4px 6px -4px rgba(0, 0, 0, 0.10);
+  cursor: pointer;
+  border: none;
+  z-index: 100;
+  transition: transform 0.15s, box-shadow 0.15s;
+  padding: 0;
 }
 
-.mp-header__ai:hover {
-  background: #F5F5F5;
+.mp-ai-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 16px 24px -4px rgba(0, 0, 0, 0.15);
 }
 
