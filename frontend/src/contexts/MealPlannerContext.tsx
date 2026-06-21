@@ -102,7 +102,7 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
               id: p.recipes.id,
               name: p.recipes.name,
               emoji: p.recipes.emoji || '🍽️',
-              cookTimeMinutes: p.recipes.cooking_time || 0,
+              cookTimeMinutes: p.recipes.cooking_time || 30,
               imageUrl: p.recipes.image_url,
               difficulty: (p.recipes.difficulty as 'Dễ' | 'Trung bình' | 'Khó') || ('Dễ' as 'Dễ'),
               servings: p.recipes.servings || 1,

@@ -26,7 +26,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
   const [activeStorage, setActiveStorage] = useState<StorageType>('Tất cả');
   const [activeCategory, setActiveCategory] = useState<FoodCategory>('Tất cả');
   
-  const { items, isLoading: isLoadingData, refreshFridge } = useFridgeContext();
+  const { items, setItems, isLoading: isLoadingData, refreshFridge } = useFridgeContext();
   const { user } = useAuth();
   const familyId = user?.family_id;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -65,19 +65,26 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
 
   const handleConfirmQty = async (delta: number) => {
     if (!qtyModalItem) return;
+    const originalItems = items;
+    const newQuantity = Math.max(0, qtyModalItem.quantity + delta);
+
+    // Optimistic Update
+    if (newQuantity <= 0) {
+      setItems(prev => prev.filter(i => i.id !== qtyModalItem.id));
+      showToast('Đã lấy hết & xóa thẻ thực phẩm!');
+    } else {
+      setItems(prev => prev.map(i => i.id === qtyModalItem.id ? { ...i, quantity: newQuantity } : i));
+      showToast('Đã cập nhật số lượng!');
+    }
+    setIsQtyModalOpen(false);
+
     try {
-      const newQuantity = Math.max(0, qtyModalItem.quantity + delta);
       await fridgeService.updateFridgeItem(qtyModalItem.id, { quantity: newQuantity });
-      
-      if (newQuantity <= 0) {
-        showToast('Đã lấy hết & xóa thẻ thực phẩm!');
-      } else {
-        showToast('Đã cập nhật số lượng!');
-      }
       await refreshFridge();
     } catch (err) {
       console.error(err);
       showToast('Có lỗi xảy ra khi cập nhật số lượng!');
+      setItems(originalItems); // Rollback
     }
   };
 
@@ -91,13 +98,20 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
 
   const handleConfirmConsume = async () => {
     if (!consumeModalItem) return;
+    const originalItems = items;
+
+    // Optimistic Update
+    setItems(prev => prev.filter(i => i.id !== consumeModalItem.id));
+    showToast('Đã dùng hết gia vị!');
+    setIsConsumeModalOpen(false);
+
     try {
       await fridgeService.updateFridgeItem(consumeModalItem.id, { quantity: 0 });
-      showToast('Đã dùng hết gia vị!');
       await refreshFridge();
     } catch (err) {
       console.error(err);
       showToast('Có lỗi xảy ra khi dùng hết gia vị!');
+      setItems(originalItems); // Rollback
     }
   };
 
@@ -130,9 +144,41 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
     setIsModalOpen(true);
   };
 
+  const mapCategoryToEmoji = (category: string) => {
+    const map: Record<string, string> = {
+      'Thịt cá': '🥩',
+      'Rau củ quả': '🥕',
+      'Trứng': '🥚',
+      'Chất lỏng': '🥛',
+      'Đồ khô': '🌾',
+      'Gia vị': '🧂',
+    };
+    return map[category] || '🍽️';
+  };
+
   const handleSaveModal = async (itemData: Omit<FoodItem, 'id'>) => {
-    try {
-      if (modalMode === 'add') {
+    const originalItems = items;
+    setIsModalOpen(false);
+
+    if (modalMode === 'add') {
+      const tempId = `temp_${Date.now()}`;
+      const tempItem: FoodItem = {
+        id: tempId,
+        name: itemData.name,
+        quantity: itemData.quantity,
+        unit: itemData.unit,
+        category: itemData.category as FoodCategory,
+        storageType: itemData.storageType as StorageType,
+        daysRemaining: Math.max(0, Math.ceil((new Date(itemData.expiryDate || new Date()).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))),
+        emoji: mapCategoryToEmoji(itemData.category || ''),
+        expiryDate: itemData.expiryDate,
+        image: itemData.image,
+      };
+
+      setItems(prev => [...prev, tempItem]);
+      showToast('Đã thêm thực phẩm vào tủ lạnh!');
+
+      try {
         await fridgeService.addFridgeItem({
           family_id: familyId,
           name: itemData.name,
@@ -144,8 +190,28 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
           image_url: itemData.image,
           image_public_id: itemData.imagePublicId
         });
-        showToast('Đã thêm thực phẩm vào tủ lạnh!');
-      } else if (modalMode === 'edit' && selectedItem) {
+        await refreshFridge();
+      } catch (err) {
+        console.error(err);
+        showToast('Có lỗi xảy ra!');
+        setItems(originalItems);
+      }
+    } else if (modalMode === 'edit' && selectedItem) {
+      setItems(prev => prev.map(i => i.id === selectedItem.id ? {
+        ...i,
+        name: itemData.name,
+        quantity: itemData.quantity,
+        unit: itemData.unit,
+        category: itemData.category as FoodCategory,
+        storageType: itemData.storageType as StorageType,
+        daysRemaining: Math.max(0, Math.ceil((new Date(itemData.expiryDate || new Date()).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))),
+        emoji: mapCategoryToEmoji(itemData.category || ''),
+        expiryDate: itemData.expiryDate,
+        image: itemData.image,
+      } : i));
+      showToast('Đã cập nhật thực phẩm!');
+
+      try {
         await fridgeService.updateFridgeItem(selectedItem.id, {
           name: itemData.name,
           quantity: itemData.quantity,
@@ -156,32 +222,34 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
           image_url: itemData.image,
           image_public_id: itemData.imagePublicId
         });
-        showToast('Đã cập nhật thực phẩm!');
+        await refreshFridge();
+      } catch (err) {
+        console.error(err);
+        showToast('Có lỗi xảy ra!');
+        setItems(originalItems);
       }
-      await refreshFridge();
-    } catch (err) {
-      console.error(err);
-      showToast('Có lỗi xảy ra!');
     }
-    setIsModalOpen(false);
   };
 
   const handleDeleteModal = async (id: string) => {
-    try {
-      await fridgeService.throwAwayFridgeItem(id);
-      showToast('Đã xóa thực phẩm!');
-      await refreshFridge();
-    } catch (err) {
-      console.error(err);
-      showToast('Có lỗi xảy ra khi xóa!');
-    }
+    const originalItems = items;
+    setItems(prev => prev.filter(item => item.id !== id));
+    showToast('Đã xóa thực phẩm!');
     setIsModalOpen(false);
-    
-    // Remove from selection if deleted
+
     if (selectedIds.has(id)) {
       const newSelected = new Set(selectedIds);
       newSelected.delete(id);
       setSelectedIds(newSelected);
+    }
+
+    try {
+      await fridgeService.throwAwayFridgeItem(id);
+      await refreshFridge();
+    } catch (err) {
+      console.error(err);
+      showToast('Có lỗi xảy ra khi xóa!');
+      setItems(originalItems);
     }
   };
 
