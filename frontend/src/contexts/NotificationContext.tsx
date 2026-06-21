@@ -20,7 +20,7 @@ interface NotificationContextProps {
   markAllAsRead: () => void;
   checkIsRead: (id: string) => boolean;
   checkCategoryHasUnread: (cat: NotificationCategory) => boolean;
-  handleSSENotification: () => Promise<void>;
+  handleSSENotification: (payload?: any) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextProps | undefined>(undefined);

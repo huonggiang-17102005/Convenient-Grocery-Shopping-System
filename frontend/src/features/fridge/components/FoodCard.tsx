@@ -62,8 +62,6 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
           <button 
             className="qty-btn minus" 
             onClick={() => onUpdateQuantity(item.id, -1)}
-            disabled={role === 'member'} // Members may not be able to modify depending on strictness, but we disable for safety or keep enabled if they consume it. Let's let members change qty, but Figma shows stepper. Let's leave it enabled for both, or disabled for members. The instruction says: "role member: chỉ xem chi tiết không chỉnh sửa", so we disable stepper for member.
-            style={{ opacity: role === 'member' ? 0.5 : 1, cursor: role === 'member' ? 'default' : 'pointer' }}
           >−</button>
           <div className="qty-value">
             {Math.round(item.quantity * 100) / 100} {item.unit && <span style={{fontSize: '12px'}}>{item.unit}</span>}
@@ -71,19 +69,16 @@ const FoodCard: React.FC<FoodCardProps> = ({ item, onUpdateQuantity, onSelect, s
           <button 
             className="qty-btn plus" 
             onClick={() => onUpdateQuantity(item.id, 1)}
-            disabled={role === 'member'}
-            style={{ opacity: role === 'member' ? 0.5 : 1, cursor: role === 'member' ? 'default' : 'pointer' }}
           >+</button>
         </div>
       ) : (
         <div style={{ alignSelf: 'stretch', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => onConsumeSpice?.(item.id)}
-            disabled={role === 'member'}
             style={{
               flex: 1, height: 32, borderRadius: 8, outline: '0.80px #E0E0E0 solid', outlineOffset: '-0.80px', 
               background: 'white', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', 
-              cursor: role === 'member' ? 'default' : 'pointer', opacity: role === 'member' ? 0.5 : 1
+              cursor: 'pointer'
             }}
           >
             <span style={{ color: '#E65100', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '18px' }}>
