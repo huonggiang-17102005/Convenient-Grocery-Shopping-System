@@ -8,6 +8,7 @@ import ImageWithFallback from '../../../components/common/ImageWithFallback';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
 import CustomSelect from '../../../components/common/CustomSelect';
 import { fridgeService } from '../../fridge/fridge.service';
+import { recipesService } from '../recipes.service';
 
 interface RecipeFormModalProps {
   isOpen: boolean;
@@ -81,6 +82,41 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   const [imageUrl, setImageUrl] = useState(() => (mode === 'edit' && recipe ? recipe.imageUrl || '' : ''));
   const [imagePublicId, setImagePublicId] = useState(() => (mode === 'edit' && recipe ? recipe.imagePublicId || '' : ''));
   const [isUploading, setIsUploading] = useState(false);
+  
+  const [calories, setCalories] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.calories || '' : ''));
+  const [protein, setProtein] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.protein || '' : ''));
+  const [fat, setFat] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.fat || '' : ''));
+  const [carbs, setCarbs] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.carbs || '' : ''));
+  const [isEstimating, setIsEstimating] = useState(false);
+
+  const handleEstimateNutrition = async () => {
+    const validIngredients = ingredients.filter((i) => i.name.trim() && i.amount > 0);
+    const validSpices = spices.filter((s) => s.name.trim());
+    const allIngs = [
+      ...validIngredients.map(i => ({ name: i.name, quantity: i.amount, unit: i.unit })),
+      ...validSpices.map(s => ({ name: s.name, quantity: s.amount || 0, unit: s.unit }))
+    ];
+    const validSteps = steps.filter((s) => s.description.trim()).map(s => s.description);
+
+    if (allIngs.length === 0) {
+      alert('Vui lòng nhập nguyên liệu trước khi tính toán dinh dưỡng!');
+      return;
+    }
+
+    setIsEstimating(true);
+    try {
+      const res = await recipesService.estimateNutrition(allIngs, validSteps.length > 0 ? validSteps : ['Nấu món ăn']);
+      setCalories(res.calories);
+      setProtein(res.protein);
+      setFat(res.fat);
+      setCarbs(res.carbs);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Không thể tính toán dinh dưỡng bằng AI. Vui lòng thử lại sau.');
+    } finally {
+      setIsEstimating(false);
+    }
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [ingredients, setIngredients] = useState<Ingredient[]>(() => {
@@ -212,6 +248,10 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
       servings: Number(servings),
       ingredients: finalIngredients,
       steps: validSteps,
+      calories: calories === '' ? 0 : Number(calories),
+      protein: protein === '' ? 0 : Number(protein),
+      fat: fat === '' ? 0 : Number(fat),
+      carbs: carbs === '' ? 0 : Number(carbs),
     });
     onClose();
   };
@@ -300,6 +340,75 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                   setServings(parseInt(val) || 0);
                 }}
               />
+            </div>
+
+            {/* Nutrition inputs */}
+            <div style={{ marginTop: '16px', background: '#F8FAFC', padding: '12px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#1A1A1A', fontFamily: 'Plus Jakarta Sans' }}>Dinh dưỡng (trên 1 phần)</span>
+                <button
+                  type="button"
+                  onClick={handleEstimateNutrition}
+                  disabled={isEstimating}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: 'white',
+                    background: primaryColor,
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    opacity: isEstimating ? 0.7 : 1,
+                    fontFamily: 'Plus Jakarta Sans'
+                  }}
+                >
+                  {isEstimating ? '⚡ Đang tính...' : '⚡ AI tính dinh dưỡng'}
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', color: '#64748B', fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Calo (kcal)</label>
+                  <input
+                    type="number"
+                    style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid #CBD5E1', padding: '0 6px', fontSize: '12px', textAlign: 'center' }}
+                    placeholder="Calo"
+                    value={calories}
+                    onChange={(e) => setCalories(e.target.value === '' ? '' : Number(e.target.value))}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', color: '#64748B', fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Protein (g)</label>
+                  <input
+                    type="number"
+                    style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid #CBD5E1', padding: '0 6px', fontSize: '12px', textAlign: 'center' }}
+                    placeholder="Prot"
+                    value={protein}
+                    onChange={(e) => setProtein(e.target.value === '' ? '' : Number(e.target.value))}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', color: '#64748B', fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Fat (g)</label>
+                  <input
+                    type="number"
+                    style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid #CBD5E1', padding: '0 6px', fontSize: '12px', textAlign: 'center' }}
+                    placeholder="Béo"
+                    value={fat}
+                    onChange={(e) => setFat(e.target.value === '' ? '' : Number(e.target.value))}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <label style={{ fontSize: '10px', color: '#64748B', fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Carbs (g)</label>
+                  <input
+                    type="number"
+                    style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid #CBD5E1', padding: '0 6px', fontSize: '12px', textAlign: 'center' }}
+                    placeholder="Carb"
+                    value={carbs}
+                    onChange={(e) => setCarbs(e.target.value === '' ? '' : Number(e.target.value))}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Ingredient list */}

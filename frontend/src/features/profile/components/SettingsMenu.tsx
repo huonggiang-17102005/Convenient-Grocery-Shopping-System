@@ -4,6 +4,7 @@ interface SettingsMenuProps {
   onOpenAccount: () => void;
   onLogout: () => void;
   onLeaveGroup?: () => void;
+  onOpenFamilySettings?: () => void;
   role?: 'homemaker' | 'member';
 }
 
@@ -11,6 +12,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
   onOpenAccount,
   onLogout,
   onLeaveGroup,
+  onOpenFamilySettings,
   role = 'homemaker',
 }) => {
   return (
@@ -27,6 +29,19 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({
         >
           <p className="profile-settings-item--text">Quản lý tài khoản</p>
         </button>
+
+        {/* Family configuration (Homemaker only) */}
+        {role === 'homemaker' && onOpenFamilySettings && (
+          <button
+            id="profile-family-settings-btn"
+            className="profile-settings-item"
+            onClick={onOpenFamilySettings}
+            style={{ background: 'white' }}
+          >
+            <p className="profile-settings-item--text">Cấu hình nhóm gia đình</p>
+            <span className="profile-settings-chevron">›</span>
+          </button>
+        )}
 
         {/* Logout */}
         <button

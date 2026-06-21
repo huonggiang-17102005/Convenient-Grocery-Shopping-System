@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Sparkles, ChefHat, Clock, Flame } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
+import { recipesService } from '../../recipes/recipes.service';
 import './AiRecipeModal.css';
 
 interface AiRecipeModalProps {
@@ -14,8 +15,89 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [recipes, setRecipes] = useState<any[]>([]);
   const [error, setError] = useState('');
+  const [savedIndexes, setSavedIndexes] = useState<Set<number>>(new Set());
 
   if (!isOpen) return null;
+
+  const parseIngredientString = (str: string) => {
+    const trimmed = str.trim();
+    const pattern1 = trimmed.match(/^([\d.,]+)\s*([a-zA-Z\u00C0-\u1EF9]+)\s+(.+)$/);
+    if (pattern1) {
+      return {
+        name: pattern1[3].trim(),
+        amount: parseFloat(pattern1[1].replace(',', '.')) || 1,
+        unit: pattern1[2].trim(),
+        category: 'Khác'
+      };
+    }
+    const pattern2 = trimmed.match(/^([\d.,]+)\s+(.+)$/);
+    if (pattern2) {
+      const qty = parseFloat(pattern2[1].replace(',', '.')) || 1;
+      const rest = pattern2[2].trim();
+      const parts = rest.split(/\s+/);
+      if (parts.length > 1) {
+        return {
+          name: parts.slice(1).join(' '),
+          amount: qty,
+          unit: parts[0],
+          category: 'Khác'
+        };
+      }
+      return {
+        name: rest,
+        amount: qty,
+        unit: 'phần',
+        category: 'Khác'
+      };
+    }
+    return {
+      name: trimmed,
+      amount: 1,
+      unit: 'phần',
+      category: 'Khác'
+    };
+  };
+
+  const handleSaveRecipe = async (aiRecipe: any, index: number) => {
+    try {
+      const parsedIngredients = (aiRecipe.ingredients || []).map((str: string, idx: number) => {
+        const parsed = parseIngredientString(str);
+        return {
+          id: `ing_ai_${Date.now()}_${idx}`,
+          ...parsed
+        };
+      });
+
+      const cookTime = parseInt(aiRecipe.prepTime?.replace(/[^0-9]/g, '')) || 30;
+
+      await recipesService.createRecipe({
+        name: aiRecipe.title,
+        emoji: '🍽️',
+        cookTimeMinutes: cookTime,
+        difficulty: 'Trung bình',
+        servings: 4,
+        ingredients: parsedIngredients,
+        steps: (aiRecipe.instructions || []).map((step: string, idx: number) => ({
+          id: `step_ai_${Date.now()}_${idx}`,
+          description: step
+        })),
+        calories: aiRecipe.calories || 0,
+        protein: aiRecipe.protein || 0,
+        fat: aiRecipe.fat || 0,
+        carbs: aiRecipe.carbs || 0,
+        visibility: 'Private'
+      });
+
+      setSavedIndexes((prev) => {
+        const next = new Set(prev);
+        next.add(index);
+        return next;
+      });
+    } catch (err: any) {
+      console.error(err);
+      alert('Không thể lưu công thức. Vui lòng thử lại sau.');
+    }
+  };
 
   const handleGenerate = async () => {
     if (!user?.family_id) return;
@@ -79,7 +161,31 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose }) => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '16px' }}>
                     {recipes.map((recipe, index) => (
                         <div className="ai-result-card" key={index}>
-                            <h3 className="recipe-title"><ChefHat size={20}/> {recipe.title}</h3>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                              <h3 className="recipe-title" style={{ margin: 0 }}><ChefHat size={20}/> {recipe.title}</h3>
+                              <button
+                                type="button"
+                                disabled={savedIndexes.has(index)}
+                                onClick={() => handleSaveRecipe(recipe, index)}
+                                style={{
+                                  padding: '6px 12px',
+                                  fontSize: '11px',
+                                  fontWeight: '600',
+                                  color: 'white',
+                                  background: savedIndexes.has(index) ? '#4CAF50' : '#7C4DFF',
+                                  border: 'none',
+                                  borderRadius: '8px',
+                                  cursor: savedIndexes.has(index) ? 'default' : 'pointer',
+                                  fontFamily: 'Plus Jakarta Sans',
+                                  transition: 'background 0.2s',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
+                              >
+                                {savedIndexes.has(index) ? '✓ Đã lưu' : '💾 Lưu vào thư viện'}
+                              </button>
+                            </div>
                             
                             <div className="recipe-meta-row">
                                 <span className="meta-badge"><Clock size={16}/> {recipe.prepTime}</span>

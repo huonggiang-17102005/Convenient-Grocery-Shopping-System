@@ -1,6 +1,6 @@
 import express from 'express';
 import { 
-  createFamily, joinFamily, getFamilyInfo,
+  createFamily, joinFamily, getFamilyInfo, updateFamilyInfo,
   getMembers, leaveFamily, removeMember, transferHomemaker, getWasteStats
 } from '../controllers/family.controller.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
@@ -11,6 +11,7 @@ const router = express.Router();
 router.post('/create', authenticateToken as any, createFamily as any);
 router.post('/join', authenticateToken as any, joinFamily as any);
 router.get('/info', authenticateToken as any, getFamilyInfo as any);
+router.put('/info', authenticateToken as any, updateFamilyInfo as any);
 
 router.get('/members', authenticateToken as any, getMembers as any);
 router.delete('/leave', authenticateToken as any, leaveFamily as any);

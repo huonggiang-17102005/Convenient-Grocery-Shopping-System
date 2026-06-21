@@ -82,6 +82,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
             <span className={`recipe-tag ${recipe.difficulty?.toLowerCase() === 'dễ' ? 'recipe-tag--easy' : recipe.difficulty?.toLowerCase() === 'trung bình' ? 'recipe-tag--medium' : 'recipe-tag--hard'}`}>
               {recipe.difficulty}
             </span>
+            {recipe.calories !== undefined && recipe.calories > 0 && (
+              <span className="recipe-tag recipe-tag--calories">
+                🔥 {recipe.calories} kcal/phần
+              </span>
+            )}
           </div>
         </div>
       </div>

@@ -259,6 +259,12 @@
   font-weight: 600;
 }
 
+.recipe-tag--calories {
+  background: #FBE9E7;
+  color: #D84315;
+  font-weight: 600;
+}
+
 /* ── Library tip ──────────────────────────────────────────── */
 .recipe-library-tip {
   font-size: 13px;
