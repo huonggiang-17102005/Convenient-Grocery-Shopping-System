@@ -86,12 +86,6 @@ const Jointhegroup: React.FC = () => {
           {isLoading ? 'Đang tham gia...' : 'Tham gia nhóm'}
         </button>
 
-        <div className="qr-scan-container">
-          <div className="qr-scan-box" onClick={() => alert('Tính năng quét QR đang được phát triển!')}>
-            <div className="qr-scan-icon">📷</div>
-            <div className="qr-scan-line"></div>
-          </div>
-        </div>
       </div>
     </div>
   );
