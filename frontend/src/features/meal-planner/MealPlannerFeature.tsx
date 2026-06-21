@@ -120,8 +120,9 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     const dateStr = `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
 
     try {
-      for (const recipe of selected) {
-        await mealPlannerService.addMealPlan(recipe.id, dateStr, activeMealKey, peopleCount);
+      const recipeIds = selected.map(r => r.id);
+      if (recipeIds.length > 0) {
+        await mealPlannerService.addMealPlan(recipeIds, dateStr, activeMealKey, peopleCount);
       }
       
       const mealLabel = MEALS.find((m) => m.key === activeMealKey)?.title ?? '';

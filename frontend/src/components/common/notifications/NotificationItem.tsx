@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Check, Trash2, Edit2, Heart, Info, Clock, UserPlus, UserMinus, CheckCircle2, AlertTriangle, UserCheck, Shield, UserX, ClipboardList } from 'lucide-react';
+import { Bell, Check, Trash2, Edit2, Heart, Info, Clock, UserPlus, UserMinus, CheckCircle2, AlertTriangle, UserCheck, Shield, UserX, ClipboardList, CalendarPlus, CalendarMinus } from 'lucide-react';
 import type { AppNotification } from '../../../types/notification';
 import { useNotifications } from '../../../contexts/NotificationContext';
 
@@ -22,6 +22,10 @@ export const NotificationItem: React.FC<Props> = ({ notif }) => {
       
       // Recipe Flow
       case 'LIKE': return <Heart size={18} color="#E91E63" />;
+      
+      // Meal Plan Flow
+      case 'MEAL_PLAN_ADD': return <CalendarPlus size={18} color="#4CAF50" />;
+      case 'MEAL_PLAN_REMOVE': return <CalendarMinus size={18} color="#F44336" />;
       
       // Task Flow
       case 'TASK_ASSIGN': return <ClipboardList size={18} color="#9C27B0" />;

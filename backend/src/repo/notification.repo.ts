@@ -40,7 +40,7 @@ export const fetchNotifications = async (familyId: string, userId: string, limit
         types = ['LIKE'];
         break;
       case 'meal':
-        types = ['NONE']; // Placeholder for future meal notifications
+        types = ['MEAL_PLAN', 'MEAL_PLAN_ADD', 'MEAL_PLAN_REMOVE'];
         break;
     }
     if (types.length > 0) {
