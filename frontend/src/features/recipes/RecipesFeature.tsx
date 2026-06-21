@@ -1,9 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { Recipe, CommunityPost, FilterIngredient, RecipesFeatureProps, PendingPost } from './types';
 import { recipesService } from './recipes.service';
+import { Sparkles } from 'lucide-react';
+import AiRecipeModal from '../fridge/modals/AiRecipeModal';
 import { useRecipesContext } from '../../contexts/RecipesContext';
 import { useFridgeContext } from '../../contexts/FridgeContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 import RecipeTabs from './components/RecipeTabs';
 import TabLibrary from './components/TabLibrary';
@@ -23,6 +26,8 @@ import './recipes.css';
 type ActiveTab = 'library' | 'favorites' | 'community';
 
 export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   // ── Data state ──────────────────────────────────────────────
   const {
     recipes, setRecipes,
@@ -35,6 +40,8 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   // ── UI state ─────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<ActiveTab>('library');
   const [subTab, setSubTab] = useState<'family' | 'system'>('family');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
   const [selectedIngredients, setSelectedIngredients] = useState<FilterIngredient[]>([]);
   const location = useLocation();
@@ -52,6 +59,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const [isShareOpen, setIsShareOpen] = useState(false);
+  const [shareRecipe, setShareRecipe] = useState<Recipe | null>(null);
 
   const [deleteRecipe, setDeleteRecipe] = useState<Recipe | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -167,12 +175,19 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     setIsDeleteOpen(true);
   }, []);
 
+  const handleOpenShare = useCallback((recipe: Recipe) => {
+    setShareRecipe(recipe);
+    setIsDetailOpen(false);
+    setIsShareOpen(true);
+  }, []);
+
   const handleFormSubmit = useCallback(
     async (data: Omit<Recipe, 'id' | 'isFavorited'>) => {
       try {
         if (formMode === 'create') {
           const newRecipe = await recipesService.createRecipe(data);
           setRecipes((prev) => [newRecipe, ...prev]);
+          showToast(`Đã lưu công thức "${newRecipe.name}" thành công!`);
         } else if (formMode === 'edit' && formRecipe) {
           const updatedRecipe = await recipesService.updateRecipe(formRecipe.id, data);
           setRecipes((prev) =>
@@ -180,13 +195,14 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
               r.id === formRecipe.id ? { ...r, ...updatedRecipe } : r
             )
           );
+          showToast(`Đã cập nhật công thức "${updatedRecipe.name}" thành công!`);
         }
       } catch (error) {
         console.error('Error saving recipe:', error);
         showToast('Lỗi khi lưu công thức');
       }
     },
-    [formMode, formRecipe]
+    [formMode, formRecipe, showToast]
   );
 
   const handleDeleteConfirm = useCallback(async () => {
@@ -278,23 +294,13 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   }, [fridgeItems]);
 
   const handleShoppingConfirmSubmit = useCallback(async (items: Array<{ name: string; category: string; buyAmountStr?: string; quantity?: number; unit?: string }>) => {
-    const parseQuantity = (str: string): { amount: number; unit: string } => {
-      const trimmed = str.trim();
-      const match = trimmed.match(/^([\d.,]+)\s*(.*)$/);
-      if (match) {
-        const num = parseFloat(match[1].replace(',', '.'));
-        return {
-          amount: isNaN(num) ? 1 : num,
-          unit: match[2] || 'g',
-        };
-      }
-      return {
-        amount: 1,
-        unit: trimmed || 'g',
-      };
-    };
-
     try {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const date = String(today.getDate()).padStart(2, '0');
+      const localTodayDateStr = `${year}-${month}-${date}`;
+
       for (const item of items) {
         let finalQty = 1;
         let finalUnit = 'g';
@@ -311,18 +317,20 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
           category: item.category,
           quantity: finalQty,
           unit: finalUnit,
-          deadlineDate: '',
-          deadlineTime: ''
+          deadlineDate: localTodayDateStr,
+          deadlineTime: '23:59'
         });
       }
 
       setIsShoppingConfirmOpen(false);
+      setIsDetailOpen(false);
       showToast('Đã thêm các nguyên liệu thiếu vào danh sách mua sắm thành công!');
+      navigate(`/${role}/shopping-list`);
     } catch (error) {
       console.error('Error adding custom items to shopping list:', error);
       showToast('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
     }
-  }, [showToast]);
+  }, [showToast, role, navigate]);
 
   const handleCommunityPostClick = useCallback((post: CommunityPost) => {
     setIsViewingCommunity(true);
@@ -368,13 +376,45 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     }
   }, [setRecipes, showToast]);
 
-  const handleCancelPending = useCallback(() => {
+  const fetchPendingPost = useCallback(async () => {
+    try {
+      const pendingRecipes = await recipesService.getUserPendingRecipes();
+      if (pendingRecipes.length > 0) {
+        const firstPending = pendingRecipes[0];
+        setPendingPost({
+          id: firstPending.id,
+          recipe: firstPending,
+          submittedAt: firstPending.createdAt || new Date().toISOString(),
+          status: 'pending',
+          description: firstPending.description || '',
+        });
+      } else {
+        setPendingPost(null);
+      }
+    } catch (error) {
+      console.error('Error fetching pending recipes:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPendingPost();
+  }, [fetchPendingPost, activeTab]);
+
+  const handleCancelPending = useCallback(async () => {
+    if (pendingPost) {
+      try {
+        await recipesService.deleteRecipe(pendingPost.id);
+        showToast('Đã hủy chia sẻ công thức thành công!');
+      } catch (error) {
+        console.error('Error deleting pending recipe:', error);
+      }
+    }
     if (pendingTimeoutRef.current) {
       clearTimeout(pendingTimeoutRef.current);
       pendingTimeoutRef.current = null;
     }
     setPendingPost(null);
-  }, []);
+  }, [pendingPost, showToast]);
 
   const handleShareSubmit = useCallback(
     async (description: string, recipeData: Omit<Recipe, 'id' | 'isFavorited'>) => {
@@ -385,32 +425,91 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
         setIsShareOpen(false);
         showToast('Đã gửi công thức lên cộng đồng, vui lòng chờ duyệt!');
+        await fetchPendingPost();
       } catch (error) {
         console.error('Error sharing recipe:', error);
         showToast('Lỗi khi chia sẻ công thức');
       }
     },
-    [showToast]
+    [showToast, fetchPendingPost]
   );
+
+  // Remove diacritics utility
+  const removeDiacritics = (str: string) => {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, (char) => (char === 'đ' ? 'd' : 'D'));
+  };
+
+  // Filter lists by search query
+  const query = removeDiacritics(searchQuery.trim().toLowerCase());
+  const filteredRecipes = query
+    ? recipes.filter(r => removeDiacritics(r.name.toLowerCase()).includes(query))
+    : recipes;
+  const filteredSystemRecipes = query
+    ? systemRecipes.filter(r => removeDiacritics(r.name.toLowerCase()).includes(query))
+    : systemRecipes;
+  const filteredFavoriteRecipes = query
+    ? favoriteRecipes.filter(r => removeDiacritics(r.name.toLowerCase()).includes(query))
+    : favoriteRecipes;
+  const filteredCommunityPosts = query
+    ? communityPosts.filter(p => removeDiacritics(p.recipe.name.toLowerCase()).includes(query))
+    : communityPosts;
 
   // ── Render ────────────────────────────────────────────────────
   return (
     <div className="recipes-feature" id="recipes-feature">
       {/* Sticky page header */}
       <div className="recipes-page-header">
-        <h1 className="recipes-page-title">Công thức nấu ăn</h1>
+        <div className="recipes-header-title-row">
+          <h1 className="recipes-page-title">Công thức nấu ăn</h1>
+          <button
+            id="recipes-ai-suggest-btn"
+            type="button"
+            className={`recipes-header-ai-btn role-${role}`}
+            onClick={() => setIsAiModalOpen(true)}
+            aria-label="AI Gợi ý nấu ăn"
+            title="AI Gợi ý nấu ăn"
+          >
+            <Sparkles size={16} />
+            <span>AI Gợi ý</span>
+          </button>
+        </div>
         <RecipeTabs
           activeTab={activeTab}
           onChangeTab={setActiveTab}
         />
+        {/* Search bar input at the bottom of header */}
+        <div className="recipe-search-bar-wrapper">
+          <span className="recipe-search-icon">🔍</span>
+          <input
+            id="recipe-search-input"
+            type="text"
+            className="recipe-search-input"
+            placeholder="Tìm kiếm theo tên món ăn..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="recipe-search-clear-btn"
+              onClick={() => setSearchQuery('')}
+              aria-label="Xoá tìm kiếm"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tab content area (scrollable) */}
       <div className="recipes-content">
         {activeTab === 'library' && (
           <TabLibrary
-            recipes={recipes}
-            systemRecipes={systemRecipes}
+            recipes={filteredRecipes}
+            systemRecipes={filteredSystemRecipes}
             subTab={subTab}
             onChangeSubTab={setSubTab}
             selectedIngredients={selectedIngredients}
@@ -418,23 +517,27 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
             onChangeIngredients={setSelectedIngredients}
             onRecipeClick={handleRecipeClick}
             onToggleFavorite={handleToggleFavorite}
+            role={role}
           />
         )}
         {activeTab === 'favorites' && (
           <TabFavorites
-            recipes={favoriteRecipes}
+            recipes={filteredFavoriteRecipes}
             onRecipeClick={handleRecipeClick}
             onToggleFavorite={handleToggleFavorite}
           />
         )}
         {activeTab === 'community' && (
           <TabCommunity
-            posts={communityPosts}
+            posts={filteredCommunityPosts}
             pendingPost={pendingPost}
             role={role}
             onPostRecipeClick={handleCommunityPostClick}
             onToggleLike={handleToggleCommunityLike}
-            onShareClick={() => setIsShareOpen(true)}
+            onShareClick={() => {
+              setShareRecipe(null);
+              setIsShareOpen(true);
+            }}
             onCancelPending={handleCancelPending}
           />
         )}
@@ -446,7 +549,10 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
           id="recipe-fab-btn"
           type="button"
           className="recipe-fab"
-          onClick={activeTab === 'community' ? () => setIsShareOpen(true) : handleOpenCreate}
+          onClick={activeTab === 'community' ? () => {
+            setShareRecipe(null);
+            setIsShareOpen(true);
+          } : handleOpenCreate}
           aria-label={activeTab === 'community' ? "Chia sẻ bài viết mới" : "Thêm công thức mới"}
         >
           <span>+</span>
@@ -457,7 +563,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       <RecipeDetailModal
         isOpen={isDetailOpen}
         recipe={detailRecipe}
-        showEditDelete={!isViewingCommunity && detailRecipe?.authorId !== null}
+        showEditDelete={!isViewingCommunity && detailRecipe?.authorId === user?.id}
         showShoppingAndCook={role !== 'member'}
         role={role}
         onClose={() => {
@@ -469,6 +575,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         onToggleFavorite={handleToggleFavorite}
         onAddToShoppingList={handleAddToShoppingList}
         onSaveToFamily={handleSaveToFamily}
+        onShare={handleOpenShare}
       />
 
       {isShoppingConfirmOpen && (
@@ -491,10 +598,14 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       />
 
       <ShareCommunityModal
-        key={isShareOpen ? 'share-modal-open' : 'share-modal-closed'}
+        key={isShareOpen ? `share-modal-${shareRecipe?.id ?? 'new'}` : 'share-modal-closed'}
         isOpen={isShareOpen}
         role={role}
-        onClose={() => setIsShareOpen(false)}
+        recipe={shareRecipe}
+        onClose={() => {
+          setIsShareOpen(false);
+          setShareRecipe(null);
+        }}
         onSubmit={handleShareSubmit}
       />
 
@@ -503,6 +614,11 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         recipeName={deleteRecipe?.name}
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleDeleteConfirm}
+      />
+
+      <AiRecipeModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
       />
 
       <Toast message={toastMsg} trigger={toastTrigger} onHide={() => { }} />

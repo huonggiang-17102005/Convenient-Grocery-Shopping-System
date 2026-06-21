@@ -17,6 +17,7 @@ router.get('/community', authenticateToken, RecipeController.getCommunityRecipes
 router.get('/favorites', authenticateToken, RecipeController.getFavoriteRecipes);
 
 // Các thao tác CRUD cho công thức
+router.get('/user-pending', authenticateToken, RecipeController.getUserPendingRecipes);
 router.post('/', authenticateToken, RecipeController.createRecipe);
 router.put('/:id', authenticateToken, RecipeController.updateRecipe);
 router.delete('/:id', authenticateToken, RecipeController.deleteRecipe);

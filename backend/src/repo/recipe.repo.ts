@@ -245,3 +245,22 @@ export const getOrCreateShoppingList = async (familyId: string, userId: string):
   if (createErr) throw new InternalServerError('Không thể tạo Shopping List.');
   return created;
 };
+
+export const getUserPendingRecipes = async (userId: string): Promise<Recipe[]> => {
+  const { data, error } = await supabase
+    .from('recipes')
+    .select(`
+      *,
+      author:users!author_id(id, full_name, avatar)
+    `)
+    .eq('author_id', userId)
+    .eq('visibility', 'Pending')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching user pending recipes:', error);
+    throw new InternalServerError('Không thể lấy danh sách công thức chờ duyệt.');
+  }
+
+  return data as Recipe[];
+};

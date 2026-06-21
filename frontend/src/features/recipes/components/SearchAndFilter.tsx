@@ -29,11 +29,20 @@ const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
+  // Remove diacritics utility
+  const removeDiacritics = (str: string) => {
+    return str
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, (char) => (char === 'đ' ? 'd' : 'D'));
+  };
+
   // Unique list combining static and selected options
   const allOptions = Array.from(new Set([...(availableIngredients || []), ...(selectedIngredients || [])])).filter(Boolean);
   
+  const normalizedSearch = removeDiacritics(search.trim().toLowerCase());
   const filtered = allOptions.filter(
-    (ing) => typeof ing === 'string' && ing.toLowerCase().includes(search.toLowerCase())
+    (ing) => typeof ing === 'string' && removeDiacritics(ing.toLowerCase()).includes(normalizedSearch)
   );
 
   const toggleIngredient = (ing: FilterIngredient) => {

@@ -807,3 +807,24 @@
   cursor: not-allowed;
 }
 
+.mp-header__ai {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+  z-index: 10;
+}
+
+.mp-header__ai:hover {
+  background: #F5F5F5;
+}
+

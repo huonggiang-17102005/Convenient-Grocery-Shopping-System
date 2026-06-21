@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Sparkles } from 'lucide-react';
 import './meal-planner.css';
+import AiRecipeModal from '../fridge/modals/AiRecipeModal';
 
 
 export interface MealPlannerFeatureProps {
@@ -97,6 +98,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
   // Bottom sheet state
   const [sheetOpen,     setSheetOpen]     = useState(false);
   const [activeMealKey, setActiveMealKey] = useState<MealKey>('breakfast');
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
 
   // Toast
   const [toastMsg,     setToastMsg]     = useState('');
@@ -200,6 +202,18 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
             <ArrowLeft size={22} color="#1A1A1A" />
           </button>
           <h1 className="mp-header__title">Thực đơn tuần</h1>
+          {role === 'homemaker' && (
+            <button
+              id="mp-ai-suggest-btn"
+              type="button"
+              className="mp-header__ai"
+              onClick={() => setIsAiModalOpen(true)}
+              aria-label="AI Gợi ý nấu ăn"
+              title="AI Gợi ý nấu ăn"
+            >
+              <Sparkles size={22} color="var(--primary-color)" />
+            </button>
+          )}
         </header>
 
         {/* ── Day tabs ── */}
@@ -296,6 +310,11 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           onConfirm={handleConfirm}
         />
       )}
+
+      <AiRecipeModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+      />
     </>
   );
 };
