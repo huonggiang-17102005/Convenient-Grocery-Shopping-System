@@ -11,7 +11,7 @@ export const getFamilyMembers = async (familyId: string) => {
   return data;
 };
 
-export const removeUserFromFamily = async (userId: string) => {
+export const leaveFamilyRepo = async (userId: string) => {
   const { data, error } = await supabase
     .from('users')
     .update({ family_id: null, role: null })
@@ -19,7 +19,19 @@ export const removeUserFromFamily = async (userId: string) => {
     .select('*')
     .single();
 
-  if (error) throw new InternalServerError('Lỗi khi xóa/rời khỏi gia đình');
+  if (error) throw new InternalServerError('Lỗi khi rời khỏi gia đình');
+  return data;
+};
+
+export const kickUserRepo = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('users')
+    .update({ family_id: null, role: 'Kicked' })
+    .eq('id', userId)
+    .select('*')
+    .single();
+
+  if (error) throw new InternalServerError('Lỗi khi xóa thành viên khỏi gia đình');
   return data;
 };
 

@@ -53,8 +53,11 @@ export default function Login() {
         navigate('/admin/dashboard');
       } else if (userRole === 'Member' || userRole === 'member') {
         navigate('/member/dashboard');
-      } else {
+      } else if (userRole === 'Homemaker' || userRole === 'homemaker') {
         navigate('/homemaker/dashboard');
+      } else {
+        // Bao gồm 'Kicked' hoặc null
+        navigate('/choose-role');
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Có lỗi xảy ra';

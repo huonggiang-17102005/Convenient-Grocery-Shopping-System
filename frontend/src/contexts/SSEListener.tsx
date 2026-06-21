@@ -60,6 +60,12 @@ export const SSEListener: React.FC = () => {
       refreshShoppingList();
     });
 
+    evtSource.addEventListener('KICKED_FROM_FAMILY', (event) => {
+      console.log('🚪 [SSE] Bị đuổi khỏi nhóm:', event.data);
+      localStorage.setItem('kicked_alert', 'true');
+      window.location.href = '/choose-role';
+    });
+
     evtSource.onerror = (err) => {
       console.error('📡 [SSE] Lỗi kết nối, đang thử lại...', err);
     };
