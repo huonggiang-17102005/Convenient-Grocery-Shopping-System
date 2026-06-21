@@ -23,10 +23,39 @@ Chỉ trả về định dạng JSON thuần túy (KHÔNG CÓ markdown \`\`\`jso
     "protein": 20,
     "fat": 10,
     "carbs": 30,
-    "ingredients": ["100g thịt bò", "1 củ hành tây"],
+    "ingredients": [
+      {
+        "name": "thịt bò",
+        "amount": 100,
+        "unit": "g",
+        "category": "Thịt cá"
+      },
+      {
+        "name": "hành tây",
+        "amount": 1,
+        "unit": "củ",
+        "category": "Rau củ quả"
+      }
+    ],
     "instructions": ["Bước 1: Thái thịt", "Bước 2: Xào"]
   }
-]`;
+]
+
+Quy định về phân loại (category) của nguyên liệu (ingredients):
+Mỗi nguyên liệu PHẢI được xếp vào chính xác một trong 7 danh mục sau:
+1. 'Thịt cá' (ví dụ: thịt heo, thịt bò, cá rô phi, gà, tôm, mực, hải sản...)
+2. 'Rau củ quả' (ví dụ: hành tây, tỏi, cà chua, cà rốt, rau muống, nấm, táo, chuối...)
+3. 'Trứng' (ví dụ: trứng gà, trứng vịt, trứng cút...)
+4. 'Chất lỏng' (ví dụ: sữa tươi, nước cốt dừa, bia, nước dùng, nước lọc...)
+5. 'Đồ khô' (ví dụ: mì gói, bún khô, nấm mèo khô, các loại hạt, đậu...)
+6. 'Gia vị' (ví dụ: đường, muối, hạt nêm, nước mắm, tiêu, dầu ăn, rượu vang đỏ, tương ớt, dấm...)
+7. 'Khác' (nếu không thuộc các nhóm trên)
+
+Quy định về đơn vị (unit) của nguyên liệu:
+- 'Thịt cá', 'Rau củ quả', 'Đồ khô', 'Khác': dùng các đơn vị đo lường thông thường, ưu tiên khối lượng là 'g' nếu có thể xác định được (hoặc 'quả', 'củ', 'tép', 'nhành' tùy loại).
+- 'Chất lỏng': dùng đơn vị đo thể tích là 'ml' (hoặc 'hộp', 'lon' nếu phù hợp).
+- 'Trứng': dùng đơn vị 'quả'.
+- 'Gia vị': để người dùng dễ xác định, đơn vị có thể dùng bất kỳ từ ngữ dân gian / ước lượng nào như 'thìa cà phê', 'thìa canh', 'chén', 'cốc', 'lát', 'nhúm', 'chút', 'tép' hoặc bất kỳ chuỗi ký tự mô tả nào phù hợp, không bắt buộc là g/ml.`;
 
   const promptText = `Danh sách nguyên liệu trong tủ lạnh:
 ${JSON.stringify(fridgeItems.map(i => ({ name: i.name, quantity: i.quantity, unit: i.unit, expiration_date: i.expiration_date })))}

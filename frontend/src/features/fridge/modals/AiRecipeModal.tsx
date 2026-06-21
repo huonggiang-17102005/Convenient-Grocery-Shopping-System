@@ -60,12 +60,22 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose }) => {
 
   const handleSaveRecipe = async (aiRecipe: any, index: number) => {
     try {
-      const parsedIngredients = (aiRecipe.ingredients || []).map((str: string, idx: number) => {
-        const parsed = parseIngredientString(str);
-        return {
-          id: `ing_ai_${Date.now()}_${idx}`,
-          ...parsed
-        };
+      const parsedIngredients = (aiRecipe.ingredients || []).map((ing: any, idx: number) => {
+        if (typeof ing === 'string') {
+          const parsed = parseIngredientString(ing);
+          return {
+            id: `ing_ai_${Date.now()}_${idx}`,
+            ...parsed
+          };
+        } else {
+          return {
+            id: `ing_ai_${Date.now()}_${idx}`,
+            name: ing?.name || '',
+            amount: Number(ing?.amount) || 1,
+            unit: ing?.unit || 'g',
+            category: ing?.category || 'Khác'
+          };
+        }
       });
 
       const cookTime = parseInt(aiRecipe.prepTime?.replace(/[^0-9]/g, '')) || 30;
@@ -105,7 +115,8 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose }) => {
     setError('');
     setRecipes([]);
     try {
-      const res = await fetch(`http://localhost:5000/api/ai/recipe`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/ai/recipe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ familyId: user.family_id, prompt })
@@ -201,7 +212,14 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose }) => {
                             <div className="recipe-section">
                                 <h4>Nguyên liệu cần dùng:</h4>
                                 <ul className="ingredient-list">
-                                    {recipe.ingredients?.map((ing: string, i: number) => <li key={i}>{ing}</li>) || <li>Không có thông tin nguyên liệu</li>}
+                                    {recipe.ingredients?.map((ing: any, i: number) => {
+                                      const formatIngredient = (item: any) => {
+                                        if (typeof item === 'string') return item;
+                                        if (!item) return '';
+                                        return `${item.amount} ${item.unit === 'any' ? '' : item.unit} ${item.name}`.replace(/\s+/g, ' ').trim();
+                                      };
+                                      return <li key={i}>{formatIngredient(ing)}</li>;
+                                    }) || <li>Không có thông tin nguyên liệu</li>}
                                 </ul>
                             </div>
 
