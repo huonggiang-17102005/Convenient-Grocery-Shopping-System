@@ -1,11 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { AppNotification } from '../types/notification';
-import { useAuth } from './AuthContext';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface NotificationContextProps {
   notifications: AppNotification[];
@@ -21,7 +15,6 @@ interface NotificationContextProps {
 const NotificationContext = createContext<NotificationContextProps | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { family, user } = useAuth();
   
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
     const cached = localStorage.getItem('cached_notifications');
@@ -97,39 +90,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     refreshNotifications();
   }, [refreshNotifications]);
 
-  // Supabase Realtime Listener
-  useEffect(() => {
-    if (!family?.id || !supabaseUrl || !supabaseKey) return;
 
-    const channel = supabase
-      .channel(`public:notifications:family_id=eq.${family.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `family_id=eq.${family.id}`
-        },
-        (payload) => {
-          console.log('🔔 [Supabase Realtime] Nhận được thông báo mới:', payload);
-          const newNoti = payload.new as any;
-          // Bỏ qua nếu thông báo là TƯ NHÂN và không phải của người đang đăng nhập
-          if (newNoti.user_id && user && newNoti.user_id !== user.id) {
-            return;
-          }
-          // Gọi refresh để lấy dữ liệu mới nhất (với offset = 0)
-          refreshNotifications();
-        }
-      )
-      .subscribe((status, err) => {
-        console.log('📡 [Supabase Realtime Notifications] Status:', status, err || '');
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [family?.id, refreshNotifications, user?.id]);
 
   const markAsRead = useCallback((id: string) => {
     setReadIds(prev => {

@@ -16,6 +16,7 @@ import categoryRoute from './routes/category.routes.js';
 import errorMiddleware from './middlewares/error.middleware.js';
 import aiRoute from './routes/ai.route.js';
 import notificationRoute from './routes/notification.routes.js';
+import sseRoute from './routes/sse.routes.js';
 
 
 dotenv.config();
@@ -40,6 +41,7 @@ app.use('/api/admin', adminRoute);
 app.use('/api/categories', categoryRoute);
 app.use('/api/ai', aiRoute);
 app.use('/api/notifications', notificationRoute);
+app.use('/api/stream', sseRoute);
 const PORT = process.env.PORT || 5000;
 
 app.get('/', (req: Request, res: Response) => {
