@@ -4,14 +4,16 @@ import * as fridgeService from '../services/fridge.service.js';
 
 export const generateRecipe = async (req: Request, res: Response) => {
   try {
-    const { familyId, prompt } = req.body;
+    const { familyId, prompt, prioritizeFridge } = req.body;
     
     if (!familyId) {
       return res.status(400).json({ success: false, message: 'Thiếu familyId' });
     }
 
     // 1. Lấy đồ trong tủ lạnh của gia đình
-    const fridgeItems = await fridgeService.getFamilyFridge(familyId);
+    const fridgeItems = prioritizeFridge !== false
+      ? await fridgeService.getFamilyFridge(familyId)
+      : [];
     
     // 2. Gửi sang AI
     const recipe = await aiService.generateRecipe(fridgeItems, prompt);

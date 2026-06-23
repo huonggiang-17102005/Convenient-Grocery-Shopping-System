@@ -17,6 +17,7 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose, onRecipe
   const [recipes, setRecipes] = useState<any[]>([]);
   const [error, setError] = useState('');
   const [savedIndexes, setSavedIndexes] = useState<Set<number>>(new Set());
+  const [prioritizeFridge, setPrioritizeFridge] = useState(true);
 
   if (!isOpen) return null;
 
@@ -124,7 +125,7 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose, onRecipe
       const res = await fetch(`${API_URL}/ai/recipe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ familyId: user.family_id, prompt })
+        body: JSON.stringify({ familyId: user.family_id, prompt, prioritizeFridge })
       });
       const data = await res.json();
       if (data.success) {
@@ -159,6 +160,18 @@ const AiRecipeModal: React.FC<AiRecipeModalProps> = ({ isOpen, onClose, onRecipe
         </div>
 
         <div className="modal-body ai-modal-body">
+            <div className="ai-toggle-group">
+                <span className="ai-toggle-label">Ưu tiên sử dụng đồ trong tủ lạnh</span>
+                <label className="ai-switch">
+                    <input 
+                        type="checkbox" 
+                        checked={prioritizeFridge} 
+                        onChange={(e) => setPrioritizeFridge(e.target.checked)} 
+                    />
+                    <span className="ai-slider"></span>
+                </label>
+            </div>
+
             <div className="ai-input-group">
                 <label>Bạn đang muốn ăn gì?</label>
                 <textarea 
