@@ -34,7 +34,7 @@ export const updateRole = async (req: AuthRequest, res: Response) => {
   const { role } = req.body;
   const userId = req.user?.id;
 
-  if (!role || (role !== 'Homemaker' && role !== 'Member')) {
+  if (role !== null && role !== 'Homemaker' && role !== 'Member') {
     return res.status(400).json({ message: 'Vai trò không hợp lệ' });
   }
 

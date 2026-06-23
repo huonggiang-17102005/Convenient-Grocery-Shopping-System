@@ -62,7 +62,7 @@ export const leaveFamily = async (userId: string, familyId: string) => {
     throw new BadRequestError('Bạn là Homemaker. Vui lòng nhường quyền cho người khác trước khi rời nhóm.');
   }
 
-  const updatedUser = await familyRepo.removeUserFromFamily(userId);
+  const updatedUser = await familyRepo.leaveFamilyRepo(userId);
 
   const actorName = currentUser.full_name || currentUser.email || 'Thành viên';
   await notificationService.createNotification(
@@ -94,7 +94,12 @@ export const removeMember = async (currentUserId: string, targetUserId: string, 
     throw new NotFoundError('Thành viên này không tồn tại trong gia đình');
   }
 
-  const updatedUser = await familyRepo.removeUserFromFamily(targetUserId);
+  // Gửi sự kiện SSE trước khi xóa dữ liệu trong DB
+  import('./sse.service.js').then(sseService => {
+    sseService.broadcastToUser(familyId, targetUserId, 'KICKED_FROM_FAMILY', { message: 'Bạn đã bị xóa khỏi gia đình' });
+  }).catch(() => {});
+
+  const updatedUser = await familyRepo.kickUserRepo(targetUserId);
 
   const actorName = targetUser.full_name || targetUser.email || 'Thành viên';
   await notificationService.createNotification(

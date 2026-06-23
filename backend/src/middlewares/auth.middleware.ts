@@ -10,7 +10,12 @@ export interface AuthRequest extends Request {
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
+  let token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
+
+  // Cho phép lấy token từ query parameter để hỗ trợ EventSource (SSE)
+  if (!token && req.query.token) {
+    token = req.query.token as string;
+  }
 
   if (!token) {
     res.status(401).json({ message: 'Không tìm thấy Token xác thực' });

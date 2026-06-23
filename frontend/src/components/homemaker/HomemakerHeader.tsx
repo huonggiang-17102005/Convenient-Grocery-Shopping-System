@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { NotificationBell } from '../common/NotificationBell';
+import { NotificationBell } from '../common/notifications/NotificationBell';
 import './HomemakerLayout.css';
 
 const HomemakerHeader: React.FC = () => {

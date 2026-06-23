@@ -177,15 +177,49 @@ export const updateFridgeItem = async (id: string, data: Partial<FridgeItem>, us
   // Cập nhật thông thường
   const updatedItem = await fridgeRepo.updateItem(id, data);
 
-  if (user && data.quantity !== undefined && data.quantity !== existingItem.quantity) {
+  if (user) {
     const actorName = user.full_name || user.email || 'Một thành viên';
-    await notificationService.createNotification(
-      existingItem.family_id!,
-      'UPDATE',
-      'Cập nhật thực phẩm',
-      `${actorName} đã cập nhật số lượng ${existingItem.name} từ ${existingItem.quantity} thành ${data.quantity} ${existingItem.unit || ''}.`,
-      { user_id: user.id, actor_name: actorName, item_name: existingItem.name, old_qty: existingItem.quantity, new_qty: data.quantity, unit: existingItem.unit }
-    );
+    const changes: string[] = [];
+
+    if (data.name !== undefined && data.name !== existingItem.name) {
+      changes.push(`tên từ '${existingItem.name}' thành '${data.name}'`);
+    }
+    if (data.category !== undefined && data.category !== existingItem.category) {
+      changes.push(`danh mục từ '${existingItem.category || 'Khác'}' thành '${data.category}'`);
+    }
+    if (data.location !== undefined && data.location !== existingItem.location) {
+      changes.push(`vị trí từ '${existingItem.location || 'Ngăn mát'}' thành '${data.location}'`);
+    }
+    if (data.quantity !== undefined && data.quantity !== existingItem.quantity) {
+      changes.push(`số lượng từ ${existingItem.quantity} thành ${data.quantity} ${existingItem.unit || ''}`.trim());
+    }
+    if (data.expiration_date !== undefined) {
+      // Compare dates using vi-VN format
+      const oldDate = new Date(existingItem.expiration_date).toLocaleDateString('vi-VN');
+      const newDate = new Date(data.expiration_date).toLocaleDateString('vi-VN');
+      if (oldDate !== newDate) {
+        changes.push(`hạn sử dụng từ '${oldDate}' thành '${newDate}'`);
+      }
+    }
+    if (data.image_url !== undefined && data.image_url !== existingItem.image_url) {
+      changes.push(`ảnh thực phẩm`);
+    }
+
+    if (changes.length > 0) {
+      const changesText = changes.join(', ');
+      await notificationService.createNotification(
+        existingItem.family_id!,
+        'UPDATE',
+        'Cập nhật thực phẩm',
+        `${actorName} đã cập nhật thông tin ${existingItem.name}: đổi ${changesText}.`,
+        { 
+          user_id: user.id, 
+          actor_name: actorName, 
+          item_name: existingItem.name,
+          changes: changes
+        }
+      );
+    }
   }
 
   return { deleted: false, item: updatedItem };

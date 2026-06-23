@@ -19,11 +19,7 @@ const ShoppingListContext = createContext<ShoppingListContextType>({
 
 export const useShoppingListContext = () => useContext(ShoppingListContext);
 
-import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const ShoppingListProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
@@ -56,26 +52,7 @@ export const ShoppingListProvider: React.FC<{ children: React.ReactNode }> = ({ 
     refreshShoppingList();
   }, [refreshShoppingList]);
 
-  // Lắng nghe Realtime tự động đồng bộ
-  useEffect(() => {
-    if (!user?.family_id || !supabaseUrl || !supabaseKey) return;
-    
-    const channel = supabase
-      .channel(`public:shopping_list_items`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'shopping_list_items' },
-        (payload) => {
-           console.log('🔄 [Supabase Realtime] Shopping list changed:', payload);
-           refreshShoppingList();
-        }
-      )
-      .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.family_id, refreshShoppingList]);
 
   // Cập nhật localStorage mỗi khi items thay đổi
   useEffect(() => {

@@ -21,7 +21,6 @@ import ConfirmModal from './modals/ConfirmModal';
 import FamilySettingsModal from './modals/FamilySettingsModal';
 import type { ConfirmVariant } from './modals/ConfirmModal';
 import Toast from '@/components/common/Toast';
-import useRealtimeNoti from '../../hooks/useRealtimeNoti';
 import { useFamilyContext } from '../../contexts/FamilyContext';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -36,17 +35,7 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
     role: authUser?.role === 'Homemaker' ? 'Nội trợ' : 'Thành viên',
   };
 
-  // Gọi Hook Realtime để lắng nghe thông báo đổi quyền
-  useRealtimeNoti(authUser?.family_id, authUser?.id, async (newRole) => {
-    // Tải lại thông tin mới nhất
-    await refreshUser();
-    // Chuyển trang theo Role mới
-    if (newRole === 'Homemaker') {
-      navigate('/homemaker/dashboard');
-    } else {
-      navigate('/member/dashboard');
-    }
-  });
+
 
   // Lấy danh sách thành viên từ Context (đã được cache ở tầng Layout)
   const { familyMembers, setFamilyMembers } = useFamilyContext();

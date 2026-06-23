@@ -134,7 +134,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
 
   const handleCardClick = (item: FoodItem) => {
     setSelectedItem(item);
-    setModalMode(role === 'member' ? 'detail' : 'edit');
+    setModalMode('edit');
     setIsModalOpen(true);
   };
 
@@ -311,26 +311,24 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
         )}
       </div>
       
-      {role === 'homemaker' && (
-        <>
-          <button 
-            className="fab-button ai-fab" 
-            aria-label="AI Gợi ý nấu ăn" 
-            title="AI Gợi ý nấu ăn"
-            onClick={() => setIsAiModalOpen(true)}
-          >
-            <Sparkles size={24} />
-          </button>
-          <button 
-            className="fab-button" 
-            aria-label="Thêm thực phẩm" 
-            title="Thêm thực phẩm"
-            onClick={handleOpenAdd}
-          >
-            <Plus size={24} />
-          </button>
-        </>
-      )}
+      <>
+        <button 
+          className="fab-button ai-fab" 
+          aria-label="AI Gợi ý nấu ăn" 
+          title="AI Gợi ý nấu ăn"
+          onClick={() => setIsAiModalOpen(true)}
+        >
+          <Sparkles size={24} />
+        </button>
+        <button 
+          className="fab-button" 
+          aria-label="Thêm thực phẩm" 
+          title="Thêm thực phẩm"
+          onClick={handleOpenAdd}
+        >
+          <Plus size={24} />
+        </button>
+      </>
 
       <AiRecipeModal 
         isOpen={isAiModalOpen} 
@@ -352,6 +350,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
         mode={qtyModalMode}
         item={qtyModalItem}
         totalOtherLotsQuantity={totalOtherLotsQuantity}
+        role={role}
         onClose={() => setIsQtyModalOpen(false)}
         onConfirm={handleConfirmQty}
         onDifferentExpiry={handleDifferentExpiry}
@@ -360,6 +359,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
       <ConsumeConfirmModal
         isOpen={isConsumeModalOpen}
         itemName={consumeModalItem?.name || ''}
+        role={role}
         onClose={() => setIsConsumeModalOpen(false)}
         onConfirm={handleConfirmConsume}
       />

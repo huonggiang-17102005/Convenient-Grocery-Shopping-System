@@ -1,5 +1,6 @@
 import * as notificationRepo from '../repo/notification.repo.js';
 import { BadRequestError } from '../errors/CommonError.js';
+import * as sseService from './sse.service.js';
 
 export const createNotification = async (
   familyId: string,
@@ -21,13 +22,20 @@ export const createNotification = async (
     metadata
   });
 
+  // Gửi sự kiện qua SSE
+  if (userId) {
+    sseService.broadcastToUser(familyId, userId, 'NEW_NOTIFICATION', newNotification);
+  } else {
+    sseService.broadcastToFamily(familyId, 'NEW_NOTIFICATION', newNotification);
+  }
+
   return newNotification;
 };
 
-export const getFamilyNotifications = async (familyId: string, userId: string, limit: number = 20, offset: number = 0) => {
+export const getFamilyNotifications = async (familyId: string, userId: string, limit: number = 20, offset: number = 0, category?: string) => {
   if (!familyId) throw new BadRequestError('Thiếu thông tin gia đình (familyId)');
   if (!userId) throw new BadRequestError('Thiếu ID người dùng');
   
-  const notifications = await notificationRepo.fetchNotifications(familyId, userId, limit, offset);
+  const notifications = await notificationRepo.fetchNotifications(familyId, userId, limit, offset, category);
   return notifications;
 };
