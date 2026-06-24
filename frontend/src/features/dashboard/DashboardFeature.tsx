@@ -58,6 +58,8 @@ const mapFoodItemToExpiringCardProps = (item: any): IngredientCardProps => {
     category: item.category || 'Khác',
     categoryClass: getCategoryBgClass(item.category),
     daysLeft: item.daysRemaining || 0,
+    quantity: item.quantity,
+    unit: item.unit,
   };
 };
 

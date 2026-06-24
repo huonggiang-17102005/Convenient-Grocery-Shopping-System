@@ -11,6 +11,8 @@ export interface IngredientCardProps {
   category: string;
   categoryClass?: string;
   daysLeft: number;
+  quantity?: number;
+  unit?: string;
   onClick?: () => void;
 }
 
@@ -27,6 +29,8 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
   category,
   categoryClass,
   daysLeft,
+  quantity,
+  unit,
   onClick,
 }) => {
   const status = getExpiryStatus(daysLeft);
@@ -49,6 +53,12 @@ const IngredientCard: React.FC<IngredientCardProps> = ({
       <div className="ingredient-card__name-wrapper">
         <p className="ingredient-card__name">{name}</p>
       </div>
+
+      {quantity !== undefined && (
+        <div className="ingredient-card__quantity">
+          {quantity} {unit || ''}
+        </div>
+      )}
 
       <div className={`ingredient-card__expiry ingredient-card__expiry--${status}`}>
         Còn {daysLeft} ngày

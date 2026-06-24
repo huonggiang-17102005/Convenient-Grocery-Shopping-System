@@ -18,7 +18,7 @@ describe('Notification Service - Chức năng Thông báo', () => {
 
     const result = await getFamilyNotifications('fam1', 'user1', 20, 0);
     expect(result).toEqual(mockNotifs);
-    expect(notificationRepo.fetchNotifications).toHaveBeenCalledWith('fam1', 'user1', 20, 0);
+    expect(notificationRepo.fetchNotifications).toHaveBeenCalledWith('fam1', 'user1', 20, 0, undefined);
   });
 
   it('Nên báo lỗi nếu gọi lấy thông báo mà thiếu familyId', async () => {

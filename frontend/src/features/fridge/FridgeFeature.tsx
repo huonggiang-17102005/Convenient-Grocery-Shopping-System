@@ -253,12 +253,14 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
     }
   };
 
-  const filteredItems = items.filter(item => {
-    const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchStorage = activeStorage === 'Tất cả' || item.storageType === activeStorage;
-    const matchCategory = activeCategory === 'Tất cả' || item.category === activeCategory;
-    return matchSearch && matchStorage && matchCategory;
-  });
+  const filteredItems = items
+    .filter(item => {
+      const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchStorage = activeStorage === 'Tất cả' || item.storageType === activeStorage;
+      const matchCategory = activeCategory === 'Tất cả' || item.category === activeCategory;
+      return matchSearch && matchStorage && matchCategory;
+    })
+    .sort((a, b) => a.daysRemaining - b.daysRemaining);
 
   const selectedNames = items.filter(i => selectedIds.has(i.id)).map(i => i.name);
 

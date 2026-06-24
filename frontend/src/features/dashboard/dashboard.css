@@ -152,9 +152,19 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 140px; /* Cố định chiều cao như FoodCard */
+  height: 160px; /* Cố định chiều cao mới để chứa số lượng */
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ingredient-card__quantity {
+  font-size: 13px;
+  font-weight: 500;
+  color: #757575;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  margin-top: -4px;
+  margin-bottom: 2px;
+  text-align: left;
 }
 
 .ingredient-card:hover  { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
