@@ -59,3 +59,73 @@ export const fetchNotifications = async (familyId: string, userId: string, limit
 
   return { data: data as Notification[], count: count || 0 };
 };
+
+export const getUnreadCount = async (familyId: string, userId: string) => {
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('family_id', familyId)
+    .not('read_by', 'cs', `{${userId}}`);
+
+  if (error) {
+    console.error('Error getting unread count:', error);
+    throw new InternalServerError('Lỗi truy vấn DB khi lấy số lượng chưa đọc');
+  }
+
+  return count || 0;
+};
+
+export const markAsRead = async (notificationId: string, userId: string) => {
+  // Lấy mảng hiện tại
+  const { data: current, error: fetchErr } = await supabase
+    .from('notifications')
+    .select('read_by')
+    .eq('id', notificationId)
+    .single();
+    
+  if (fetchErr) throw new InternalServerError('Lỗi truy vấn DB');
+
+  const currentReadBy = current?.read_by || [];
+  if (currentReadBy.includes(userId)) return; // Đã đọc rồi
+
+  const newReadBy = [...currentReadBy, userId];
+
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read_by: newReadBy })
+    .eq('id', notificationId);
+
+  if (error) {
+    console.error('Error marking as read:', error);
+    throw new InternalServerError('Lỗi DB');
+  }
+};
+
+export const markAllAsRead = async (familyId: string, userId: string) => {
+  // 1. Lấy tất cả thông báo của gia đình mà user chưa đọc
+  const { data: unreadNotifs, error: fetchErr } = await supabase
+    .from('notifications')
+    .select('id, read_by')
+    .eq('family_id', familyId)
+    .not('read_by', 'cs', `{${userId}}`);
+
+  if (fetchErr) throw new InternalServerError('Lỗi truy vấn DB');
+  if (!unreadNotifs || unreadNotifs.length === 0) return;
+
+  // 2. Cập nhật mảng read_by cho từng thông báo
+  const updates = unreadNotifs.map(n => ({
+    id: n.id,
+    read_by: [...(n.read_by || []), userId]
+  }));
+
+  // Upsert để update hàng loạt
+  const { error } = await supabase
+    .from('notifications')
+    .upsert(updates);
+
+  if (error) {
+    console.error('Error marking all as read:', error);
+    throw new InternalServerError('Lỗi DB');
+  }
+};
+

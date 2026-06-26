@@ -7,5 +7,7 @@ const router = Router();
 router.use(authenticateToken);
 
 router.get('/', notificationController.getNotifications);
+router.post('/mark-all-read', notificationController.markAllAsRead);
+router.post('/:id/read', notificationController.markAsRead);
 
 export default router;

@@ -7,5 +7,5 @@ export interface AppNotification {
   message: string;
   metadata?: any;
   created_at: string;
-  is_read?: boolean; // Client-side only state
+  read_by?: string[];
 }

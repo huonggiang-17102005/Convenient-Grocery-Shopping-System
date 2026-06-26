@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { AppNotification } from '../types/notification';
+import { useAuth } from './AuthContext';
 
 export type NotificationCategory = 'all' | 'family' | 'fridge' | 'shopping' | 'recipe' | 'meal';
 
@@ -18,8 +19,8 @@ interface NotificationContextProps {
   refreshNotifications: (cat?: NotificationCategory) => Promise<void>;
   loadMoreNotifications: (cat?: NotificationCategory) => Promise<void>;
   markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-  checkIsRead: (id: string) => boolean;
+  markAllAsRead: () => Promise<void>;
+  checkIsRead: (notif: AppNotification) => boolean;
   checkCategoryHasUnread: (cat: NotificationCategory) => boolean;
   handleSSENotification: (payload?: any) => Promise<void>;
 }
@@ -36,6 +37,7 @@ const initialCategoryState = (): Record<NotificationCategory, CategoryData> => (
 });
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Record<NotificationCategory, CategoryData>>(() => {
     const cached = localStorage.getItem('cached_notifications_all');
     const state = initialCategoryState();
@@ -47,10 +49,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>('all');
 
-  const [readIds, setReadIds] = useState<Set<string>>(() => {
-    const cachedIds = localStorage.getItem('read_notification_ids');
-    return cachedIds ? new Set(JSON.parse(cachedIds)) : new Set();
-  });
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const limit = 20;
 
@@ -58,12 +57,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     localStorage.setItem('cached_notifications_all', JSON.stringify(categories.all.items));
   }, [categories.all.items]);
-
-  useEffect(() => {
-    localStorage.setItem('read_notification_ids', JSON.stringify(Array.from(readIds)));
-  }, [readIds]);
-
-  const [serverTotalCount, setServerTotalCount] = useState<number>(0);
 
   const fetchApi = async (offset: number, cat: NotificationCategory) => {
     const token = localStorage.getItem('token');
@@ -74,10 +67,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const json = await res.json();
-      return json.success ? { data: json.data, totalCount: json.totalCount || 0 } : { data: [], totalCount: 0 };
+      return json.success ? { data: json.data, totalCount: json.totalCount || 0, unreadCount: json.unreadCount || 0 } : { data: [], totalCount: 0, unreadCount: 0 };
     } catch (err) {
       console.error('Lỗi khi fetch notifications', err);
-      return { data: [], totalCount: 0 };
+      return { data: [], totalCount: 0, unreadCount: 0 };
     }
   };
 
@@ -90,9 +83,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const refreshNotifications = useCallback(async (cat: NotificationCategory = activeCategory) => {
     updateCategoryState(cat, prev => ({ ...prev, isLoading: true }));
-    const { data, totalCount } = await fetchApi(0, cat);
+    const { data, unreadCount: fetchedUnreadCount } = await fetchApi(0, cat);
     if (cat === 'all') {
-      setServerTotalCount(totalCount);
+      setUnreadCount(fetchedUnreadCount);
     }
     updateCategoryState(cat, prev => ({
       ...prev,
@@ -137,6 +130,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
 
       updateCategoryState('all', updater);
+      setUnreadCount(prev => prev + 1);
+      
       if (targetCat !== 'all') {
         updateCategoryState(targetCat, updater);
       }
@@ -191,41 +186,71 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, [activeCategory, categories, refreshNotifications]);
 
 
-  const markAsRead = useCallback((id: string) => {
-    setReadIds(prev => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-  }, []);
+  const markAsRead = useCallback(async (id: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      await fetch(`${API_URL}/notifications/${id}/read`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      
+      const cats: NotificationCategory[] = ['all', 'family', 'fridge', 'shopping', 'recipe', 'meal'];
+      cats.forEach(cat => {
+        updateCategoryState(cat, prev => {
+          const items = prev.items.map(n => 
+            n.id === id ? { ...n, read_by: [...(n.read_by || []), user?.id || ''] } : n
+          );
+          return { ...prev, items };
+        });
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }, [user?.id, updateCategoryState]);
 
-  const markAllAsRead = useCallback(() => {
-    setReadIds(prev => {
-      const next = new Set(prev);
-      categories.all.items.forEach(n => next.add(n.id));
-      return next;
-    });
-  }, [categories.all.items]);
+  const markAllAsRead = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      await fetch(`${API_URL}/notifications/mark-all-read`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      setUnreadCount(0);
+      
+      const cats: NotificationCategory[] = ['all', 'family', 'fridge', 'shopping', 'recipe', 'meal'];
+      cats.forEach(cat => {
+        updateCategoryState(cat, prev => {
+          const items = prev.items.map(n => ({ ...n, read_by: [...(n.read_by || []), user?.id || ''] }));
+          return { ...prev, items };
+        });
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }, [user?.id, updateCategoryState]);
 
-  const checkIsRead = useCallback((id: string) => {
-    return readIds.has(id);
-  }, [readIds]);
+  const checkIsRead = useCallback((notif: AppNotification) => {
+    if (!user?.id) return false;
+    return notif.read_by?.includes(user.id) || false;
+  }, [user?.id]);
 
   const checkCategoryHasUnread = useCallback((cat: NotificationCategory) => {
-    if (cat === 'all') return categories.all.items.some(n => !readIds.has(n.id));
+    if (cat === 'all') return categories.all.items.some(n => !checkIsRead(n));
 
     // Check locally in all items first
-    const hasUnreadInAll = categories.all.items.some(n => !readIds.has(n.id) && getCategoryForType(n.type) === cat);
+    const hasUnreadInAll = categories.all.items.some(n => !checkIsRead(n) && getCategoryForType(n.type) === cat);
     if (hasUnreadInAll) return true;
 
     // Fallback to checking the category's own items just in case
-    return categories[cat].items.some(n => !readIds.has(n.id));
-  }, [categories, readIds]);
-
-  // Calculate true unread count by subtracting local readIds size from server total count
-  // If serverTotalCount is less than the loaded unread count (unlikely), fallback to local calculate
-  const loadedUnreadCount = categories.all.items.filter(n => !readIds.has(n.id)).length;
-  const unreadCount = Math.max(loadedUnreadCount, serverTotalCount - readIds.size);
+    return categories[cat].items.some(n => !checkIsRead(n));
+  }, [categories, checkIsRead]);
 
   return (
     <NotificationContext.Provider value={{
