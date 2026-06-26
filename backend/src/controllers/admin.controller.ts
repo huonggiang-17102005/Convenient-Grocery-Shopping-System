@@ -850,6 +850,26 @@ export const approveRecipe = async (req: Request, res: Response): Promise<void> 
     if (error) {
       throw error;
     }
+
+    // Notify author
+    const { data: recipe } = await supabase.from('recipes').select('author_id, name').eq('id', id).single();
+    if (recipe && recipe.author_id) {
+      const { data: user } = await supabase.from('users').select('family_id').eq('id', recipe.author_id).single();
+      if (user && user.family_id) {
+        // We need to import notificationService. It might not be imported.
+        // Let's use the local import or require to be safe if not imported at top.
+        const notificationService = await import('../services/notification.service.js');
+        await notificationService.createNotification(
+          user.family_id,
+          'RECIPE_APPROVED',
+          'Công thức đã được duyệt',
+          `Công thức "<b>${recipe.name}</b>" của bạn đã được duyệt và đăng lên Cộng đồng.`,
+          { recipeId: id },
+          recipe.author_id
+        );
+      }
+    }
+
     res.status(200).json({ message: 'Duyệt công thức thành công' });
   } catch (error: any) {
     console.error('Error approving recipe:', error);

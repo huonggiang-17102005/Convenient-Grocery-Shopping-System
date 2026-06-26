@@ -293,6 +293,47 @@ export const checkExpiringItems = async (familyId: string) => {
   });
 };
 
+export const checkAndNotifyExpiring = async (familyId: string) => {
+  const items = await checkExpiringItems(familyId);
+  for (const item of items) {
+    if (item.quantity <= 0 || item.is_wasted) continue;
+    
+    // Check if notification already exists for this item
+    const { data: existing } = await supabase
+      .from('notifications')
+      .select('id')
+      .eq('family_id', familyId)
+      .eq('type', 'EXPIRE')
+      .contains('metadata', { item_id: item.id })
+      .maybeSingle();
+
+    if (!existing) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const expDate = new Date(item.expiration_date);
+      expDate.setHours(0, 0, 0, 0);
+      const daysLeft = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      
+      let message = '';
+      if (daysLeft < 0) {
+        message = `⚠️ Cảnh báo: ${item.name} đã hết hạn!`;
+      } else if (daysLeft === 0) {
+        message = `⚠️ Cảnh báo: ${item.name} sẽ hết hạn trong hôm nay.`;
+      } else {
+        message = `⚠️ Chú ý: ${item.name} sẽ hết hạn trong ${daysLeft} ngày tới.`;
+      }
+
+      await notificationService.createNotification(
+        familyId,
+        'EXPIRE',
+        'Thực phẩm sắp hết hạn',
+        message,
+        { item_name: item.name, quantity: item.quantity, unit: item.unit, item_id: item.id }
+      );
+    }
+  }
+};
+
 // Hàm này được gọi bởi Vercel Cronjob thông qua API
 export const runCronCheck = async () => {
   console.log('Bắt đầu chạy Cronjob kiểm tra thực phẩm hết hạn và sắp hết hạn...');

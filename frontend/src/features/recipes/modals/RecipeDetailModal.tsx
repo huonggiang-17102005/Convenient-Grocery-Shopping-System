@@ -17,6 +17,7 @@ interface RecipeDetailModalProps {
   onAddToShoppingList: (recipe: Recipe) => void;
   onSaveToFamily?: (recipe: Recipe) => void;
   onShare?: (recipe: Recipe) => void;
+  onAddToMenu?: (recipe: Recipe, mealType: 'breakfast' | 'lunch' | 'dinner') => void;
 }
 
 const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
@@ -32,7 +33,16 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   onAddToShoppingList,
   onSaveToFamily,
   onShare,
+  onAddToMenu,
 }) => {
+  const [showMealSelector, setShowMealSelector] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isOpen) {
+      setShowMealSelector(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen || !recipe) return null;
 
   const expiring = recipe.ingredients.filter((i) => i.isExpiringSoon);
@@ -173,6 +183,30 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
 
           {/* Action buttons */}
           <div className="recipe-detail-actions">
+            {onAddToMenu && (
+              <>
+                <button
+                  id="recipe-detail-add-menu-btn"
+                  type="button"
+                  className="recipe-detail-primary-btn"
+                  style={{ backgroundColor: '#FF9800', color: 'white', marginBottom: showMealSelector ? '8px' : '0' }}
+                  onClick={() => setShowMealSelector(!showMealSelector)}
+                >
+                  📅 Thêm vào thực đơn hôm nay
+                </button>
+                {showMealSelector && (
+                  <div className="meal-selector-popup" style={{ background: '#FFF3E0', padding: '12px', borderRadius: '8px', marginBottom: '16px', border: '1px dashed #FFB74D' }}>
+                    <p style={{ margin: '0 0 8px 0', fontWeight: 600, fontSize: '14px', color: '#E65100', textAlign: 'center' }}>Chọn bữa ăn cho hôm nay:</p>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => { onAddToMenu(recipe, 'breakfast'); setShowMealSelector(false); }} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #FFCC80', background: 'white', color: '#E65100', fontWeight: 'bold' }}>Sáng</button>
+                      <button onClick={() => { onAddToMenu(recipe, 'lunch'); setShowMealSelector(false); }} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #FFCC80', background: 'white', color: '#E65100', fontWeight: 'bold' }}>Trưa</button>
+                      <button onClick={() => { onAddToMenu(recipe, 'dinner'); setShowMealSelector(false); }} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: '1px solid #FFCC80', background: 'white', color: '#E65100', fontWeight: 'bold' }}>Tối</button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
             {showEditDelete && recipe.authorId === null && (
               <button
                 id="recipe-detail-save-family-btn"
