@@ -9,8 +9,6 @@ import DeleteConfirmModal from './modals/DeleteConfirmModal';
 import type { ShoppingItem, FoodCategory } from './types';
 import { shoppingService } from './shopping-list.service';
 import Toast from '@/components/common/Toast';
-import IngredientFormModal from '../fridge/modals/IngredientFormModal';
-import { fridgeService } from '../fridge/fridge.service';
 import { useShoppingListContext } from '../../contexts/ShoppingListContext';
 import { useFamilyContext } from '../../contexts/FamilyContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -40,9 +38,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
-  // Fridge Modal state for checked items
-  const [itemToSaveFridge, setItemToSaveFridge] = useState<ShoppingItem | null>(null);
-  const [isFridgeModalOpen, setIsFridgeModalOpen] = useState(false);
+
 
   // Toast state
   const [toastMessage, setToastMessage] = useState('');
@@ -64,44 +60,18 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
     const item = items.find(i => i.id === id);
     if (!item || item.isBought) return;
 
-    // Thay vì gọi API ngay, mở modal để lưu tủ lạnh trước
-    setItemToSaveFridge(item);
-    setIsFridgeModalOpen(true);
-  };
-
-  const handleSaveToFridge = async (itemData: any) => {
-    if (!itemToSaveFridge || !user?.family_id) return;
     const originalItems = items;
 
     // Optimistic Update
-    setItems(prev => prev.map(i => i.id === itemToSaveFridge.id ? { ...i, isBought: true } : i));
-    showToast('Đã mua xong và lưu vào tủ lạnh!');
-    setIsFridgeModalOpen(false);
-    
-    const savedItem = itemToSaveFridge;
-    setItemToSaveFridge(null);
+    setItems(prev => prev.map(i => i.id === id ? { ...i, isBought: true } : i));
+    showToast('Đã mua xong và tự động lưu vào tủ lạnh!');
 
     try {
-      // 1. Lưu vào tủ lạnh
-      await fridgeService.addFridgeItem({
-        family_id: user.family_id,
-        name: itemData.name,
-        quantity: itemData.quantity,
-        unit: itemData.unit,
-        category: itemData.category,
-        expiration_date: itemData.expiryDate || new Date().toISOString(),
-        location: itemData.storageType,
-        image_url: itemData.image,
-        image_public_id: itemData.imagePublicId
-      });
-      
-      // 2. Đánh dấu đã mua ở Shopping List
-      const updatedItem = await shoppingService.updateShoppingItem(savedItem.id, { isBought: true });
-      
-      setItems(prev => prev.map(i => i.id === savedItem.id ? updatedItem : i));
+      const updatedItem = await shoppingService.updateShoppingItem(id, { isBought: true });
+      setItems(prev => prev.map(i => i.id === id ? updatedItem : i));
     } catch (error) {
-      console.error('Error saving to fridge:', error);
-      showToast('Lỗi khi lưu vào tủ lạnh');
+      console.error('Error updating shopping item status:', error);
+      showToast('Lỗi khi cập nhật trạng thái đã mua');
       setItems(originalItems); // Rollback
     }
   };
@@ -340,17 +310,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
         onConfirm={handleDeleteConfirm}
       />
 
-      <IngredientFormModal
-        isOpen={isFridgeModalOpen}
-        mode="add"
-        item={itemToSaveFridge as any}
-        role={role}
-        onClose={() => {
-          setIsFridgeModalOpen(false);
-          setItemToSaveFridge(null);
-        }}
-        onSave={handleSaveToFridge}
-      />
+
     </div>
   );
 };

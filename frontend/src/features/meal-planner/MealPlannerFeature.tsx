@@ -290,6 +290,65 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     return MEALS.some(({ key }) => currentDay[key] && currentDay[key].length > 0);
   }, [currentDay]);
 
+  const handleAddToShoppingList = useCallback(async (recipe: Recipe) => {
+    const missing: Array<{
+      name: string;
+      category: string;
+      neededText: string;
+      defaultBuyAmount: string;
+      quantity?: number;
+      unit?: string;
+    }> = [];
+
+    recipe.ingredients.forEach(ing => {
+      const inFridge = (fridgeItems || []).find(f =>
+        (f.category || 'Khác').toLowerCase().trim() === (ing.category || 'Khác').toLowerCase().trim() &&
+        f.name.toLowerCase().trim() === ing.name.toLowerCase().trim()
+      );
+
+      if (ing.category === 'Gia vị') {
+        if (!inFridge) {
+          const roundedAmount = Math.round(ing.amount * 100) / 100;
+          missing.push({
+            name: ing.name,
+            category: ing.category,
+            neededText: 'Gia vị chưa có trong tủ lạnh',
+            defaultBuyAmount: ing.amount > 0 ? `${roundedAmount} ${ing.unit}` : '1 gói',
+            quantity: ing.amount > 0 ? roundedAmount : 1,
+            unit: ing.amount > 0 ? ing.unit : 'gói',
+          });
+        }
+      } else {
+        const available = inFridge ? inFridge.quantity : 0;
+        if (available < ing.amount) {
+          const diff = ing.amount - available;
+          const roundedAmount = Math.round(ing.amount * 100) / 100;
+          const roundedAvailable = Math.round(available * 100) / 100;
+          const roundedDiff = Math.round(diff * 100) / 100;
+          missing.push({
+            name: ing.name,
+            category: ing.category,
+            neededText: `Cần ${roundedAmount} ${ing.unit} (Trong tủ: ${roundedAvailable} ${ing.unit})`,
+            defaultBuyAmount: `${roundedDiff} ${ing.unit}`,
+            quantity: roundedDiff,
+            unit: ing.unit,
+          });
+        }
+      }
+    });
+
+    if (missing.length === 0) {
+      setToastMsg('Gia đình đã có đầy đủ nguyên liệu trong tủ lạnh cho món ăn này!');
+      setToastTrigger(prev => prev + 1);
+      setIsRecipeModalOpen(false);
+      return;
+    }
+
+    setShoppingConfirmIngredients(missing);
+    setIsShoppingConfirmOpen(true);
+    setIsRecipeModalOpen(false);
+  }, [fridgeItems]);
+
   const handleConsolidateMissing = useCallback(() => {
     const missing: Array<{
       name: string;
@@ -357,7 +416,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           missing.push({
             name: neededItem.name,
             category: neededItem.category,
-            neededText: `Cần ${roundedAmount}${neededItem.unit} (Trong tủ: ${roundedAvailable}${neededItem.unit})`,
+            neededText: `Cần ${roundedAmount} ${neededItem.unit} (Trong tủ: ${roundedAvailable} ${neededItem.unit})`,
             defaultBuyAmount: `${roundedDiff} ${neededItem.unit}`,
             quantity: roundedDiff,
             unit: neededItem.unit,
@@ -613,7 +672,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           isOpen={isRecipeModalOpen}
           recipe={selectedRecipe}
           showEditDelete={false}
-          showShoppingAndCook={false}
+          showShoppingAndCook={true}
           onClose={() => {
             setIsRecipeModalOpen(false);
             setSelectedRecipe(null);
@@ -621,7 +680,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           onEdit={() => {}}
           onDelete={() => {}}
           onToggleFavorite={() => {}}
-          onAddToShoppingList={() => {}}
+          onAddToShoppingList={handleAddToShoppingList}
         />
       )}
 
