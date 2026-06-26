@@ -3,6 +3,7 @@ import * as inventoryLogRepo from '../repo/inventoryLog.repo.js';
 import * as notificationService from './notification.service.js';
 import { BadRequestError, NotFoundError } from '../errors/CommonError.js';
 import type { FridgeItem } from '../models/FridgeItem.js';
+import supabase from '../config/db.config.js';
 
 export const getFamilyFridge = async (familyId: string) => {
   if (!familyId) {
@@ -282,6 +283,47 @@ export const checkExpiringItems = async (familyId: string) => {
   });
 
   return expiringItems;
+};
+
+export const checkAndNotifyExpiring = async (familyId: string) => {
+  const items = await checkExpiringItems(familyId);
+  for (const item of items) {
+    if (item.quantity <= 0 || item.is_wasted) continue;
+    
+    // Check if notification already exists for this item
+    const { data: existing } = await supabase
+      .from('notifications')
+      .select('id')
+      .eq('family_id', familyId)
+      .eq('type', 'EXPIRE')
+      .contains('metadata', { item_id: item.id })
+      .maybeSingle();
+
+    if (!existing) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const expDate = new Date(item.expiration_date);
+      expDate.setHours(0, 0, 0, 0);
+      const daysLeft = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      
+      let message = '';
+      if (daysLeft < 0) {
+        message = `⚠️ Cảnh báo: ${item.name} đã hết hạn!`;
+      } else if (daysLeft === 0) {
+        message = `⚠️ Cảnh báo: ${item.name} sẽ hết hạn trong hôm nay.`;
+      } else {
+        message = `⚠️ Chú ý: ${item.name} sẽ hết hạn trong ${daysLeft} ngày tới.`;
+      }
+
+      await notificationService.createNotification(
+        familyId,
+        'EXPIRE',
+        'Thực phẩm sắp hết hạn',
+        message,
+        { item_name: item.name, quantity: item.quantity, unit: item.unit, item_id: item.id }
+      );
+    }
+  }
 };
 
 // Hàm này được gọi bởi Vercel Cronjob thông qua API

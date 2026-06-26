@@ -6,6 +6,11 @@ export const getByFamilyId = async (req: Request, res: Response) => {
   const { familyId } = req.params as { familyId: string };
   const items = await fridgeService.getFamilyFridge(familyId);
   
+  // Async check for expiring items and push notifications
+  fridgeService.checkAndNotifyExpiring(familyId).catch(err => {
+    console.error('Error checking expiring items:', err);
+  });
+  
   return res.status(200).json({
     success: true,
     data: items

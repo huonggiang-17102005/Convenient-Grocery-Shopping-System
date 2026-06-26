@@ -8,6 +8,7 @@ interface RecipeCardProps {
   recipe: Recipe;
   onClick: (recipe: Recipe) => void;
   onToggleFavorite: (recipeId: string) => void;
+  showStatus?: boolean;
 }
 
 const RecipeCard: React.FC<RecipeCardProps> = ({
@@ -60,9 +61,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           <div className="recipe-card-author" style={{ fontSize: '11.5px', color: '#1A1A1A', fontWeight: '600', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span>👤</span>
             <span>
-              {recipe.visibility === 'Public'
+              {showStatus && recipe.visibility === 'Public'
                 ? 'Đã duyệt (Cộng đồng)'
-                : recipe.visibility === 'Pending'
+                : showStatus && recipe.visibility === 'Pending'
                 ? 'Đang chờ duyệt'
                 : (recipe.authorName || (recipe.authorId === null ? 'Hệ thống' : 'Gia đình'))}
             </span>

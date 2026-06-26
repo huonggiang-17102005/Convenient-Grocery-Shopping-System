@@ -37,7 +37,7 @@ export const fetchNotifications = async (familyId: string, userId: string, limit
         types = ['TASK_ASSIGN', 'TASK_UNASSIGN', 'TASK_COMPLETE', 'TASK_DELETE', 'TASK_OVERDUE'];
         break;
       case 'recipe':
-        types = ['LIKE'];
+        types = ['LIKE', 'RECIPE_APPROVED'];
         break;
       case 'meal':
         types = ['MEAL_PLAN', 'MEAL_PLAN_ADD', 'MEAL_PLAN_REMOVE'];
