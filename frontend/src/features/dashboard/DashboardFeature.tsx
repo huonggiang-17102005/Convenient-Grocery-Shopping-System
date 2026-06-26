@@ -95,13 +95,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   const { todayMeals, todayIngredients } = React.useMemo(() => getTodayPlan(), [getTodayPlan]);
 
   const expiringItems = React.useMemo(() => {
+    const warningDays = family?.expiration_warning_days || 3;
     return fridgeItems
       .filter(item => {
         // daysRemaining is already calculated in FridgeContext
-        return item.daysRemaining !== undefined && item.daysRemaining <= 3 && item.daysRemaining > 0;
+        return item.daysRemaining !== undefined && item.daysRemaining <= warningDays && item.daysRemaining > 0;
       })
       .map(mapFoodItemToExpiringCardProps);
-  }, [fridgeItems]);
+  }, [fridgeItems, family?.expiration_warning_days]);
   // Selected item for ExpireItemModal
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 

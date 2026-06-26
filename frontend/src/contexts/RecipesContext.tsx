@@ -34,7 +34,7 @@ const RecipesContext = createContext<RecipesContextType>({
 export const useRecipesContext = () => useContext(RecipesContext);
 
 export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, family } = useAuth();
   const { items: fridgeItems } = useFridgeContext();
 
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -45,8 +45,9 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // 1. Lọc ra các đồ sắp hết hạn trong tủ lạnh
   const expiringFridgeItems = useMemo(() => {
-    return (fridgeItems || []).filter((item) => item.daysRemaining != null && item.daysRemaining <= 3);
-  }, [fridgeItems]);
+    const warningDays = family?.expiration_warning_days || 3;
+    return (fridgeItems || []).filter((item) => item.daysRemaining != null && item.daysRemaining <= warningDays);
+  }, [fridgeItems, family?.expiration_warning_days]);
 
   // 2. Hàm map cờ ưu tiên vào từng công thức
   const mapRecipePriority = useCallback(
