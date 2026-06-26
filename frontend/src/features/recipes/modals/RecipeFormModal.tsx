@@ -6,6 +6,7 @@ import { Camera, Image as ImageIcon } from 'lucide-react';
 import type { Recipe, Ingredient, CookingStep, DifficultyLevel } from '../types';
 import ImageWithFallback from '../../../components/common/ImageWithFallback';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
+import { validateFoodName } from '../../../utils/nameValidation';
 import CustomSelect from '../../../components/common/CustomSelect';
 import { fridgeService } from '../../fridge/fridge.service';
 import { recipesService } from '../recipes.service';
@@ -83,6 +84,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   const [imageUrl, setImageUrl] = useState(() => (mode === 'edit' && recipe ? recipe.imageUrl || '' : ''));
   const [imagePublicId, setImagePublicId] = useState(() => (mode === 'edit' && recipe ? recipe.imagePublicId || '' : ''));
   const [isUploading, setIsUploading] = useState(false);
+  const [nameError, setNameError] = useState('');
   
   const [calories, setCalories] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.calories || '' : ''));
   const [protein, setProtein] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.protein || '' : ''));
@@ -221,10 +223,33 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   };
 
   const handleSubmit = () => {
+    if (name.trim()) {
+      const recipeNameValidation = validateFoodName(name);
+      if (!recipeNameValidation.isValid) {
+        alert(`Tên món ăn không hợp lệ: ${recipeNameValidation.error}`);
+        return;
+      }
+    }
+
     const validIngredients = ingredients.filter((i) => i.name.trim() || i.amount > 0 || i.category);
     const hasIncompleteIngredient = validIngredients.some(i => !i.name.trim() || !i.category || !i.unit);
     
     const validSteps = steps.filter((s) => s.description.trim());
+
+    const finalIngredients = [
+      ...validIngredients,
+      ...spices.filter((s) => s.name.trim()),
+    ];
+
+    for (const ing of finalIngredients) {
+      if (ing.name.trim()) {
+        const validation = validateFoodName(ing.name);
+        if (!validation.isValid) {
+          alert(`Lỗi ở thành phần "${ing.name}": ${validation.error}`);
+          return;
+        }
+      }
+    }
 
     if (!name.trim() || !servings || validIngredients.length === 0 || validSteps.length === 0 || !cookTime || !difficulty) {
       alert('Vui lòng điền đầy đủ các thông tin bắt buộc (*)');
@@ -235,11 +260,6 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
       alert('Vui lòng điền đầy đủ Tên, Phân loại và Đơn vị cho các nguyên liệu đã nhập!');
       return;
     }
-
-    const finalIngredients = [
-      ...validIngredients,
-      ...spices.filter((s) => s.name.trim()),
-    ];
 
     onSubmit({
       name: name.trim(),
@@ -293,8 +313,20 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
               className="form-input"
               placeholder="Thịt bò xào cà chua"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setName(val);
+                if (val.trim()) {
+                  const validation = validateFoodName(val);
+                  setNameError(validation.isValid ? '' : validation.error || '');
+                } else {
+                  setNameError('');
+                }
+              }}
             />
+            {nameError && (
+              <span style={{ color: '#D32F2F', fontSize: 12, marginTop: 4, display: 'block' }}>{nameError}</span>
+            )}
           </div>
 
           {/* Cook time & difficulty */}
