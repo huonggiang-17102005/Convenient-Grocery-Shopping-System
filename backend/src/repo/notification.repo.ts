@@ -65,7 +65,7 @@ export const getUnreadCount = async (familyId: string, userId: string) => {
     .from('notifications')
     .select('*', { count: 'exact', head: true })
     .eq('family_id', familyId)
-    .not('read_by', 'cs', `{${userId}}`);
+    .not('read_by', 'cs', [userId]);
 
   if (error) {
     console.error('Error getting unread count:', error);
@@ -107,7 +107,7 @@ export const markAllAsRead = async (familyId: string, userId: string) => {
     .from('notifications')
     .select('id, read_by')
     .eq('family_id', familyId)
-    .not('read_by', 'cs', `{${userId}}`);
+    .not('read_by', 'cs', [userId]);
 
   if (fetchErr) throw new InternalServerError('Lỗi truy vấn DB');
   if (!unreadNotifs || unreadNotifs.length === 0) return;
