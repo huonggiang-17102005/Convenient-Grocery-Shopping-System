@@ -174,8 +174,8 @@ export const getUsersList = async (req: Request, res: Response): Promise<void> =
 
       return {
         id: u.id,
-        // Create a display name from email if name doesn't exist
-        name: u.email ? u.email.split('@')[0] : 'Không rõ',
+        // Use full_name if available, otherwise fallback to email prefix
+        name: u.full_name || (u.email ? u.email.split('@')[0] : 'Không rõ'),
         email: u.email,
         role: role,
         group: groupName,
