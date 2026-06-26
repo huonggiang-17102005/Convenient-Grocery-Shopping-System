@@ -118,7 +118,7 @@ export const updateShoppingItem = async (familyId: string, itemId: string, curre
 
   // Notification: TASK_COMPLETE
   if (updateData.is_bought && !existing.is_bought) {
-    await syncItemToFridge(familyId, updated);
+    await syncItemToFridge(familyId, updated, data.location, data.expirationDate);
 
     // Báo cho toàn gia đình
     const currentUser = await userRepo.findById(currentUserId);
@@ -163,13 +163,15 @@ export const deleteShoppingItem = async (familyId: string, itemId: string, curre
 };
 
 // Helper function to sync a bought shopping item to fridge_items table
-async function syncItemToFridge(familyId: string, item: any) {
+async function syncItemToFridge(familyId: string, item: any, customLocation?: string, customExpirationDate?: string) {
   try {
     const fridgeItems = await fridgeRepo.getItemsByFamilyId(familyId);
     
     const existing = fridgeItems.find(f => 
       f.name.toLowerCase().trim() === item.name.toLowerCase().trim() &&
-      f.category?.toLowerCase().trim() === item.category.toLowerCase().trim()
+      f.category?.toLowerCase().trim() === item.category.toLowerCase().trim() &&
+      (!customLocation || f.location === customLocation) &&
+      (!customExpirationDate || f.expiration_date === customExpirationDate)
     );
 
     if (existing) {
@@ -193,8 +195,11 @@ async function syncItemToFridge(familyId: string, item: any) {
         category: item.category,
         image_url: item.image_url || null,
         image_public_id: item.image_public_id || null,
-        location: item.category === 'Thịt cá' ? 'Ngăn đông' : 'Ngăn mát',
-        expiration_date: expiry.toISOString().split('T')[0] as string,
+        location: customLocation || (
+          item.category === 'Thịt cá' ? 'Ngăn đông' :
+          (item.category === 'Đồ khô' || item.category === 'Gia vị') ? 'Khô' : 'Ngăn mát'
+        ),
+        expiration_date: customExpirationDate || (expiry.toISOString().split('T')[0] as string),
         is_wasted: false
       };
 
