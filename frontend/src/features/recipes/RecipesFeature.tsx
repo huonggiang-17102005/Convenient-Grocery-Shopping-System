@@ -42,7 +42,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   const [subTab, setSubTab] = useState<'family' | 'system'>('family');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
+  const [pendingPosts, setPendingPosts] = useState<PendingPost[]>([]);
   const [selectedIngredients, setSelectedIngredients] = useState<FilterIngredient[]>([]);
   const location = useLocation();
 
@@ -442,16 +442,20 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     try {
       const pendingRecipes = await recipesService.getUserPendingRecipes();
       if (pendingRecipes.length > 0) {
-        const firstPending = pendingRecipes[0];
-        setPendingPost({
-          id: firstPending.id,
-          recipe: firstPending,
-          submittedAt: firstPending.createdAt || new Date().toISOString(),
+        // Sort newest first
+        const sortedRecipes = [...pendingRecipes].sort(
+          (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+        const mappedPosts: PendingPost[] = sortedRecipes.map(recipe => ({
+          id: recipe.id,
+          recipe: recipe,
+          submittedAt: recipe.createdAt || new Date().toISOString(),
           status: 'pending',
-          description: firstPending.description || '',
-        });
+          description: recipe.description || '',
+        }));
+        setPendingPosts(mappedPosts);
       } else {
-        setPendingPost(null);
+        setPendingPosts([]);
       }
     } catch (error) {
       console.error('Error fetching pending recipes:', error);
@@ -462,21 +466,15 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     fetchPendingPost();
   }, [fetchPendingPost, activeTab]);
 
-  const handleCancelPending = useCallback(async () => {
-    if (pendingPost) {
-      try {
-        await recipesService.deleteRecipe(pendingPost.id);
-        showToast('Đã hủy chia sẻ công thức thành công!');
-      } catch (error) {
-        console.error('Error deleting pending recipe:', error);
-      }
+  const handleCancelPending = useCallback(async (postId: string) => {
+    try {
+      await recipesService.deleteRecipe(postId);
+      showToast('Đã hủy chia sẻ công thức thành công!');
+      setPendingPosts(prev => prev.filter(post => post.id !== postId));
+    } catch (error) {
+      console.error('Error deleting pending recipe:', error);
     }
-    if (pendingTimeoutRef.current) {
-      clearTimeout(pendingTimeoutRef.current);
-      pendingTimeoutRef.current = null;
-    }
-    setPendingPost(null);
-  }, [pendingPost, showToast]);
+  }, [showToast]);
 
   const handleShareSubmit = useCallback(
     async (description: string, recipeData: Omit<Recipe, 'id' | 'isFavorited'>) => {
@@ -596,7 +594,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         {activeTab === 'community' && (
           <TabCommunity
             posts={filteredCommunityPosts}
-            pendingPost={pendingPost}
+            pendingPosts={pendingPosts}
             role={role}
             onPostRecipeClick={handleCommunityPostClick}
             onToggleLike={handleToggleCommunityLike}

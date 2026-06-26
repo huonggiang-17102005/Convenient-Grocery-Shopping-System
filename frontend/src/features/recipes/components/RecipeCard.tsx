@@ -15,6 +15,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   recipe,
   onClick,
   onToggleFavorite,
+  showStatus,
 }) => {
   return (
     <div

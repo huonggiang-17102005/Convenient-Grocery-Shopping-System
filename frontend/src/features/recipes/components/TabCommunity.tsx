@@ -7,17 +7,17 @@ import PendingPostCard from './PendingPostCard';
 
 interface TabCommunityProps {
   posts: CommunityPost[];
-  pendingPost?: PendingPost | null;
+  pendingPosts?: PendingPost[];
   role?: 'homemaker' | 'member';
   onPostRecipeClick: (post: CommunityPost) => void;
   onToggleLike: (postId: string) => void;
   onShareClick: () => void;
-  onCancelPending?: () => void;
+  onCancelPending?: (postId: string) => void;
 }
 
 const TabCommunity: React.FC<TabCommunityProps> = ({
   posts,
-  pendingPost,
+  pendingPosts = [],
   role,
   onPostRecipeClick,
   onToggleLike,
@@ -26,15 +26,16 @@ const TabCommunity: React.FC<TabCommunityProps> = ({
   return (
     <div className="recipe-tab-content">
       {/* Pending post notice */}
-      {pendingPost && (
+      {pendingPosts.map(post => (
         <PendingPostCard
-          recipeEmoji={pendingPost.recipe.emoji}
-          recipeName={pendingPost.recipe.name}
-          recipeImageUrl={pendingPost.recipe.imageUrl}
+          key={post.id}
+          recipeEmoji={post.recipe.emoji}
+          recipeName={post.recipe.name}
+          recipeImageUrl={post.recipe.imageUrl}
           role={role}
-          onCancel={onCancelPending || (() => {})}
+          onCancel={onCancelPending ? () => onCancelPending(post.id) : () => {}}
         />
-      )}
+      ))}
 
       {/* Posts list */}
       {posts.length === 0 ? (
