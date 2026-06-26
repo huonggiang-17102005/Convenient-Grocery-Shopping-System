@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import type { MealKey } from './types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -24,6 +24,11 @@ export const mealPlannerService = {
   addMealPlan: async (recipeIds: string | string[], date: string, mealType: MealKey, peopleCount: number) => {
     const payload = Array.isArray(recipeIds) ? recipeIds : [recipeIds];
     const response = await api.post('', { recipeId: payload, date, mealType, peopleCount });
+    return response.data;
+  },
+
+  updateServings: async (date: string, mealType: MealKey, peopleCount: number) => {
+    const response = await api.patch('/servings', { date, mealType, peopleCount });
     return response.data;
   },
 

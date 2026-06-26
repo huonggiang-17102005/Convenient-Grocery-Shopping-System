@@ -8,6 +8,8 @@ router.use(authenticateToken);
 
 router.get('/', mealPlannerController.getMealPlan);
 router.post('/', mealPlannerController.addMealPlan);
+router.patch('/servings', mealPlannerController.updateServings);
 router.delete('/:id', mealPlannerController.removeMealPlan);
 
 export default router;
+

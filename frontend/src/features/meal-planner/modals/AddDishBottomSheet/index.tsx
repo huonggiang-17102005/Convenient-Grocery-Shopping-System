@@ -12,6 +12,10 @@ interface AddDishBottomSheetProps {
   availableRecipes: Recipe[];
   /** Dishes already added to this meal (to pre-check them) */
   existingDishes: Recipe[];
+  /** If true, skip the servings selection step (meal already has dishes with a set people_count) */
+  skipServings?: boolean;
+  /** Pre-fill the people count picker */
+  initialPeopleCount?: number;
   onClose: () => void;
   onConfirm: (selected: Recipe[], peopleCount: number) => void;
 }
@@ -20,6 +24,8 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
   isOpen,
   availableRecipes,
   existingDishes,
+  skipServings = false,
+  initialPeopleCount = 1,
   onClose,
   onConfirm,
 }) => {
@@ -28,7 +34,12 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(existingDishes.map((d) => d.id)));
 
   const [servingsModalOpen, setServingsModalOpen] = useState(false);
-  const [peopleCount, setPeopleCount] = useState(1);
+  const [peopleCount, setPeopleCount] = useState(initialPeopleCount);
+
+  // Sync initialPeopleCount if parent changes it
+  React.useEffect(() => {
+    setPeopleCount(initialPeopleCount);
+  }, [initialPeopleCount]);
 
   // Close on Escape
   useEffect(() => {
@@ -90,7 +101,13 @@ const AddDishBottomSheet: React.FC<AddDishBottomSheetProps> = ({
   );
 
   const handleNextStep = () => {
-    setServingsModalOpen(true);
+    if (skipServings) {
+      // Skip the servings modal and confirm immediately with existing people count
+      onConfirm(newlySelectedRecipes, peopleCount);
+      onClose();
+    } else {
+      setServingsModalOpen(true);
+    }
   };
 
   const handleFinalConfirm = () => {

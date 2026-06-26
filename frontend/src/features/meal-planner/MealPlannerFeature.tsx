@@ -113,6 +113,11 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
   const [isShoppingConfirmOpen, setIsShoppingConfirmOpen] = useState(false);
   const [shoppingConfirmIngredients, setShoppingConfirmIngredients] = useState<any[]>([]);
 
+  // Servings change modal state
+  const [isServingsModalOpen, setIsServingsModalOpen] = useState(false);
+  const [servingsModalMealKey, setServingsModalMealKey] = useState<MealKey>('breakfast');
+  const [servingsModalCount, setServingsModalCount] = useState(1);
+
   // Toast
   const [toastMsg,     setToastMsg]     = useState('');
   const [toastTrigger, setToastTrigger] = useState(0);
@@ -126,6 +131,47 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
   const openSheet = (mealKey: MealKey) => {
     setActiveMealKey(mealKey);
     setSheetOpen(true);
+  };
+
+  // Open the servings-change modal for a given meal
+  const handleChangeServings = (mealKey: MealKey) => {
+    const existing = currentDay[mealKey]?.[0]?.people_count ?? 1;
+    setServingsModalMealKey(mealKey);
+    setServingsModalCount(existing);
+    setIsServingsModalOpen(true);
+  };
+
+  // Confirm servings change from the modal
+  const handleServingsConfirm = async () => {
+    const activeDayTab = weekDays.find(d => d.key === activeDay);
+    if (!activeDayTab) return;
+    const year = new Date().getFullYear();
+    const [d, m] = activeDayTab.date!.split('/');
+    const dateStr = `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+
+    const cacheKey = getCacheKey();
+
+    // Optimistic: update people_count locally
+    setPlansByWeek(prev => {
+      const currentWeek = prev[cacheKey];
+      if (!currentWeek) return prev;
+      const updatedDay = { ...currentWeek[activeDay] };
+      updatedDay[servingsModalMealKey] = (updatedDay[servingsModalMealKey] || []).map(pm => ({
+        ...pm,
+        people_count: servingsModalCount
+      }));
+      return { ...prev, [cacheKey]: { ...currentWeek, [activeDay]: updatedDay } };
+    });
+
+    setIsServingsModalOpen(false);
+
+    try {
+      await mealPlannerService.updateServings(dateStr, servingsModalMealKey, servingsModalCount);
+    } catch (err) {
+      console.error('Lỗi cập nhật khẩu phần:', err);
+      setToastMsg('Có lỗi xảy ra khi cập nhật khẩu phần');
+      setToastTrigger(prev => prev + 1);
+    }
   };
 
   const handleConfirm = async (selected: Recipe[], peopleCount: number) => {
@@ -495,6 +541,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
               onAddDish={() => openSheet(key)}
               onRemoveDish={(dishId) => handleRemoveDish(key, dishId)}
               onClickCard={handleCardClick}
+              onChangeServings={() => handleChangeServings(key)}
             />
           ))}
         </div>
@@ -508,9 +555,49 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           mealKey={activeMealKey}
           availableRecipes={availableRecipes}
           existingDishes={currentDay[activeMealKey].map(pm => pm.recipe)}
+          skipServings={currentDay[activeMealKey].length > 0}
+          initialPeopleCount={currentDay[activeMealKey]?.[0]?.people_count ?? 1}
           onClose={() => setSheetOpen(false)}
           onConfirm={handleConfirm}
         />
+      )}
+
+      {/* ── Servings change modal ── */}
+      {isServingsModalOpen && (
+        <div className="mp-overlay" onClick={() => setIsServingsModalOpen(false)} aria-modal="true" role="dialog">
+          <div className="mp-bottom-sheet" onClick={e => e.stopPropagation()} style={{ padding: 0 }}>
+            <div style={{ width: '100%', paddingTop: 20, paddingBottom: 32, paddingLeft: 20, paddingRight: 20, background: 'white', borderTopLeftRadius: 20, borderTopRightRadius: 20, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
+              <div onClick={() => setIsServingsModalOpen(false)} style={{ width: '100%', justifyContent: 'center', alignItems: 'flex-start', display: 'flex', cursor: 'pointer', paddingBottom: 8 }}>
+                <div style={{ width: 40, height: 4, background: '#E0E0E0', borderRadius: 4 }} />
+              </div>
+              <div style={{ paddingTop: 16, flexDirection: 'column', display: 'flex' }}>
+                <div style={{ color: '#1A1A1A', fontSize: 18, fontFamily: 'Plus Jakarta Sans', fontWeight: '700', lineHeight: '24px' }}>Thay đổi khẩu phần</div>
+              </div>
+              <div style={{ paddingTop: 4 }}>
+                <div style={{ color: '#757575', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', lineHeight: '20px' }}>Cập nhật số người ăn cho bữa {MEALS.find(m => m.key === servingsModalMealKey)?.title?.toLowerCase()}.</div>
+              </div>
+              <div style={{ width: '100%', paddingTop: 24, flexDirection: 'column', alignItems: 'center', display: 'flex' }}>
+                <div style={{ width: '100%', paddingLeft: 8, paddingRight: 8, justifyContent: 'space-between', alignItems: 'center', display: 'flex' }}>
+                  <button onClick={() => setServingsModalCount(prev => Math.max(1, prev - 1))} disabled={servingsModalCount <= 1} style={{ width: 44, height: 44, background: 'white', borderRadius: '50%', border: '1.27px solid #E0E0E0', justifyContent: 'center', alignItems: 'center', display: 'flex', cursor: 'pointer', padding: 0 }}>
+                    <span style={{ color: servingsModalCount > 1 ? '#1A1A1A' : '#E0E0E0', fontSize: 22, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>−</span>
+                  </button>
+                  <div style={{ flexDirection: 'column', alignItems: 'center', gap: 4, display: 'flex' }}>
+                    <div style={{ color: '#FF8A00', fontSize: 40, fontFamily: 'Plus Jakarta Sans', fontWeight: '700', lineHeight: '40px' }}>{servingsModalCount}</div>
+                    <div style={{ color: '#757575', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '400' }}>người ăn</div>
+                  </div>
+                  <button onClick={() => setServingsModalCount(prev => prev + 1)} style={{ width: 44, height: 44, background: 'white', borderRadius: '50%', border: '1.27px solid #FF8A00', justifyContent: 'center', alignItems: 'center', display: 'flex', cursor: 'pointer', padding: 0 }}>
+                    <span style={{ color: '#FF8A00', fontSize: 22, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>+</span>
+                  </button>
+                </div>
+              </div>
+              <div style={{ width: '100%', paddingTop: 24, flexDirection: 'column', display: 'flex' }}>
+                <button id="mp-servings-confirm-btn" onClick={handleServingsConfirm} style={{ width: '100%', height: 48, background: '#FF8A00', borderRadius: 100, border: 'none', color: 'white', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '700', cursor: 'pointer' }}>
+                  Xác nhận {servingsModalCount} người
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <AiRecipeModal
