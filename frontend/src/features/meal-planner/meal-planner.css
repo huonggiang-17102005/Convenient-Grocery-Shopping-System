@@ -354,6 +354,10 @@
   color: white !important;
 }
 
+.mp-weekday-tab--active .mp-weekday-tab__date {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
 /* ── Bottom Sheet Search/Filter ── */
 .mp-bottom-sheet {
   display: flex;

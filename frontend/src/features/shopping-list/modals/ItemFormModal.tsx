@@ -10,9 +10,10 @@ interface ItemFormModalProps {
   item: ShoppingItem | null;
   mode: 'create' | 'edit' | 'view';
   readOnly?: boolean;
+  defaultDeadlineDate?: string;
 }
 
-const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit, item, mode, readOnly = false }) => {
+const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit, item, mode, readOnly = false, defaultDeadlineDate }) => {
   const { categoriesData } = useCategoryContext();
 
   const [category, setCategory] = useState<FoodCategory>(() => {
@@ -55,7 +56,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
   const [deadlineDate, setDeadlineDate] = useState(() => {
     if ((mode === 'edit' || mode === 'view') && item) return item.deadlineDate;
-    return '';
+    return defaultDeadlineDate || '';
   });
 
   const [deadlineTime, setDeadlineTime] = useState(() => {

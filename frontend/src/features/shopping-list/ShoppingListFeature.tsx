@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Plus } from 'lucide-react';
-import TimeFilterTabs from './components/TimeFilterTabs';
+import WeekDayTabs from '../meal-planner/components/WeekDayTabs';
+import type { DayTab } from '../meal-planner/components/WeekDayTabs';
 import CategoryGroup from './components/CategoryGroup';
 import ShoppingCard from './components/ShoppingCard';
 import ActionBottomSheet from './modals/ActionBottomSheet';
@@ -14,6 +15,25 @@ import { useShoppingListContext } from '../../contexts/ShoppingListContext';
 import { useFamilyContext } from '../../contexts/FamilyContext';
 import { useAuth } from '../../contexts/AuthContext';
 import './shopping-list.css';
+
+// Helper to build weekly tabs
+function buildWeekDays(weekOffset: number = 0): DayTab[] {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sun, 1 = Mon ...
+  const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diffToMon + (weekOffset * 7));
+
+  const labels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
+  const keys   = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+  return keys.map((key, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dateStr = `${d.getDate()}/${d.getMonth() + 1}`;
+    return { key, label: labels[i], date: dateStr };
+  });
+}
 
 // Color theme per role
 const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
@@ -30,7 +50,14 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   const { user } = useAuth();
   const { items, setItems, isLoading: loading } = useShoppingListContext();
   const { familyMembers } = useFamilyContext();
-  const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekDays = React.useMemo(() => buildWeekDays(weekOffset), [weekOffset]);
+  const [activeDay, setActiveDay] = useState<string>(() => {
+    const dayOfWeek = new Date().getDay();
+    const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const key  = keys[dayOfWeek];
+    return ['mon','tue','wed','thu','fri','sat','sun'].includes(key) ? key : 'mon';
+  });
 
   // Modal states
   const [selectedItem, setSelectedItem] = useState<ShoppingItem | null>(null);
@@ -61,17 +88,16 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   const hideToast = useCallback(() => {}, []);
 
   // Filter items (must be defined before handleSaveBulkToFridge uses it)
-  const now = new Date();
-  const offset = now.getTimezoneOffset();
-  const localDate = new Date(now.getTime() - (offset * 60 * 1000));
-  const todayStr = localDate.toISOString().split('T')[0];
+  const activeDayTab = weekDays.find(d => d.key === activeDay);
+  let targetDateStr = '';
+  if (activeDayTab) {
+    const year = new Date().getFullYear();
+    const [dVal, mVal] = activeDayTab.date!.split('/');
+    targetDateStr = `${year}-${mVal.padStart(2, '0')}-${dVal.padStart(2, '0')}`;
+  }
 
   const filteredItems = items.filter(item => {
-    if (activeTab === 'today') {
-      return item.deadlineDate === todayStr;
-    }
-    // "Trong tuần" - show all items
-    return true;
+    return item.deadlineDate === targetDateStr;
   });
 
   // Toggle single item status
@@ -320,12 +346,18 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
       />
 
       {/* Header */}
-      <div className="shopping-header">
-        <div className="shopping-title-row">
+      <div className="shopping-header" style={{ paddingBottom: 0 }}>
+        <div className="shopping-title-row" style={{ paddingBottom: 12 }}>
           <h1 className="shopping-title">Danh sách mua sắm</h1>
         </div>
-        <TimeFilterTabs activeTab={activeTab} onChangeTab={setActiveTab} />
       </div>
+      <WeekDayTabs
+        days={weekDays}
+        activeDay={activeDay}
+        onSelectDay={setActiveDay}
+        onPrevWeek={() => setWeekOffset(prev => prev - 1)}
+        onNextWeek={() => setWeekOffset(prev => prev + 1)}
+      />
 
       {/* Shopping List Container */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -411,6 +443,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
         item={selectedItem}
         mode={formMode as any}
         readOnly={role === 'member'}
+        defaultDeadlineDate={targetDateStr}
       />
 
       <DeleteConfirmModal
