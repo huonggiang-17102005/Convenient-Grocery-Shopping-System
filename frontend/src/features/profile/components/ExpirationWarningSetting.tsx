@@ -2,44 +2,29 @@ import React, { useState, useEffect } from 'react';
 
 interface ExpirationWarningSettingProps {
   initialDays: number;
-  onUpdateDays: (days: number) => Promise<void>;
+  onChangeDays: (days: number) => void;
 }
 
-const ExpirationWarningSetting: React.FC<ExpirationWarningSettingProps> = ({ initialDays, onUpdateDays }) => {
+const ExpirationWarningSetting: React.FC<ExpirationWarningSettingProps> = ({ initialDays, onChangeDays }) => {
   const [days, setDays] = useState(initialDays);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     setDays(initialDays);
   }, [initialDays]);
 
-  const handleDecrease = async () => {
-    if (days > 1 && !isUpdating) {
+  const handleDecrease = () => {
+    if (days > 1) {
       const newDays = days - 1;
       setDays(newDays);
-      setIsUpdating(true);
-      try {
-        await onUpdateDays(newDays);
-      } catch (error) {
-        setDays(days); // revert on error
-      } finally {
-        setIsUpdating(false);
-      }
+      onChangeDays(newDays);
     }
   };
 
-  const handleIncrease = async () => {
-    if (days < 30 && !isUpdating) {
+  const handleIncrease = () => {
+    if (days < 30) {
       const newDays = days + 1;
       setDays(newDays);
-      setIsUpdating(true);
-      try {
-        await onUpdateDays(newDays);
-      } catch (error) {
-        setDays(days); // revert on error
-      } finally {
-        setIsUpdating(false);
-      }
+      onChangeDays(newDays);
     }
   };
 
@@ -67,11 +52,10 @@ const ExpirationWarningSetting: React.FC<ExpirationWarningSettingProps> = ({ ini
         justifyContent: 'flex-start', 
         alignItems: 'center', 
         display: 'flex',
-        gap: 8,
-        opacity: isUpdating ? 0.6 : 1,
-        pointerEvents: isUpdating ? 'none' : 'auto'
+        gap: 8
       }}>
         <button 
+          type="button"
           onClick={handleDecrease}
           disabled={days <= 1}
           style={{
@@ -98,6 +82,7 @@ const ExpirationWarningSetting: React.FC<ExpirationWarningSettingProps> = ({ ini
         </div>
         
         <button 
+          type="button"
           onClick={handleIncrease}
           disabled={days >= 30}
           style={{
