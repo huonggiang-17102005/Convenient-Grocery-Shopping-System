@@ -5,6 +5,7 @@ import { getFamilyNotifications, createNotification } from '../notification.serv
 vi.mock('../../repo/notification.repo.js', () => ({
   insertNotification: vi.fn(),
   fetchNotifications: vi.fn(),
+  getUnreadCount: vi.fn(),
 }));
 
 describe('Notification Service - Chức năng Thông báo', () => {
@@ -13,11 +14,12 @@ describe('Notification Service - Chức năng Thông báo', () => {
   });
 
   it('Nên lấy thông báo của gia đình thành công', async () => {
-    const mockNotifs = [{ id: '1', title: 'Thông báo', family_id: 'fam1', user_id: 'user1' }];
+    const mockNotifs = { data: [{ id: '1', title: 'Thông báo', family_id: 'fam1', user_id: 'user1' }], count: 1 };
     (notificationRepo.fetchNotifications as any).mockResolvedValue(mockNotifs);
+    (notificationRepo.getUnreadCount as any).mockResolvedValue(5);
 
     const result = await getFamilyNotifications('fam1', 'user1', 20, 0);
-    expect(result).toEqual(mockNotifs);
+    expect(result).toEqual({ ...mockNotifs, unreadCount: 5 });
     expect(notificationRepo.fetchNotifications).toHaveBeenCalledWith('fam1', 'user1', 20, 0, undefined);
   });
 

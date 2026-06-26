@@ -26,6 +26,15 @@
   border-color: var(--primary-color, #FF8A00);
 }
 
+.custom-select-trigger > span:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px;
+  flex-grow: 1;
+  text-align: left;
+}
+
 .custom-select-trigger.disabled {
   cursor: not-allowed;
   opacity: 0.6;

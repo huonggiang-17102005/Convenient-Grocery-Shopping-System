@@ -70,7 +70,7 @@ const UserManagement: React.FC = () => {
   };
 
   const handleToggleStatus = async (user: User) => {
-    const newStatus = user.status === 'active' ? 'locked' : 'active';
+    const newStatus = (user.status || '').toLowerCase() === 'active' ? 'locked' : 'active';
     
     // Optimistic UI update so the user sees it immediately even if DB fails
     setUsers(users.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
@@ -208,7 +208,7 @@ const UserManagement: React.FC = () => {
                     const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                                           u.email.toLowerCase().includes(searchTerm.toLowerCase());
                     const matchesRole = roleFilter === 'all' || u.role.toLowerCase() === roleFilter;
-                    const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
+                    const matchesStatus = statusFilter === 'all' || (u.status || '').toLowerCase() === statusFilter.toLowerCase();
                     
                     return matchesSearch && matchesRole && matchesStatus;
                   }).map((user) => (
@@ -238,7 +238,7 @@ const UserManagement: React.FC = () => {
                       </td>
                       <td className="um-group-name">{user.group}</td>
                       <td>
-                        {user.status === 'locked' ? (
+                        {(user.status || '').toLowerCase() === 'locked' ? (
                           <div className="um-badge-status-locked">
                             Bị khóa
                           </div>
@@ -250,7 +250,7 @@ const UserManagement: React.FC = () => {
                       </td>
                       <td>
                         <div className="um-actions">
-                          {user.status === 'locked' ? (
+                          {(user.status || '').toLowerCase() === 'locked' ? (
                             <div className="um-action-icon" title="Mở khóa tài khoản" onClick={() => handleToggleStatus(user)}>
                               <Lock size={18} color="#1A1A1A" />
                             </div>
