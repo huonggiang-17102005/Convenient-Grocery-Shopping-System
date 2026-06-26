@@ -185,11 +185,12 @@ export const getWasteStatistics = async (familyId: string, month: number, year: 
       statsMap[cat][unit] = { total: 0, consumed: 0, wasted: 0 };
     }
     
-    if (log.action_type === 'add') {
+    const action = (log.action_type || '').toLowerCase();
+    if (action === 'add') {
       statsMap[cat][unit].total += log.amount;
-    } else if (log.action_type === 'consume') {
+    } else if (action === 'consume') {
       statsMap[cat][unit].consumed += log.amount;
-    } else if (log.action_type === 'waste' || log.action_type === 'expire') {
+    } else if (action === 'waste' || action === 'expire') {
       statsMap[cat][unit].wasted += log.amount;
     }
   }
