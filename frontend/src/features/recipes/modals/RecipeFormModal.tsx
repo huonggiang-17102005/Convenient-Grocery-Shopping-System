@@ -38,7 +38,7 @@ const createEmptySpice = (categoriesData: any[]): Ingredient => {
     category: spiceCategory?.category || 'Gia vị',
     name: '',
     amount: 0,
-    unit: spiceCategory?.units?.[0] || '',
+    unit: '', // Default to empty instead of 'any'
   };
 };
 
@@ -142,6 +142,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   );
 
   const availableCategories = categoriesData.map(c => c.category);
+  const [rawQtys, setRawQtys] = useState<Record<string, string>>({});
 
   const getAvailableUnits = (category: string) => {
     const data = categoriesData.find(c => c.category === category);
@@ -200,6 +201,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   };
 
   const handleSpiceQtyChange = (id: string, value: string) => {
+    setRawQtys((prev) => ({ ...prev, [id]: value }));
     const parsed = parseQuantity(value);
     setSpices((prev) =>
       prev.map((s) => (s.id === id ? { ...s, amount: parsed.amount, unit: parsed.unit } : s))
@@ -506,7 +508,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                   className="figma-spice-input-qty"
                   placeholder="Định lượng"
                   title="Định lượng"
-                  value={formatSpiceQty(spice)}
+                  value={rawQtys[spice.id] ?? formatSpiceQty(spice)}
                   onChange={(e) => handleSpiceQtyChange(spice.id, e.target.value)}
                 />
               </div>

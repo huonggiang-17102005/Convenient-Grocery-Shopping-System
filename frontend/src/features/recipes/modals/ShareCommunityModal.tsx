@@ -37,7 +37,7 @@ const createEmptySpice = (categoriesData: any[]): Ingredient => {
     category: spiceCategory?.category || 'Gia vị',
     name: '',
     amount: 0,
-    unit: spiceCategory?.units?.[0] || '',
+    unit: '', // Default to empty instead of 'any'
   };
 };
 
@@ -99,6 +99,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [spices, setSpices] = useState<Ingredient[]>([]);
+  const [rawQtys, setRawQtys] = useState<Record<string, string>>({});
   const [steps, setSteps] = useState<CookingStep[]>([emptyStep()]);
 
   const [calories, setCalories] = useState<number | ''>('');
@@ -230,6 +231,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   };
 
   const handleSpiceQtyChange = (id: string, value: string) => {
+    setRawQtys((prev) => ({ ...prev, [id]: value }));
     const parsed = parseQuantity(value);
     setSpices((prev) =>
       prev.map((s) => (s.id === id ? { ...s, amount: parsed.amount, unit: parsed.unit } : s))
@@ -555,7 +557,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                   className="figma-spice-input-qty"
                   placeholder="Định lượng"
                   title="Định lượng"
-                  value={formatSpiceQty(spice)}
+                  value={rawQtys[spice.id] ?? formatSpiceQty(spice)}
                   onChange={(e) => handleSpiceQtyChange(spice.id, e.target.value)}
                 />
               </div>
