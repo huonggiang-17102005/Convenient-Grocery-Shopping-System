@@ -275,6 +275,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     // Optimistic Update
     const nextIsLiked = !currentPost.isLiked;
     const nextLikes = nextIsLiked ? currentPost.likes + 1 : Math.max(0, currentPost.likes - 1);
+    
     setCommunityPosts((prev) =>
       prev.map((p) =>
         p.id === postId
@@ -283,13 +284,18 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
       )
     );
 
+    // Sync favorite state with like state
+    if (!!currentPost.recipe.isFavorited !== nextIsLiked) {
+      handleToggleFavorite(postId);
+    }
+
     try {
       await recipesService.toggleLike(postId);
     } catch (error) {
       console.error('Error toggling like:', error);
       setCommunityPosts(originalCommunity); // Rollback
     }
-  }, [communityPosts]);
+  }, [communityPosts, handleToggleFavorite]);
 
   const handleAddToShoppingList = useCallback(async (recipe: Recipe) => {
     const missing: Array<{

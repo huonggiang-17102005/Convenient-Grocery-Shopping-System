@@ -121,11 +121,19 @@ export const RecipesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         ...r,
         isFavorited: r.isFavorited || favMap.has(r.id),
       }));
+
+      const allCommunityPosts = posts.map(p => ({
+        ...p,
+        recipe: {
+          ...p.recipe,
+          isFavorited: p.recipe.isFavorited || favMap.has(p.recipe.id)
+        }
+      }));
       
       setRecipes(allRecipes);
       setSystemRecipes(allSystemRecipes);
       setFavoriteRecipes(favRecipes);
-      setCommunityPosts(posts);
+      setCommunityPosts(allCommunityPosts);
     } catch (error) {
       console.error('Lỗi tải danh sách công thức:', error);
     } finally {
