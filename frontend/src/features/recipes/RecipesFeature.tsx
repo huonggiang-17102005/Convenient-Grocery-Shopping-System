@@ -21,6 +21,7 @@ import ShoppingConfirmModal from './modals/ShoppingConfirmModal';
 import Toast from '../../components/common/Toast';
 
 import { shoppingService } from '../shopping-list/shopping-list.service';
+import { mealPlannerService } from '../meal-planner/mealPlanner.service';
 import './recipes.css';
 
 type ActiveTab = 'library' | 'favorites' | 'community';
@@ -438,6 +439,29 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     }
   }, [setRecipes, showToast]);
 
+  const handleAddToMenu = useCallback(async (recipe: Recipe, mealType: 'breakfast' | 'lunch' | 'dinner') => {
+    try {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${dd}`;
+
+      let peopleCount = recipe.servings || 1;
+      const data = await mealPlannerService.getMealPlan(dateStr, dateStr);
+      if (data && data[dateStr] && data[dateStr][mealType] && data[dateStr][mealType].length > 0) {
+        peopleCount = data[dateStr][mealType][0].people_count;
+      }
+
+      await mealPlannerService.addMealPlan(recipe.id, dateStr, mealType, peopleCount);
+      setIsDetailOpen(false);
+      showToast(`Đã thêm "${recipe.name}" vào bữa ${mealType === 'breakfast' ? 'sáng' : mealType === 'lunch' ? 'trưa' : 'tối'} hôm nay!`);
+    } catch (error) {
+      console.error('Error adding to menu:', error);
+      showToast('Lỗi khi thêm vào thực đơn hôm nay');
+    }
+  }, [showToast]);
+
   const fetchPendingPost = useCallback(async () => {
     try {
       const pendingRecipes = await recipesService.getUserPendingRecipes();
@@ -640,6 +664,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         onAddToShoppingList={handleAddToShoppingList}
         onSaveToFamily={handleSaveToFamily}
         onShare={handleOpenShare}
+        onAddToMenu={handleAddToMenu}
       />
 
       {isShoppingConfirmOpen && (
