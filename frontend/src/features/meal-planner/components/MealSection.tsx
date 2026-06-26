@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import type { PlannedMeal } from '../types';
 import type { Recipe } from '../../recipes/types';
 import SelectedDishCard from './SelectedDishCard';
@@ -11,7 +11,7 @@ interface MealSectionProps {
   showRemove?: boolean;
   onAddDish: () => void;
   onRemoveDish: (id: string) => void;
-  onClickCard: (recipe: Recipe) => void;
+  onClickCard: (pm: PlannedMeal) => void;
   onChangeServings?: () => void;
 }
 

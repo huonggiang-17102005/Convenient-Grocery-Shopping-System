@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import type { MealKey } from './types';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -34,6 +34,21 @@ export const mealPlannerService = {
 
   removeMealPlan: async (id: string) => {
     const response = await api.delete(`/${id}`);
+    return response.data;
+  },
+
+  markCooked: async (date: string) => {
+    const response = await api.patch('/cooked', { date });
+    return response.data;
+  },
+
+  markShopped: async (date: string) => {
+    const response = await api.patch('/shopped', { date });
+    return response.data;
+  },
+
+  markSingleItemShopped: async (id: string) => {
+    const response = await api.patch(`/items/${id}/shopped`);
     return response.data;
   }
 };

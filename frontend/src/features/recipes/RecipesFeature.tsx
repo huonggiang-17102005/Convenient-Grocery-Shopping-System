@@ -335,7 +335,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
           missing.push({
             name: ing.name,
             category: ing.category,
-            neededText: `Cần ${roundedAmount}${ing.unit} (Trong tủ: ${roundedAvailable}${ing.unit})`,
+            neededText: `Cần ${roundedAmount} ${ing.unit} (Trong tủ: ${roundedAvailable} ${ing.unit})`,
             defaultBuyAmount: `${roundedDiff} ${ing.unit}`,
             quantity: roundedDiff,
             unit: ing.unit,

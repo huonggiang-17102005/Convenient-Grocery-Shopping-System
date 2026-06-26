@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Plus } from 'lucide-react';
-import TimeFilterTabs from './components/TimeFilterTabs';
+import WeekDayTabs from '../meal-planner/components/WeekDayTabs';
+import type { DayTab } from '../meal-planner/components/WeekDayTabs';
 import CategoryGroup from './components/CategoryGroup';
 import ShoppingCard from './components/ShoppingCard';
 import ActionBottomSheet from './modals/ActionBottomSheet';
@@ -10,11 +11,29 @@ import type { ShoppingItem, FoodCategory } from './types';
 import { shoppingService } from './shopping-list.service';
 import Toast from '@/components/common/Toast';
 import IngredientFormModal from '../fridge/modals/IngredientFormModal';
-import { fridgeService } from '../fridge/fridge.service';
 import { useShoppingListContext } from '../../contexts/ShoppingListContext';
 import { useFamilyContext } from '../../contexts/FamilyContext';
 import { useAuth } from '../../contexts/AuthContext';
 import './shopping-list.css';
+
+// Helper to build weekly tabs
+function buildWeekDays(weekOffset: number = 0): DayTab[] {
+  const today = new Date();
+  const dayOfWeek = today.getDay(); // 0 = Sun, 1 = Mon ...
+  const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diffToMon + (weekOffset * 7));
+
+  const labels = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
+  const keys   = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+  return keys.map((key, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const dateStr = `${d.getDate()}/${d.getMonth() + 1}`;
+    return { key, label: labels[i], date: dateStr };
+  });
+}
 
 // Color theme per role
 const ROLE_COLORS: Record<'homemaker' | 'member', string> = {
@@ -31,7 +50,14 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   const { user } = useAuth();
   const { items, setItems, isLoading: loading } = useShoppingListContext();
   const { familyMembers } = useFamilyContext();
-  const [activeTab, setActiveTab] = useState<'today' | 'week'>('today');
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekDays = React.useMemo(() => buildWeekDays(weekOffset), [weekOffset]);
+  const [activeDay, setActiveDay] = useState<string>(() => {
+    const dayOfWeek = new Date().getDay();
+    const keys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const key  = keys[dayOfWeek];
+    return ['mon','tue','wed','thu','fri','sat','sun'].includes(key) ? key : 'mon';
+  });
 
   // Modal states
   const [selectedItem, setSelectedItem] = useState<ShoppingItem | null>(null);
@@ -39,10 +65,14 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  
-  // Fridge Modal state for checked items
+
+  // Fridge Modal state for single item checked
   const [itemToSaveFridge, setItemToSaveFridge] = useState<ShoppingItem | null>(null);
   const [isFridgeModalOpen, setIsFridgeModalOpen] = useState(false);
+
+  // Bulk tick state - for ticking all items in a category
+  const [bulkCategory, setBulkCategory] = useState<FoodCategory | null>(null);
+  const [isBulkFridgeModalOpen, setIsBulkFridgeModalOpen] = useState(false);
 
   // Toast state
   const [toastMessage, setToastMessage] = useState('');
@@ -57,14 +87,27 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   const hideToast = useCallback(() => {}, []);
 
-  // Toggle item status
+  // Filter items (must be defined before handleSaveBulkToFridge uses it)
+  const activeDayTab = weekDays.find(d => d.key === activeDay);
+  let targetDateStr = '';
+  if (activeDayTab) {
+    const year = new Date().getFullYear();
+    const [dVal, mVal] = activeDayTab.date!.split('/');
+    targetDateStr = `${year}-${mVal.padStart(2, '0')}-${dVal.padStart(2, '0')}`;
+  }
+
+  const filteredItems = items.filter(item => {
+    return item.deadlineDate === targetDateStr;
+  });
+
+  // Toggle single item status
   const handleToggleCheck = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening bottom sheet
 
     const item = items.find(i => i.id === id);
     if (!item || item.isBought) return;
 
-    // Thay vì gọi API ngay, mở modal để lưu tủ lạnh trước
+    // Open modal to let assignee select storage location, expiration date, and actual quantity
     setItemToSaveFridge(item);
     setIsFridgeModalOpen(true);
   };
@@ -77,31 +120,74 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
     setItems(prev => prev.map(i => i.id === itemToSaveFridge.id ? { ...i, isBought: true } : i));
     showToast('Đã mua xong và lưu vào tủ lạnh!');
     setIsFridgeModalOpen(false);
-    
+
     const savedItem = itemToSaveFridge;
     setItemToSaveFridge(null);
 
     try {
-      // 1. Lưu vào tủ lạnh
-      await fridgeService.addFridgeItem({
-        family_id: user.family_id,
-        name: itemData.name,
+      const updatedItem = await shoppingService.updateShoppingItem(savedItem.id, {
+        isBought: true,
         quantity: itemData.quantity,
-        unit: itemData.unit,
-        category: itemData.category,
-        expiration_date: itemData.expiryDate || new Date().toISOString(),
         location: itemData.storageType,
-        image_url: itemData.image,
-        image_public_id: itemData.imagePublicId
-      });
-      
-      // 2. Đánh dấu đã mua ở Shopping List
-      const updatedItem = await shoppingService.updateShoppingItem(savedItem.id, { isBought: true });
-      
+        expirationDate: itemData.expiryDate
+      } as any);
+
       setItems(prev => prev.map(i => i.id === savedItem.id ? updatedItem : i));
     } catch (error) {
-      console.error('Error saving to fridge:', error);
+      console.error('Error saving to fridge via backend sync:', error);
       showToast('Lỗi khi lưu vào tủ lạnh');
+      setItems(originalItems); // Rollback
+    }
+  };
+
+  // ── Bulk tick: open confirmation modal for a whole category ──────────────────
+  const handleBulkTick = (category: FoodCategory) => {
+    setBulkCategory(category);
+    setIsBulkFridgeModalOpen(true);
+  };
+
+  const handleSaveBulkToFridge = async (itemData: any) => {
+    if (!bulkCategory || !user?.family_id) return;
+
+    // Determine which items are checkable (unbought) in this category
+    const checkableItems = filteredItems.filter(item => {
+      if (item.category !== bulkCategory) return false;
+      if (item.isBought) return false;
+      // For members: only their assigned items
+      if (role === 'member' && item.assigneeId !== user?.id) return false;
+      return true;
+    });
+
+    if (checkableItems.length === 0) {
+      setIsBulkFridgeModalOpen(false);
+      setBulkCategory(null);
+      return;
+    }
+
+    const originalItems = items;
+
+    // Optimistic update — mark all as bought immediately
+    const checkableIds = new Set(checkableItems.map(i => i.id));
+    setItems(prev => prev.map(i => checkableIds.has(i.id) ? { ...i, isBought: true } : i));
+    showToast(`Đã mua xong ${checkableItems.length} mặt hàng và lưu vào tủ lạnh!`);
+    setIsBulkFridgeModalOpen(false);
+    setBulkCategory(null);
+
+    try {
+      // Parallel API calls for all checkable items
+      await Promise.all(
+        checkableItems.map(item =>
+          shoppingService.updateShoppingItem(item.id, {
+            isBought: true,
+            quantity: item.quantity,
+            location: itemData.storageType,
+            expirationDate: itemData.expiryDate
+          } as any)
+        )
+      );
+    } catch (error) {
+      console.error('Error saving bulk items to fridge:', error);
+      showToast('Lỗi khi lưu hàng loạt vào tủ lạnh');
       setItems(originalItems); // Rollback
     }
   };
@@ -225,20 +311,6 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
     setIsDeleteModalOpen(true);
   };
 
-  // Filter items
-  const now = new Date();
-  const offset = now.getTimezoneOffset();
-  const localDate = new Date(now.getTime() - (offset * 60 * 1000));
-  const todayStr = localDate.toISOString().split('T')[0];
-
-  const filteredItems = items.filter(item => {
-    if (activeTab === 'today') {
-      return item.deadlineDate === todayStr;
-    }
-    // "Trong tuần" - show all items
-    return true;
-  });
-
   // Group items by category
   const categoriesList: FoodCategory[] = ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'];
   const groupedItems = categoriesList.reduce((acc, cat) => {
@@ -248,6 +320,21 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
     }
     return acc;
   }, {} as Record<FoodCategory, ShoppingItem[]>);
+
+  // Build a mock FoodItem-like object for the bulk modal (category is used for storage auto-recommend)
+  const bulkModalItem = bulkCategory ? {
+    id: '',
+    name: '',
+    category: bulkCategory,
+    storageType: '' as any,
+    quantity: 0,
+    unit: '',
+    emoji: '📦',
+    daysRemaining: 0,
+    expiryDate: '',
+    image: '',
+    imagePublicId: '',
+  } : null;
 
   return (
     <div className="shopping-page">
@@ -259,12 +346,18 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
       />
 
       {/* Header */}
-      <div className="shopping-header">
-        <div className="shopping-title-row">
+      <div className="shopping-header" style={{ paddingBottom: 0 }}>
+        <div className="shopping-title-row" style={{ paddingBottom: 12 }}>
           <h1 className="shopping-title">Danh sách mua sắm</h1>
         </div>
-        <TimeFilterTabs activeTab={activeTab} onChangeTab={setActiveTab} />
       </div>
+      <WeekDayTabs
+        days={weekDays}
+        activeDay={activeDay}
+        onSelectDay={setActiveDay}
+        onPrevWeek={() => setWeekOffset(prev => prev - 1)}
+        onNextWeek={() => setWeekOffset(prev => prev + 1)}
+      />
 
       {/* Shopping List Container */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -280,8 +373,26 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
           categoriesList.map(cat => {
             const catItems = groupedItems[cat];
             if (!catItems) return null;
+
+            // Determine checkable (unbought) items for this category per role
+            const checkableItems = catItems.filter(item => {
+              if (item.isBought) return false;
+              if (role === 'member' && item.assigneeId !== user?.id) return false;
+              return true;
+            });
+
+            const showTickAll = checkableItems.length > 0;
+            // All items bought = show checked state on the tick-all button
+            const tickAllChecked = checkableItems.length === 0 && catItems.some(i => i.isBought);
+
             return (
-              <CategoryGroup key={cat} title={cat}>
+              <CategoryGroup
+                key={cat}
+                title={cat}
+                showTickAll={showTickAll}
+                onTickAll={() => handleBulkTick(cat)}
+                tickAllChecked={tickAllChecked}
+              >
                 {catItems.map(item => {
                   const disabledCheck = role === 'member' && item.assigneeId !== user?.id;
                   return (
@@ -332,6 +443,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
         item={selectedItem}
         mode={formMode as any}
         readOnly={role === 'member'}
+        defaultDeadlineDate={targetDateStr}
       />
 
       <DeleteConfirmModal
@@ -340,6 +452,7 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
         onConfirm={handleDeleteConfirm}
       />
 
+      {/* Single item: purchase confirmation modal */}
       <IngredientFormModal
         isOpen={isFridgeModalOpen}
         mode="add"
@@ -350,6 +463,20 @@ export const ShoppingListFeature: React.FC<ShoppingListFeatureProps> = ({ role }
           setItemToSaveFridge(null);
         }}
         onSave={handleSaveToFridge}
+      />
+
+      {/* Bulk (category-level) purchase confirmation modal */}
+      <IngredientFormModal
+        key={bulkCategory ?? 'bulk-closed'}
+        isOpen={isBulkFridgeModalOpen}
+        mode="bulk_add"
+        item={bulkModalItem as any}
+        role={role}
+        onClose={() => {
+          setIsBulkFridgeModalOpen(false);
+          setBulkCategory(null);
+        }}
+        onSave={handleSaveBulkToFridge}
       />
     </div>
   );

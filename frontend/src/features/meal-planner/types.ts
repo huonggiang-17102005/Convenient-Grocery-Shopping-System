@@ -10,6 +10,8 @@ export interface PlannedMeal {
   id: string; // The meal_plan id from database
   recipe: Recipe;
   people_count?: number;
+  isCooked?: boolean;
+  isShopped?: boolean;
 }
 
 export interface DayMeals {

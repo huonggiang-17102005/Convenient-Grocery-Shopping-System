@@ -100,6 +100,8 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           newPlan[key][p.meal_type as MealKey].push({
             id: p.id,
             people_count: p.people_count,
+            isCooked: p.isCooked ?? false,
+            isShopped: p.isShopped ?? false,
             recipe: {
               id: p.recipes.id,
               name: p.recipes.name,
@@ -108,7 +110,14 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
               imageUrl: p.recipes.image_url,
               difficulty: (p.recipes.difficulty as 'Dễ' | 'Trung bình' | 'Khó') || ('Dễ' as 'Dễ'),
               servings: p.recipes.servings || 1,
-              ingredients: p.recipes.ingredients || [],
+              ingredients: (p.recipes.ingredients || []).map((ing: any, i: number) => ({
+                id: ing.id || `ing_${i}`,
+                category: ing.category || 'Khác',
+                name: ing.name,
+                amount: Number(ing.quantity ?? ing.amount ?? 0),
+                unit: ing.unit || '',
+                imageUrl: ing.imageUrl || ing.image_url || '',
+              })),
               steps: p.recipes.instructions ? p.recipes.instructions.map((desc: string, i: number) => ({ id: `s_${i}`, description: desc })) : [],
               isFavorited: false,
               calories: p.recipes.calories || 0,
@@ -164,8 +173,9 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
           const arr = todayMealsObj[mealKey as MealKey] || [];
           arr.forEach(pm => {
             if (pm.recipe.name) {
-              mealMap[mealKey].push(pm.recipe.name);
+              mealMap[mealKey].push(pm.recipe.name + (pm.isCooked ? ' (Đã nấu)' : ''));
             }
+            if (pm.isCooked) return; // Skip cooked items for ingredient calculation!
             if (pm.recipe.ingredients) {
               const multiplier = (pm.people_count || 1) / (pm.recipe.servings || 1);
               pm.recipe.ingredients.forEach(ing => {

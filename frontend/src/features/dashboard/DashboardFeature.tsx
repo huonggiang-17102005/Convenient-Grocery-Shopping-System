@@ -27,6 +27,7 @@ import { useShoppingListContext } from '../../contexts/ShoppingListContext';
 import { useMealPlannerContext } from '../../contexts/MealPlannerContext';
 import { shoppingService } from '../shopping-list/shopping-list.service';
 import { fridgeService } from '../fridge/fridge.service';
+import { mealPlannerService } from '../meal-planner/mealPlanner.service';
 
 // Modals
 import InviteCodeModal from './modals/InviteCodeModal';
@@ -89,7 +90,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   const { items: fridgeItems, refreshFridge } = useFridgeContext();
   const { items: shoppingItems, setItems: setShoppingItems } = useShoppingListContext();
-  const { getTodayPlan } = useMealPlannerContext();
+  const { getTodayPlan, fetchWeekPlan } = useMealPlannerContext();
 
   const { todayMeals, todayIngredients } = React.useMemo(() => getTodayPlan(), [getTodayPlan]);
 
@@ -101,13 +102,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       })
       .map(mapFoodItemToExpiringCardProps);
   }, [fridgeItems]);
-
   // Selected item for ExpireItemModal
-  const [selectedItem, setSelectedItem] = useState<IngredientCardProps | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
   // Fridge Modal state for checked items
   const [itemToSaveFridge, setItemToSaveFridge] = useState<ShoppingItem | null>(null);
   const [isFridgeModalOpen, setIsFridgeModalOpen] = useState(false);
+
+
 
   // Toast state
   const [toastMsg,     setToastMsg]     = useState('');
@@ -155,8 +157,27 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       const newDeducted = [...stored, ...ingredients.map(i => i.name)];
       localStorage.setItem(storageKey, JSON.stringify(newDeducted));
 
+      // Mark today's planned meals as cooked in DB
+      await mealPlannerService.markCooked(todayStr);
+
       // Refresh tủ lạnh
       await refreshFridge();
+
+      // Force refresh week plans so that (Đã nấu) labels and state updates instantly
+      const today = new Date();
+      const diffToMon = today.getDay() === 0 ? -6 : 1 - today.getDay();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() + diffToMon);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      
+      const formatDate = (d: Date) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${dd}`;
+      };
+      await fetchWeekPlan(formatDate(monday), formatDate(sunday), true);
     } catch (err: unknown) {
       console.error(err);
       showToast('Có lỗi xảy ra khi trừ kho!');
@@ -175,31 +196,27 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   const handleSaveToFridge = async (itemData: any) => {
     if (!itemToSaveFridge || !familyId) return;
-    try {
-      // 1. Lưu vào tủ lạnh
-      await fridgeService.addFridgeItem({
-        family_id: familyId,
-        name: itemData.name,
-        quantity: itemData.quantity,
-        unit: itemData.unit,
-        category: itemData.category,
-        expiration_date: itemData.expiryDate || new Date().toISOString(),
-        location: itemData.storageType,
-        image_url: itemData.image,
-        image_public_id: itemData.imagePublicId
-      });
-      
-      // 2. Đánh dấu đã mua
-      await shoppingService.updateShoppingItem(itemToSaveFridge.id, { isBought: true });
-      
-      setShoppingItems(prev => prev.map(i => i.id === itemToSaveFridge.id ? { ...i, isBought: true } : i));
+    const originalItems = shoppingItems;
 
-      showToast('Đã mua xong và lưu vào tủ lạnh!');
-      setIsFridgeModalOpen(false);
-      setItemToSaveFridge(null);
+    // Optimistic Update
+    setShoppingItems(prev => prev.map(i => i.id === itemToSaveFridge.id ? { ...i, isBought: true } : i));
+    showToast('Đã mua xong và lưu vào tủ lạnh!');
+    setIsFridgeModalOpen(false);
+
+    const savedItem = itemToSaveFridge;
+    setItemToSaveFridge(null);
+
+    try {
+      await shoppingService.updateShoppingItem(savedItem.id, {
+        isBought: true,
+        quantity: itemData.quantity,
+        location: itemData.storageType,
+        expirationDate: itemData.expiryDate
+      });
     } catch (err) {
       console.error(err);
       showToast('Có lỗi xảy ra khi lưu vào tủ lạnh!');
+      setShoppingItems(originalItems); // Rollback
     }
   };
 
@@ -336,6 +353,8 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
         }}
         onSave={handleSaveToFridge}
       />
+
+
     </>
   );
 };

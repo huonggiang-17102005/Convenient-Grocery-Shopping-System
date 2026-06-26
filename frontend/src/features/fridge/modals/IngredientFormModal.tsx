@@ -11,7 +11,7 @@ import './IngredientFormModal.css';
 
 interface IngredientFormModalProps {
   isOpen: boolean;
-  mode: 'add' | 'edit' | 'detail';
+  mode: 'add' | 'edit' | 'detail' | 'bulk_add';
   item: FoodItem | null;
   role?: 'homemaker' | 'member';
   onClose: () => void;
@@ -36,6 +36,13 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const primaryColor = role === 'member' ? '#1E88E5' : '#FF8A00';
   const isReadOnly = mode === 'detail';
   const { categoriesData } = useCategoryContext();
+
+  const todayLocalStr = React.useMemo(() => {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const localDate = new Date(now.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+  }, []);
 
   const DYNAMIC_CATEGORIES = categoriesData.length > 0 ? categoriesData.map(c => c.category as FoodCategory) : ['Thịt cá', 'Rau củ quả', 'Trứng', 'Chất lỏng', 'Đồ khô', 'Gia vị', 'Khác'] as FoodCategory[];
 
@@ -78,14 +85,16 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
         setEmoji(item.emoji);
         setImage(item.image || '');
         setImagePublicId(item.imagePublicId || '');
-      } else if (item && mode === 'add') {
-        setStorageType(item.storageType);
+      } else if (item && (mode === 'add' || mode === 'bulk_add')) {
+        const defaultStorage = item.category === 'Thịt cá' ? 'Ngăn đông' :
+                               (item.category === 'Đồ khô' || item.category === 'Gia vị') ? 'Khô' : 'Ngăn mát';
+        setStorageType(item.storageType || defaultStorage);
         setCategory(item.category);
-        setName(item.name);
+        setName(item.name || '');
         setQuantity(item.quantity || 1);
         setUnit((item.unit as UnitType) || '');
         setExpiryDate('');
-        setEmoji(item.emoji);
+        setEmoji(item.emoji || '📦');
         setImage(item.image || '');
         setImagePublicId(item.imagePublicId || '');
       } else {
@@ -155,6 +164,28 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
       const diffTime = new Date(expiryDate).getTime() - new Date().getTime();
       daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
     }
+
+    if (expiryDate && expiryDate < todayLocalStr) {
+      alert('Hạn sử dụng không được trước ngày hôm nay!');
+      return;
+    }
+
+    if (mode === 'bulk_add') {
+      onSave({
+        storageType,
+        category,
+        name: '',
+        quantity: 0,
+        unit: '',
+        expiryDate,
+        emoji: EMOJI_MAP[category] || '📦',
+        image: '',
+        imagePublicId: '',
+        daysRemaining
+      });
+      return;
+    }
+
     onSave({
       storageType,
       category,
@@ -183,7 +214,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ color: '#1A1A1A', fontSize: 20, fontFamily: 'Plus Jakarta Sans', fontWeight: '600' }}>
-            {mode === 'add' ? 'Thêm thực phẩm' : mode === 'edit' ? 'Chỉnh sửa thực phẩm' : 'Chi tiết thực phẩm'}
+            {mode === 'add' ? 'Thêm thực phẩm' : mode === 'bulk_add' ? 'Xác nhận mua chung' : mode === 'edit' ? 'Chỉnh sửa thực phẩm' : 'Chi tiết thực phẩm'}
           </div>
           {mode === 'edit' && item && onDelete && (
             <div
@@ -223,6 +254,9 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                 if (newCatData && newCatData.units.length > 0) {
                   setUnit(newCatData.units[0]);
                 }
+                const defaultStorage = newCat === 'Thịt cá' ? 'Ngăn đông' :
+                                       (newCat === 'Đồ khô' || newCat === 'Gia vị') ? 'Khô' : 'Ngăn mát';
+                setStorageType(defaultStorage);
               }}
               options={DYNAMIC_CATEGORIES.map(c => ({ value: c, label: c }))}
               placeholder="Chọn danh mục thực phẩm"
@@ -231,59 +265,63 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
           </div>
 
           {/* Tên thực phẩm */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
-            <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Tên thực phẩm</label>
-            <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', alignItems: 'center' }}>
-              <input
-                type="text"
-                style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '400' }}
-                placeholder="VD: Cà rốt"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isReadOnly}
-              />
+          {mode !== 'bulk_add' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
+              <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Tên thực phẩm</label>
+              <div style={{ position: 'relative', width: '100%', height: 52, paddingLeft: 16, paddingRight: 16, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '400' }}
+                  placeholder="VD: Cà rốt"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={isReadOnly}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Hình ảnh */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
-            <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Hình ảnh</label>
+          {mode !== 'bulk_add' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
+              <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Hình ảnh</label>
 
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                onChange={handleFileChange}
+              />
 
-            {image ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', background: '#F9FAFB', padding: 12, borderRadius: 12, border: '1px solid #E5E7EB' }}>
-                <img src={image} alt="Thực phẩm" style={{ width: 100, height: 100, borderRadius: 12, objectFit: 'cover' }} />
-                {!isReadOnly && (
-                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ background: 'transparent', border: `1px solid ${primaryColor}`, color: primaryColor, borderRadius: 100, padding: '6px 16px', fontSize: 13, fontWeight: '500', cursor: 'pointer' }}>
-                    {isUploading ? 'Đang tải...' : 'Đổi ảnh'}
+              {image ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center', background: '#F9FAFB', padding: 12, borderRadius: 12, border: '1px solid #E5E7EB' }}>
+                  <img src={image} alt="Thực phẩm" style={{ width: 100, height: 100, borderRadius: 12, objectFit: 'cover' }} />
+                  {!isReadOnly && (
+                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} style={{ background: 'transparent', border: `1px solid ${primaryColor}`, color: primaryColor, borderRadius: 100, padding: '6px 16px', fontSize: 13, fontWeight: '500', cursor: 'pointer' }}>
+                      {isUploading ? 'Đang tải...' : 'Đổi ảnh'}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isReadOnly || isUploading} style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
+                    <ImageIcon size={20} color={primaryColor} />
+                    <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>
+                      {isUploading ? 'Đang tải...' : 'Chọn ảnh'}
+                    </span>
                   </button>
-                )}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isReadOnly || isUploading} style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
-                  <ImageIcon size={20} color={primaryColor} />
-                  <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>
-                    {isUploading ? 'Đang tải...' : 'Chọn ảnh'}
-                  </span>
-                </button>
-                <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isReadOnly || isUploading} style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
-                  <Camera size={20} color={primaryColor} />
-                  <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Chụp ảnh</span>
-                </button>
-              </div>
-            )}
-          </div>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isReadOnly || isUploading} style={{ flex: 1, height: 52, background: 'white', borderRadius: 12, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, border: 'none', cursor: isReadOnly ? 'default' : 'pointer' }}>
+                    <Camera size={20} color={primaryColor} />
+                    <span style={{ color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '500' }}>Chụp ảnh</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Số lượng & Đơn vị */}
-          {!isGiaVi && (
+          {!isGiaVi && mode !== 'bulk_add' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8 }}>
               <label style={{ color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', lineHeight: '18px' }}>Số lượng & Đơn vị</label>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -348,6 +386,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                 value={expiryDate}
                 onChange={(e) => setExpiryDate(e.target.value)}
                 disabled={isReadOnly}
+                min={todayLocalStr}
               />
             </div>
           </div>
@@ -362,11 +401,11 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
             <>
               <button
                 type="button"
-                style={{ width: '100%', height: 48, background: primaryColor, borderRadius: 100, color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: (!name.trim() || !category || !storageType) ? 'default' : 'pointer', opacity: (!name.trim() || !category || !storageType) ? 0.6 : 1 }}
+                style={{ width: '100%', height: 48, background: primaryColor, borderRadius: 100, color: 'white', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: (mode === 'bulk_add' ? (!category || !storageType) : (!name.trim() || !category || !storageType)) ? 'default' : 'pointer', opacity: (mode === 'bulk_add' ? (!category || !storageType) : (!name.trim() || !category || !storageType)) ? 0.6 : 1 }}
                 onClick={handleSave}
-                disabled={!name.trim() || !category || !storageType}
+                disabled={mode === 'bulk_add' ? (!category || !storageType) : (!name.trim() || !category || !storageType)}
               >
-                {mode === 'add' ? 'Lưu vào tủ lạnh' : 'Lưu thay đổi'}
+                {mode === 'add' ? 'Lưu vào tủ lạnh' : mode === 'bulk_add' ? 'Xác nhận mua chung' : 'Lưu thay đổi'}
               </button>
               <button type="button" style={{ width: '100%', height: 48, background: 'white', borderRadius: 100, outline: '1.27px #E0E0E0 solid', outlineOffset: '-1.27px', color: '#1A1A1A', fontSize: 13, fontFamily: 'Plus Jakarta Sans', fontWeight: '500', border: 'none', cursor: 'pointer' }} onClick={onClose}>
                 Hủy

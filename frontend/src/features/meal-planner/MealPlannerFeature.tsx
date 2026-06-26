@@ -12,7 +12,7 @@ export interface MealPlannerFeatureProps {
   role: 'homemaker' | 'member';
 }
 
-import type { Recipe, MealKey, DayMeals } from './types';
+import type { Recipe, MealKey, DayMeals, PlannedMeal } from './types';
 import WeekDayTabs from './components/WeekDayTabs';
 import type { DayTab } from './components/WeekDayTabs';
 import MealSection from './components/MealSection';
@@ -107,6 +107,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
 
   // Recipe detail modal state
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [selectedPlannedMeal, setSelectedPlannedMeal] = useState<PlannedMeal | null>(null);
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
 
   // Shopping confirm modal state
@@ -123,8 +124,9 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
   const [toastTrigger, setToastTrigger] = useState(0);
   const hideToast = useCallback(() => {}, []);
 
-  const handleCardClick = useCallback((recipe: Recipe) => {
-    setSelectedRecipe(recipe);
+  const handleCardClick = useCallback((pm: PlannedMeal) => {
+    setSelectedPlannedMeal(pm);
+    setSelectedRecipe(pm.recipe);
     setIsRecipeModalOpen(true);
   }, []);
 
@@ -290,6 +292,65 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     return MEALS.some(({ key }) => currentDay[key] && currentDay[key].length > 0);
   }, [currentDay]);
 
+  const handleAddToShoppingList = useCallback(async (recipe: Recipe) => {
+    const missing: Array<{
+      name: string;
+      category: string;
+      neededText: string;
+      defaultBuyAmount: string;
+      quantity?: number;
+      unit?: string;
+    }> = [];
+
+    recipe.ingredients.forEach(ing => {
+      const inFridge = (fridgeItems || []).find(f =>
+        (f.category || 'Khác').toLowerCase().trim() === (ing.category || 'Khác').toLowerCase().trim() &&
+        f.name.toLowerCase().trim() === ing.name.toLowerCase().trim()
+      );
+
+      if (ing.category === 'Gia vị') {
+        if (!inFridge) {
+          const roundedAmount = Math.round(ing.amount * 100) / 100;
+          missing.push({
+            name: ing.name,
+            category: ing.category,
+            neededText: 'Gia vị chưa có trong tủ lạnh',
+            defaultBuyAmount: ing.amount > 0 ? `${roundedAmount} ${ing.unit}` : '1 gói',
+            quantity: ing.amount > 0 ? roundedAmount : 1,
+            unit: ing.amount > 0 ? ing.unit : 'gói',
+          });
+        }
+      } else {
+        const available = inFridge ? inFridge.quantity : 0;
+        if (available < ing.amount) {
+          const diff = ing.amount - available;
+          const roundedAmount = Math.round(ing.amount * 100) / 100;
+          const roundedAvailable = Math.round(available * 100) / 100;
+          const roundedDiff = Math.round(diff * 100) / 100;
+          missing.push({
+            name: ing.name,
+            category: ing.category,
+            neededText: `Cần ${roundedAmount} ${ing.unit} (Trong tủ: ${roundedAvailable} ${ing.unit})`,
+            defaultBuyAmount: `${roundedDiff} ${ing.unit}`,
+            quantity: roundedDiff,
+            unit: ing.unit,
+          });
+        }
+      }
+    });
+
+    if (missing.length === 0) {
+      setToastMsg('Gia đình đã có đầy đủ nguyên liệu trong tủ lạnh cho món ăn này!');
+      setToastTrigger(prev => prev + 1);
+      setIsRecipeModalOpen(false);
+      return;
+    }
+
+    setShoppingConfirmIngredients(missing);
+    setIsShoppingConfirmOpen(true);
+    setIsRecipeModalOpen(false);
+  }, [fridgeItems]);
+
   const handleConsolidateMissing = useCallback(() => {
     const missing: Array<{
       name: string;
@@ -305,6 +366,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     MEALS.forEach(({ key }) => {
       const plannedMeals = currentDay[key] || [];
       plannedMeals.forEach(pm => {
+        if (pm.isCooked || pm.isShopped) return; // Skip cooked or already gathered items!
         const recipe = pm.recipe;
         if (!recipe || !recipe.ingredients) return;
         const multiplier = (pm.people_count || 1) / (recipe.servings || 1);
@@ -357,7 +419,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           missing.push({
             name: neededItem.name,
             category: neededItem.category,
-            neededText: `Cần ${roundedAmount}${neededItem.unit} (Trong tủ: ${roundedAvailable}${neededItem.unit})`,
+            neededText: `Cần ${roundedAmount} ${neededItem.unit} (Trong tủ: ${roundedAvailable} ${neededItem.unit})`,
             defaultBuyAmount: `${roundedDiff} ${neededItem.unit}`,
             quantity: roundedDiff,
             unit: neededItem.unit,
@@ -405,16 +467,38 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
         });
       }
 
+      // Mark planned items as shopped
+      if (selectedPlannedMeal) {
+        await mealPlannerService.markSingleItemShopped(selectedPlannedMeal.id);
+      } else {
+        const activeDayTab = weekDays.find(d => d.key === activeDay);
+        if (activeDayTab) {
+          const [d, m] = activeDayTab.date!.split('/');
+          const dateStr = `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+          await mealPlannerService.markShopped(dateStr);
+        }
+      }
+
       setIsShoppingConfirmOpen(false);
-      setToastMsg('Đã thêm các nguyên liệu thiếu của ngày vào danh sách mua sắm thành công!');
+      setToastMsg('Đã thêm các nguyên liệu thiếu vào danh sách mua sắm thành công!');
       setToastTrigger(prev => prev + 1);
+
+      // Force reload weekly plan to update badge labels instantly
+      const startDateStr = weekDays[0].date;
+      const endDateStr = weekDays[6].date;
+      const parseDate = (dStr: string) => {
+        const [dVal, mVal] = dStr.split('/');
+        return `${year}-${mVal.padStart(2, '0')}-${dVal.padStart(2, '0')}`;
+      };
+      await fetchWeekPlan(parseDate(startDateStr!), parseDate(endDateStr!), true);
+
       navigate(`/${role}/shopping-list`);
     } catch (error) {
       console.error('Error adding custom items to shopping list:', error);
       setToastMsg('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
       setToastTrigger(prev => prev + 1);
     }
-  }, [role, navigate]);
+  }, [role, navigate, selectedPlannedMeal, weekDays, activeDay, fetchWeekPlan]);
 
   const totalCalories = React.useMemo(() => {
     let sum = 0;
@@ -613,15 +697,16 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           isOpen={isRecipeModalOpen}
           recipe={selectedRecipe}
           showEditDelete={false}
-          showShoppingAndCook={false}
+          showShoppingAndCook={true}
           onClose={() => {
             setIsRecipeModalOpen(false);
             setSelectedRecipe(null);
+            setSelectedPlannedMeal(null);
           }}
           onEdit={() => {}}
           onDelete={() => {}}
           onToggleFavorite={() => {}}
-          onAddToShoppingList={() => {}}
+          onAddToShoppingList={handleAddToShoppingList}
         />
       )}
 
