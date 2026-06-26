@@ -9,7 +9,7 @@ interface Props {
 
 export const NotificationItem: React.FC<Props> = ({ notif }) => {
   const { markAsRead, checkIsRead } = useNotifications();
-  const isRead = checkIsRead(notif.id);
+  const isRead = checkIsRead(notif);
 
   const getIcon = (type: string) => {
     switch(type) {

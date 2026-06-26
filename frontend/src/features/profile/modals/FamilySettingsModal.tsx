@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../profile.css';
+import ExpirationWarningSetting from '../components/ExpirationWarningSetting';
 
 interface FamilySettingsModalProps {
   isOpen: boolean;
@@ -7,6 +8,8 @@ interface FamilySettingsModalProps {
   dailyCalorieTarget: number;
   onUpdateFamilySettings: (name: string, dailyCalorieTarget: number) => Promise<void>;
   onClose: () => void;
+  warningDays?: number;
+  onUpdateWarningDays?: (days: number) => Promise<void>;
 }
 
 const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
@@ -15,17 +18,23 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
   dailyCalorieTarget,
   onUpdateFamilySettings,
   onClose,
+  warningDays,
+  onUpdateWarningDays,
 }) => {
   const [inputName, setInputName] = useState(name);
   const [inputTarget, setInputTarget] = useState(dailyCalorieTarget);
+  const [inputWarningDays, setInputWarningDays] = useState(warningDays ?? 3);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setInputName(name);
       setInputTarget(dailyCalorieTarget);
+      if (warningDays !== undefined) {
+        setInputWarningDays(warningDays);
+      }
     }
-  }, [isOpen, name, dailyCalorieTarget]);
+  }, [isOpen, name, dailyCalorieTarget, warningDays]);
 
   if (!isOpen) return null;
 
@@ -41,6 +50,9 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
     setIsSubmitting(true);
     try {
       await onUpdateFamilySettings(inputName.trim(), Number(inputTarget));
+      if (onUpdateWarningDays && inputWarningDays !== warningDays) {
+        await onUpdateWarningDays(inputWarningDays);
+      }
       onClose();
     } catch (err) {
       console.error(err);
@@ -82,6 +94,17 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
               required
             />
           </div>
+
+          {/* Expiration Warning Setting */}
+          {warningDays !== undefined && onUpdateWarningDays && (
+            <div className="profile-form-group">
+              <label className="profile-form-label" style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 600 }}>Cài đặt thông báo</label>
+              <ExpirationWarningSetting 
+                initialDays={inputWarningDays} 
+                onChangeDays={setInputWarningDays} 
+              />
+            </div>
+          )}
 
           {/* Form actions */}
           <div className="profile-form-actions">

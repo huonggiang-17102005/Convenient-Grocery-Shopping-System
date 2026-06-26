@@ -37,5 +37,23 @@ export const getFamilyNotifications = async (familyId: string, userId: string, l
   if (!userId) throw new BadRequestError('Thiếu ID người dùng');
   
   const notifications = await notificationRepo.fetchNotifications(familyId, userId, limit, offset, category);
-  return notifications;
+  const unreadCount = await notificationRepo.getUnreadCount(familyId, userId);
+  
+  return { ...notifications, unreadCount };
+};
+
+export const markAsRead = async (notificationId: string, userId: string) => {
+  if (!notificationId) throw new BadRequestError('Thiếu ID thông báo');
+  if (!userId) throw new BadRequestError('Thiếu ID người dùng');
+
+  await notificationRepo.markAsRead(notificationId, userId);
+  return true;
+};
+
+export const markAllAsRead = async (familyId: string, userId: string) => {
+  if (!familyId) throw new BadRequestError('Thiếu thông tin gia đình');
+  if (!userId) throw new BadRequestError('Thiếu ID người dùng');
+
+  await notificationRepo.markAllAsRead(familyId, userId);
+  return true;
 };

@@ -62,3 +62,32 @@ export const transferHomemakerRole = async (currentHomemakerId: string, newHomem
 
   return data;
 };
+
+export const getFamilyById = async (familyId: string) => {
+  const { data, error } = await supabase
+    .from('families')
+    .select('*')
+    .eq('id', familyId)
+    .single();
+
+  if (error) {
+    console.error('Lỗi khi lấy thông tin gia đình:', error);
+    throw new InternalServerError('Không thể lấy thông tin gia đình');
+  }
+  return data;
+};
+
+export const updateExpirationWarningDays = async (familyId: string, days: number) => {
+  const { data, error } = await supabase
+    .from('families')
+    .update({ expiration_warning_days: days })
+    .eq('id', familyId)
+    .select('*')
+    .single();
+
+  if (error) {
+    console.error('Lỗi cập nhật ngày cảnh báo:', error);
+    throw new InternalServerError('Không thể cập nhật số ngày cảnh báo hết hạn');
+  }
+  return data;
+};

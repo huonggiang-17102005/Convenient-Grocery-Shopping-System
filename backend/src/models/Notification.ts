@@ -7,4 +7,5 @@ export interface Notification {
   message: string;
   metadata?: any;
   created_at?: Date;
+  read_by?: string[];
 }

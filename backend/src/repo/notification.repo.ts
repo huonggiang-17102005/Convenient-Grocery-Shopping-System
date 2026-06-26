@@ -59,3 +59,73 @@ export const fetchNotifications = async (familyId: string, userId: string, limit
 
   return { data: data as Notification[], count: count || 0 };
 };
+
+export const getUnreadCount = async (familyId: string, userId: string) => {
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('family_id', familyId)
+    .not('read_by', 'cs', `{${userId}}`);
+
+  if (error) {
+    console.error('Error getting unread count:', error);
+    throw new InternalServerError('Lỗi truy vấn DB khi lấy số lượng chưa đọc');
+  }
+
+  return count || 0;
+};
+
+export const markAsRead = async (notificationId: string, userId: string) => {
+  // Lấy mảng hiện tại
+  const { data: current, error: fetchErr } = await supabase
+    .from('notifications')
+    .select('read_by')
+    .eq('id', notificationId)
+    .single();
+    
+  if (fetchErr) throw new InternalServerError('Lỗi truy vấn DB');
+
+  const currentReadBy = current?.read_by || [];
+  if (currentReadBy.includes(userId)) return; // Đã đọc rồi
+
+  const newReadBy = [...currentReadBy, userId];
+
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read_by: newReadBy })
+    .eq('id', notificationId);
+
+  if (error) {
+    console.error('Error marking as read:', error);
+    throw new InternalServerError('Lỗi DB');
+  }
+};
+
+export const markAllAsRead = async (familyId: string, userId: string) => {
+  // 1. Lấy tất cả thông báo của gia đình mà user chưa đọc
+  const { data: unreadNotifs, error: fetchErr } = await supabase
+    .from('notifications')
+    .select('id, read_by')
+    .eq('family_id', familyId)
+    .not('read_by', 'cs', `{${userId}}`);
+
+  if (fetchErr) throw new InternalServerError('Lỗi truy vấn DB');
+  if (!unreadNotifs || unreadNotifs.length === 0) return;
+
+  // 2. Cập nhật mảng read_by cho từng thông báo bằng vòng lặp update (an toàn hơn upsert)
+  const promises = unreadNotifs.map(n => 
+    supabase
+      .from('notifications')
+      .update({ read_by: [...(n.read_by || []), userId] })
+      .eq('id', n.id)
+  );
+
+  const results = await Promise.all(promises);
+  const errorResult = results.find(r => r.error);
+
+  if (errorResult) {
+    console.error('Error marking all as read:', errorResult.error);
+    throw new InternalServerError('Lỗi DB khi cập nhật trạng thái đã đọc');
+  }
+};
+

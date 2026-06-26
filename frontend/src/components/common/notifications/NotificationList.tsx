@@ -9,41 +9,35 @@ interface Props {
 
 export const NotificationList: React.FC<Props> = ({ category }) => {
   const { categories, loadMoreNotifications } = useNotifications();
-  const observerTarget = useRef<HTMLDivElement>(null);
-  
   const catData = categories[category];
+  const observer = useRef<IntersectionObserver | null>(null);
 
-  // Infinite Scroll logic
-  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
-    const target = entries[0];
-    if (target.isIntersecting && catData.hasMore && !catData.isLoading) {
-      loadMoreNotifications(category);
-    }
-  }, [catData.hasMore, catData.isLoading, loadMoreNotifications, category]);
+  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (catData.isLoading) return;
+    if (observer.current) observer.current.disconnect();
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, { root: null, rootMargin: '20px', threshold: 1.0 });
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-    return () => {
-      if (observerTarget.current) observer.unobserve(observerTarget.current);
-    };
-  }, [handleObserver]);
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && catData.hasMore) {
+        loadMoreNotifications(category);
+      }
+    }, { root: null, rootMargin: '20px', threshold: 1.0 });
+
+    if (node) observer.current.observe(node);
+  }, [catData.isLoading, catData.hasMore, loadMoreNotifications, category]);
 
   return (
     <div className="notif-list">
       {catData.items.length === 0 && !catData.isLoading && (
         <p className="notif-empty">Chưa có thông báo nào.</p>
       )}
-      
+
       {catData.items.map(notif => (
         <NotificationItem key={notif.id} notif={notif} />
       ))}
 
       {catData.isLoading && <p className="notif-loading">Đang tải...</p>}
-      
-      <div ref={observerTarget} style={{ height: '20px', width: '100%' }}></div>
+
+      <div ref={lastElementRef} style={{ height: '20px', width: '100%' }}></div>
     </div>
   );
 };

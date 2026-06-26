@@ -91,6 +91,26 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
     }
   };
 
+  const handleUpdateWarningDays = async (days: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${API_URL}/families/warning-days`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ days })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Lỗi cập nhật cấu hình ngày cảnh báo');
+      
+      await refreshFamily();
+      triggerToast('Cập nhật ngày cảnh báo thành công!');
+    } catch (err: any) {
+      alert(err.message);
+      throw err;
+    }
+  };
+
   // Toast feedback state
   const [toastMessage, setToastMessage] = useState('');
   const [toastTrigger, setToastTrigger] = useState(0);
@@ -345,6 +365,8 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
           dailyCalorieTarget={family?.daily_calorie_target || 2000}
           onUpdateFamilySettings={handleUpdateFamilySettings}
           onClose={() => setIsFamilySettingsOpen(false)}
+          warningDays={family?.expiration_warning_days}
+          onUpdateWarningDays={handleUpdateWarningDays}
         />
 
         <AccountModal

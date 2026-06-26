@@ -14,6 +14,7 @@ export interface Family {
   name: string;
   invite_code: string;
   daily_calorie_target?: number;
+  expiration_warning_days?: number;
 }
 
 interface AuthContextType {
