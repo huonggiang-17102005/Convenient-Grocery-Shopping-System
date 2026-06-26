@@ -247,6 +247,9 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
         const element = document.getElementById('waste-stats-report');
         
         if (element) {
+          // Add is-printing class to temporarily display all collapsed rows
+          element.classList.add('is-printing');
+
           const opt = {
             margin:       10,
             filename:     `Thong-ke-lang-phi-${new Date().toISOString().slice(0, 10)}.pdf`,
@@ -256,9 +259,11 @@ export const ProfileFeature: React.FC<ProfileFeatureProps> = ({ role }) => {
           };
           
           html2pdf().set(opt).from(element).save().then(() => {
+            element.classList.remove('is-printing');
             triggerToast('Xuất báo cáo PDF thành công!');
           }).catch((err: any) => {
             console.error('Lỗi xuất PDF:', err);
+            element.classList.remove('is-printing');
             triggerToast('Lỗi khi xuất file PDF');
           });
         } else {

@@ -762,4 +762,9 @@
   text-align: left;
 }
 
+/* Print styles */
+#waste-stats-report.is-printing .waste-stat-collapsed-row {
+  display: flex !important;
+}
+
 

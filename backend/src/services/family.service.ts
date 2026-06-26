@@ -149,11 +149,14 @@ export const transferHomemaker = async (currentUserId: string, targetUserId: str
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Thịt cá': '#EF5350',
+  'Rau củ quả': '#66BB6A',
   'Rau củ': '#66BB6A',
+  'Chất lỏng': '#42A5F5',
   'Đồ uống': '#42A5F5',
   'Trứng': '#FFA726',
   'Đồ khô': '#8D6E63',
   'Gia vị': '#AB47BC',
+  'Khác': '#9E9E9E',
 };
 
 export const getWasteStatistics = async (familyId: string, month: number, year: number) => {
@@ -161,49 +164,106 @@ export const getWasteStatistics = async (familyId: string, month: number, year: 
   
   const logs = await inventoryLogRepo.getLogsByFamilyAndMonth(familyId, month, year);
   
-  const statsMap: Record<string, { total: number, consumed: number, wasted: number, unit: string }> = {};
+  // Group by category, then by unit
+  const statsMap: Record<string, Record<string, { total: number, consumed: number, wasted: number }>> = {
+    'Khác': {
+      'g': { total: 0, consumed: 0, wasted: 0 },
+      'ml': { total: 0, consumed: 0, wasted: 0 }
+    }
+  };
   
   for (const log of logs) {
     const cat = log.category || 'Khác';
+    if (cat === 'Gia vị') continue; // Exclude 'Gia vị' completely
+    
+    const unit = log.unit || (cat === 'Chất lỏng' ? 'ml' : 'g');
+    
     if (!statsMap[cat]) {
-      statsMap[cat] = { total: 0, consumed: 0, wasted: 0, unit: log.unit || '' };
+      statsMap[cat] = {};
+    }
+    if (!statsMap[cat][unit]) {
+      statsMap[cat][unit] = { total: 0, consumed: 0, wasted: 0 };
     }
     
     if (log.action_type === 'add') {
-      statsMap[cat].total += log.amount;
+      statsMap[cat][unit].total += log.amount;
     } else if (log.action_type === 'consume') {
-      statsMap[cat].consumed += log.amount;
+      statsMap[cat][unit].consumed += log.amount;
     } else if (log.action_type === 'waste' || log.action_type === 'expire') {
-      statsMap[cat].wasted += log.amount;
-    }
-    
-    if (!statsMap[cat].unit && log.unit) {
-      statsMap[cat].unit = log.unit;
+      statsMap[cat][unit].wasted += log.amount;
     }
   }
   
   const result = [];
-  for (const [name, data] of Object.entries(statsMap)) {
-    const actualTotal = Math.max(data.total, data.consumed + data.wasted);
+  for (const [name, unitsDataMap] of Object.entries(statsMap)) {
+    if (name === 'Gia vị') continue;
     
-    let consumedPercent = 0;
-    let wastedPercent = 0;
-    
-    if (actualTotal > 0) {
-      consumedPercent = Math.round((data.consumed / actualTotal) * 100);
-      wastedPercent = Math.round((data.wasted / actualTotal) * 100);
+    if (name === 'Khác') {
+      const unitG = unitsDataMap['g'] || { total: 0, consumed: 0, wasted: 0 };
+      const unitMl = unitsDataMap['ml'] || { total: 0, consumed: 0, wasted: 0 };
+      
+      const totalG = Math.max(unitG.total, unitG.consumed + unitG.wasted);
+      const wastedPercentG = totalG > 0 ? (unitG.wasted / totalG) * 100 : 0;
+      const consumedPercentG = totalG > 0 ? (unitG.consumed / totalG) * 100 : 0;
+      
+      const totalMl = Math.max(unitMl.total, unitMl.consumed + unitMl.wasted);
+      const wastedPercentMl = totalMl > 0 ? (unitMl.wasted / totalMl) * 100 : 0;
+      const consumedPercentMl = totalMl > 0 ? (unitMl.consumed / totalMl) * 100 : 0;
+      
+      const avgWastedPercent = (wastedPercentG + wastedPercentMl) / 2;
+      const avgConsumedPercent = (consumedPercentG + consumedPercentMl) / 2;
+      
+      result.push({
+        name: 'Khác',
+        isMultipleUnits: true,
+        unitsData: [
+          { unit: 'g', total: totalG, consumed: unitG.consumed, wasted: unitG.wasted, consumedPercent: consumedPercentG, wastedPercent: wastedPercentG },
+          { unit: 'ml', total: totalMl, consumed: unitMl.consumed, wasted: unitMl.wasted, consumedPercent: consumedPercentMl, wastedPercent: wastedPercentMl }
+        ],
+        total: 0,
+        unit: 'g, ml',
+        consumed: 0,
+        consumedPercent: avgConsumedPercent,
+        wasted: 0,
+        wastedPercent: avgWastedPercent,
+        color: CATEGORY_COLORS[name] || '#9E9E9E'
+      });
+    } else {
+      // Standard category - sum up if there are multiple units (e.g. data noise)
+      const units = Object.keys(unitsDataMap);
+      if (units.length === 0) continue; // No logs for this category
+      
+      const primaryUnit = units[0];
+      let totalAmount = 0;
+      let consumedAmount = 0;
+      let wastedAmount = 0;
+      
+      for (const data of Object.values(unitsDataMap)) {
+        totalAmount += data.total;
+        consumedAmount += data.consumed;
+        wastedAmount += data.wasted;
+      }
+      
+      const actualTotal = Math.max(totalAmount, consumedAmount + wastedAmount);
+      let consumedPercent = 0;
+      let wastedPercent = 0;
+      
+      if (actualTotal > 0) {
+        consumedPercent = Math.round((consumedAmount / actualTotal) * 100);
+        wastedPercent = Math.round((wastedAmount / actualTotal) * 100);
+      }
+      
+      result.push({
+        name,
+        total: actualTotal,
+        unit: primaryUnit,
+        consumed: consumedAmount,
+        consumedPercent,
+        wasted: wastedAmount,
+        wastedPercent,
+        color: CATEGORY_COLORS[name] || '#9E9E9E'
+      });
     }
-    
-    result.push({
-      name,
-      total: actualTotal,
-      unit: data.unit,
-      consumed: data.consumed,
-      consumedPercent,
-      wasted: data.wasted,
-      wastedPercent,
-      color: CATEGORY_COLORS[name] || '#9E9E9E'
-    });
   }
   
   return result.sort((a, b) => b.wastedPercent - a.wastedPercent);
