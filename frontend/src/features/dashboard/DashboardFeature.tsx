@@ -98,7 +98,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
     return fridgeItems
       .filter(item => {
         // daysRemaining is already calculated in FridgeContext
-        return item.daysRemaining !== undefined && item.daysRemaining <= 3;
+        return item.daysRemaining !== undefined && item.daysRemaining <= 3 && item.daysRemaining > 0;
       })
       .map(mapFoodItemToExpiringCardProps);
   }, [fridgeItems]);

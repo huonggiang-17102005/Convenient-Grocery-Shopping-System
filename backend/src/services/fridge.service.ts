@@ -10,8 +10,16 @@ export const getFamilyFridge = async (familyId: string) => {
   }
 
   const items = await fridgeRepo.getItemsByFamilyId(familyId);
+  const now = new Date();
   
-  return items;
+  // Lọc bỏ thực phẩm đã hết hạn (chênh lệch ngày <= 0) hoặc bị đánh dấu lãng phí
+  return items.filter(item => {
+    if (item.is_wasted) return false;
+    const expDate = new Date(item.expiration_date);
+    const diffTime = expDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0;
+  });
 };
 
 export const deductInventory = async (
@@ -269,19 +277,19 @@ export const checkExpiringItems = async (familyId: string) => {
   if (!familyId) throw new BadRequestError('Mã ID của gia đình không được để trống.');
 
   const items = await fridgeRepo.getItemsByFamilyId(familyId);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
   
-  const threeDaysFromNow = new Date(today);
-  threeDaysFromNow.setDate(today.getDate() + 3);
+  const threeDaysFromNow = new Date(now);
+  threeDaysFromNow.setDate(now.getDate() + 3);
 
-  // Filter items that are expiring within 3 days or already expired
-  const expiringItems = items.filter(item => {
+  // Lọc những thực phẩm sắp hết hạn (0 < daysRemaining <= 3) và chưa bị đánh dấu lãng phí
+  return items.filter(item => {
+    if (item.is_wasted) return false;
     const expDate = new Date(item.expiration_date);
-    return expDate <= threeDaysFromNow;
+    const diffTime = expDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 && diffDays <= 3;
   });
-
-  return expiringItems;
 };
 
 // Hàm này được gọi bởi Vercel Cronjob thông qua API
@@ -321,10 +329,12 @@ export const runCronCheck = async () => {
     itemIds.push(item.id);
   }
 
-  // Đánh dấu đã phạt lãng phí để không bị ghi log đúp vào hôm sau
+  // Xóa thực phẩm hết hạn khỏi tủ lạnh luôn để giải phóng dung lượng DB
   if (itemIds.length > 0) {
-    await fridgeRepo.markItemsAsWasted(itemIds);
-    console.log(`Đã ghi log lãng phí (expire) cho ${itemIds.length} món đồ.`);
+    for (const id of itemIds) {
+      await fridgeRepo.deleteItem(id);
+    }
+    console.log(`Đã ghi log lãng phí (expire) và xóa ${itemIds.length} món đồ hết hạn.`);
   }
 
   return { processedCount: itemIds.length };

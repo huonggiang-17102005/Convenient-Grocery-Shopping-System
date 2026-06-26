@@ -32,10 +32,12 @@ export const runFridgeCronJob = () => {
         itemIds.push(item.id);
       }
 
-      // Đánh dấu đã phạt lãng phí để không bị ghi log đúp vào hôm sau
+      // Xóa thực phẩm hết hạn khỏi tủ lạnh luôn để giải phóng dung lượng DB
       if (itemIds.length > 0) {
-        await fridgeRepo.markItemsAsWasted(itemIds);
-        console.log(`Đã ghi log lãng phí (expire) cho ${itemIds.length} món đồ.`);
+        for (const id of itemIds) {
+          await fridgeRepo.deleteItem(id);
+        }
+        console.log(`Đã ghi log lãng phí (expire) và xóa ${itemIds.length} món đồ hết hạn.`);
       }
 
     } catch (error) {
