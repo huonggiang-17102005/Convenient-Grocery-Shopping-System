@@ -11,8 +11,16 @@ export const getFamilyFridge = async (familyId: string) => {
   }
 
   const items = await fridgeRepo.getItemsByFamilyId(familyId);
+  const now = new Date();
   
-  return items;
+  // Lọc bỏ thực phẩm đã hết hạn (chênh lệch ngày <= 0) hoặc bị đánh dấu lãng phí
+  return items.filter(item => {
+    if (item.is_wasted) return false;
+    const expDate = new Date(item.expiration_date);
+    const diffTime = expDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0;
+  });
 };
 
 export const deductInventory = async (
@@ -270,35 +278,19 @@ export const checkExpiringItems = async (familyId: string) => {
   if (!familyId) throw new BadRequestError('Mã ID của gia đình không được để trống.');
 
   const items = await fridgeRepo.getItemsByFamilyId(familyId);
-  const { data: family } = await supabase
-    .from('families')
-    .select('expiration_warning_days')
-    .eq('id', familyId)
-    .single();
-
-  const { data: systemSetting } = await supabase
-    .from('system_settings')
-    .select('default_expiry_warning_days')
-    .order('id', { ascending: true })
-    .limit(1)
-    .single();
-
-  const globalDefault = systemSetting?.default_expiry_warning_days ?? 3;
-  const warningDays = family?.expiration_warning_days ?? globalDefault;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
   
-  const warningDate = new Date(today);
-  warningDate.setDate(today.getDate() + warningDays);
+  const threeDaysFromNow = new Date(now);
+  threeDaysFromNow.setDate(now.getDate() + 3);
 
-  // Filter items that are expiring within warningDays or already expired
-  const expiringItems = items.filter(item => {
+  // Lọc những thực phẩm sắp hết hạn (0 < daysRemaining <= 3) và chưa bị đánh dấu lãng phí
+  return items.filter(item => {
+    if (item.is_wasted) return false;
     const expDate = new Date(item.expiration_date);
-    return expDate <= warningDate;
+    const diffTime = expDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 && diffDays <= 3;
   });
-
-  return expiringItems;
 };
 
 // Hàm này được gọi bởi Vercel Cronjob thông qua API
@@ -387,17 +379,25 @@ export const runCronCheck = async () => {
     console.log(`Đã ghi log lãng phí (expire) cho ${expiredItemIds.length} món đồ.`);
   }
 
-  // Gửi một thông báo tổng hợp cho các món sắp hết hạn của mỗi gia đình
+  // Xóa thực phẩm hết hạn khỏi tủ lạnh luôn để giải phóng dung lượng DB
+  if (expiredItemIds.length > 0) {
+    for (const id of expiredItemIds) {
+      await fridgeRepo.deleteItem(id);
+    }
+    console.log(`Đã ghi log lãng phí (expire) và xóa ${expiredItemIds.length} món đồ hết hạn.`);
+  }
+
+  // Gửi một thông báo tổng hợp cho các món sắp hết hạn của mỗi gia đình (giữ nguyên tính năng mới từ main)
   for (const [familyId, items] of Object.entries(expiringItemsByFamily)) {
     const itemNames = items.map(i => `${i.name} (${i.diffDays === 0 ? 'hết hạn hôm nay' : `còn ${i.diffDays} ngày`})`).join(', ');
     await notificationService.createNotification(
       familyId,
       'EXPIRING_SOON',
       'Thực phẩm sắp hết hạn',
-      `⏳ Có ${items.length} thực phẩm sắp hết hạn: ${itemNames}. Hãy nhanh chóng sử dụng!`,
+      `⌛ có ${items.length} thực phẩm sắp hết hạn: ${itemNames}. Hãy nhanh chóng sử dụng`,
       { count: items.length, items: items.map(i => ({ name: i.name, days_left: i.diffDays })) }
     );
   }
 
-  return { processedCount };
+  return { processedCount: expiredItemIds.length };
 };

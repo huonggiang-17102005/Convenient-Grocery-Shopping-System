@@ -8,7 +8,7 @@ const mockUser = { id: 'user1', email: 'test@gmail.com', family_id: 'family1', r
 const testToken = jwt.sign({ id: mockUser.id }, JWT_SECRET);
 
 const mockFridgeItems = [
-  { id: 'item1', family_id: 'family1', name: 'Đậu phụ', quantity: 2, unit: 'bìa', category: 'Thịt cá' }
+  { id: 'item1', family_id: 'family1', name: 'Đậu phụ', quantity: 2, unit: 'bìa', category: 'Thịt cá', expiration_date: '2026-12-31', is_wasted: false }
 ];
 
 // Định nghĩa mock chain thông qua vi.hoisted để Vitest hoist lên trước vi.mock

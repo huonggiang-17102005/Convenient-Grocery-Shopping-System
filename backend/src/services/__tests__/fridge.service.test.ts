@@ -29,9 +29,13 @@ describe('Fridge Service - Chức năng Tủ lạnh', () => {
 
   it('Nên lấy danh sách thực phẩm trong tủ lạnh thành công', async () => {
     // BƯỚC 1: CHUẨN BỊ
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 2); // 2 days in the future to ensure it stays in active list
+    const expirationDateStr = tomorrow.toISOString().split('T')[0];
+
     const mockItems = [
-      { id: '1', name: 'Thịt bò', quantity: 2, unit: 'g' },
-      { id: '2', name: 'Rau muống', quantity: 1, unit: 'g' }
+      { id: '1', name: 'Thịt bò', quantity: 2, unit: 'g', expiration_date: expirationDateStr },
+      { id: '2', name: 'Rau muống', quantity: 1, unit: 'g', expiration_date: expirationDateStr }
     ];
     (fridgeRepo.getItemsByFamilyId as any).mockResolvedValue(mockItems);
 

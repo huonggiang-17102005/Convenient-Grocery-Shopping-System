@@ -258,7 +258,7 @@ export const FridgeFeature: React.FC<FridgeFeatureProps> = ({ role = 'homemaker'
       const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchStorage = activeStorage === 'Tất cả' || item.storageType === activeStorage;
       const matchCategory = activeCategory === 'Tất cả' || item.category === activeCategory;
-      return matchSearch && matchStorage && matchCategory;
+      return matchSearch && matchStorage && matchCategory && item.daysRemaining > 0;
     })
     .sort((a, b) => a.daysRemaining - b.daysRemaining);
 
