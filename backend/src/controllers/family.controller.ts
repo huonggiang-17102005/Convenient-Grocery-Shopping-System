@@ -89,20 +89,50 @@ export const getFamilyInfo = async (req: AuthRequest, res: Response): Promise<vo
       .eq('id', user.id)
       .single();
 
-    if (userError || !userData || !userData.family_id) {
-      res.status(404).json({ message: 'Người dùng chưa có nhóm' });
+    let familyId = userData?.family_id;
+
+    // Fallback: Nếu không có family_id nhưng user là homemaker của một nhóm nào đó
+    let fallbackErrorObj: any = null;
+    if (!familyId) {
+      const { data: fallbackFamilies, error: fallbackError } = await supabase
+        .from('families')
+        .select('id')
+        .eq('homemaker_id', user.id)
+        .limit(1);
+        
+      if (fallbackError) {
+        console.error('Fallback query error:', fallbackError);
+        fallbackErrorObj = fallbackError;
+      }
+        
+      if (fallbackFamilies && fallbackFamilies.length > 0) {
+        familyId = fallbackFamilies[0].id;
+        // Thử cập nhật lại
+        await supabase.from('users').update({ family_id: familyId }).eq('id', user.id);
+      }
+    }
+
+    if (!familyId) {
+      res.status(404).json({ 
+        message: 'Người dùng chưa có nhóm', 
+        debug_fallback_error: fallbackErrorObj 
+      });
       return;
     }
 
     // 2. Lấy thông tin family
     const { data: family, error: familyError } = await supabase
       .from('families')
-      .select('id, name, invite_code, daily_calorie_target')
-      .eq('id', userData.family_id)
+      .select('id, name, invite_code')
+      .eq('id', familyId)
       .single();
 
     if (familyError || !family) {
-      res.status(404).json({ message: 'Không tìm thấy thông tin nhóm gia đình' });
+      res.status(404).json({ 
+        message: 'Không tìm thấy thông tin nhóm gia đình',
+        debug_family_error: familyError,
+        debug_family_id: familyId
+      });
       return;
     }
 
@@ -137,9 +167,9 @@ export const updateFamilyInfo = async (req: AuthRequest, res: Response): Promise
 
     const updateFields: any = {};
     if (name !== undefined) updateFields.name = name;
-    if (dailyCalorieTarget !== undefined) {
-      updateFields.daily_calorie_target = Number(dailyCalorieTarget);
-    }
+    // if (dailyCalorieTarget !== undefined) {
+    //   updateFields.daily_calorie_target = Number(dailyCalorieTarget);
+    // }
 
     if (Object.keys(updateFields).length === 0) {
       res.status(400).json({ message: 'Không có dữ liệu chỉnh sửa.' });

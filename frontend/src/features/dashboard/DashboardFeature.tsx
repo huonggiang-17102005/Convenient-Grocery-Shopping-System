@@ -76,9 +76,16 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
   const [isExpireOpen, setIsExpireOpen] = useState(false);
   const [isCookOpen,   setIsCookOpen]   = useState(false);
 
-  const { user, family } = useAuth();
+  const { user, family, isLoading, refreshFamily } = useAuth();
   const familyId = user?.family_id || null;
   const realInviteCode = family?.invite_code || 'Chưa có mã';
+
+  React.useEffect(() => {
+    if (!isLoading && user && !user.family_id) {
+      if (role === 'homemaker') navigate('/homemaker/create-group');
+      else navigate('/member/join-group');
+    }
+  }, [isLoading, user, role, navigate]);
 
   const { items: fridgeItems, refreshFridge } = useFridgeContext();
   const { items: shoppingItems, setItems: setShoppingItems } = useShoppingListContext();
@@ -216,6 +223,13 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
     return false; // Không hiển thị item không có deadline
   });
 
+  const handleOpenInvite = async () => {
+    if (!family?.invite_code) {
+      await refreshFamily();
+    }
+    setIsInviteOpen(true);
+  };
+
   return (
     <>
       {/* Toast – hiện ở trên cùng */}
@@ -252,7 +266,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
             id="btn-invite-code"
             className="invite-banner__btn"
             style={{ background: primaryColor }}
-            onClick={() => setIsInviteOpen(true)}
+            onClick={handleOpenInvite}
           >
             Lấy mã mời
           </button>

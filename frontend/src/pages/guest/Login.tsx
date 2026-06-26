@@ -49,12 +49,16 @@ export default function Login() {
 
       // Kiểm tra role để điều hướng cho đúng
       const userRole = data.user.role;
+      const hasFamily = !!data.user.family_id;
+
       if (userRole === 'Admin' || userRole === 'admin') {
         navigate('/admin/dashboard');
       } else if (userRole === 'Member' || userRole === 'member') {
-        navigate('/member/dashboard');
+        if (!hasFamily) navigate('/member/join-group');
+        else navigate('/member/dashboard');
       } else if (userRole === 'Homemaker' || userRole === 'homemaker') {
-        navigate('/homemaker/dashboard');
+        if (!hasFamily) navigate('/homemaker/create-group');
+        else navigate('/homemaker/dashboard');
       } else {
         // Bao gồm 'Kicked' hoặc null
         navigate('/choose-role');
