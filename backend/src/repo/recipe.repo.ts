@@ -18,7 +18,7 @@ export const getFamilyRecipes = async (familyId: string): Promise<Recipe[]> => {
 
   if (userIds.length === 0) return [];
 
-  // Get recipes created by these users that are Private
+  // Get all recipes created by these users (Private, Pending, or Public)
   const { data, error } = await supabase
     .from('recipes')
     .select(`
@@ -26,7 +26,6 @@ export const getFamilyRecipes = async (familyId: string): Promise<Recipe[]> => {
       author:users!author_id(id, full_name, avatar)
     `)
     .in('author_id', userIds)
-    .eq('visibility', 'Private')
     .order('created_at', { ascending: false });
 
   if (error) {

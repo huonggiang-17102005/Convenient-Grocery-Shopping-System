@@ -481,19 +481,34 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   const handleShareSubmit = useCallback(
     async (description: string, recipeData: Omit<Recipe, 'id' | 'isFavorited'>) => {
       try {
-        // Create recipe first, then share
-        const createdRecipe = await recipesService.createRecipe(recipeData);
-        await recipesService.shareToCommunity(createdRecipe.id, description);
+        let recipeIdToShare;
+        
+        if (shareRecipe) {
+          // Update the existing recipe
+          const updatedRecipe = await recipesService.updateRecipe(shareRecipe.id, recipeData);
+          recipeIdToShare = updatedRecipe.id;
+        } else {
+          // Create new recipe
+          const createdRecipe = await recipesService.createRecipe(recipeData);
+          recipeIdToShare = createdRecipe.id;
+        }
+        
+        // Share to community (this sets visibility to 'Pending')
+        await recipesService.shareToCommunity(recipeIdToShare, description);
 
         setIsShareOpen(false);
+        setShareRecipe(null);
         showToast('Đã gửi công thức lên cộng đồng, vui lòng chờ duyệt!');
+        
+        // Refresh family recipes so the updated visibility reflects immediately
+        refreshRecipes();
         await fetchPendingPost();
       } catch (error) {
         console.error('Error sharing recipe:', error);
         showToast('Lỗi khi chia sẻ công thức');
       }
     },
-    [showToast, fetchPendingPost]
+    [shareRecipe, showToast, fetchPendingPost, refreshRecipes]
   );
 
   // Remove diacritics utility

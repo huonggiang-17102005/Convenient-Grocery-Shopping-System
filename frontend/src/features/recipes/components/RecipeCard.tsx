@@ -56,12 +56,14 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       <div className="recipe-card-info">
         <h3 className="recipe-card-name">{recipe.name}</h3>
 
-        {(recipe.authorName || recipe.visibility === 'Public' || recipe.authorId === null) && (
+        {(recipe.authorName || recipe.visibility === 'Public' || recipe.visibility === 'Pending' || recipe.authorId === null) && (
           <div className="recipe-card-author" style={{ fontSize: '11.5px', color: '#1A1A1A', fontWeight: '600', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span>👤</span>
             <span>
               {recipe.visibility === 'Public'
-                ? 'Cộng đồng'
+                ? 'Đã duyệt (Cộng đồng)'
+                : recipe.visibility === 'Pending'
+                ? 'Đang chờ duyệt'
                 : (recipe.authorName || (recipe.authorId === null ? 'Hệ thống' : 'Gia đình'))}
             </span>
           </div>
