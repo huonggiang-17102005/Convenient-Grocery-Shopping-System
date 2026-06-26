@@ -12,7 +12,7 @@ export interface MealPlannerFeatureProps {
   role: 'homemaker' | 'member';
 }
 
-import type { Recipe, MealKey, DayMeals } from './types';
+import type { Recipe, MealKey, DayMeals, PlannedMeal } from './types';
 import WeekDayTabs from './components/WeekDayTabs';
 import type { DayTab } from './components/WeekDayTabs';
 import MealSection from './components/MealSection';
@@ -107,6 +107,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
 
   // Recipe detail modal state
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [selectedPlannedMeal, setSelectedPlannedMeal] = useState<PlannedMeal | null>(null);
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
 
   // Shopping confirm modal state
@@ -123,8 +124,9 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
   const [toastTrigger, setToastTrigger] = useState(0);
   const hideToast = useCallback(() => {}, []);
 
-  const handleCardClick = useCallback((recipe: Recipe) => {
-    setSelectedRecipe(recipe);
+  const handleCardClick = useCallback((pm: PlannedMeal) => {
+    setSelectedPlannedMeal(pm);
+    setSelectedRecipe(pm.recipe);
     setIsRecipeModalOpen(true);
   }, []);
 
@@ -364,6 +366,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     MEALS.forEach(({ key }) => {
       const plannedMeals = currentDay[key] || [];
       plannedMeals.forEach(pm => {
+        if (pm.isCooked || pm.isShopped) return; // Skip cooked or already gathered items!
         const recipe = pm.recipe;
         if (!recipe || !recipe.ingredients) return;
         const multiplier = (pm.people_count || 1) / (recipe.servings || 1);
@@ -464,16 +467,38 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
         });
       }
 
+      // Mark planned items as shopped
+      if (selectedPlannedMeal) {
+        await mealPlannerService.markSingleItemShopped(selectedPlannedMeal.id);
+      } else {
+        const activeDayTab = weekDays.find(d => d.key === activeDay);
+        if (activeDayTab) {
+          const [d, m] = activeDayTab.date!.split('/');
+          const dateStr = `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+          await mealPlannerService.markShopped(dateStr);
+        }
+      }
+
       setIsShoppingConfirmOpen(false);
-      setToastMsg('Đã thêm các nguyên liệu thiếu của ngày vào danh sách mua sắm thành công!');
+      setToastMsg('Đã thêm các nguyên liệu thiếu vào danh sách mua sắm thành công!');
       setToastTrigger(prev => prev + 1);
+
+      // Force reload weekly plan to update badge labels instantly
+      const startDateStr = weekDays[0].date;
+      const endDateStr = weekDays[6].date;
+      const parseDate = (dStr: string) => {
+        const [dVal, mVal] = dStr.split('/');
+        return `${year}-${mVal.padStart(2, '0')}-${dVal.padStart(2, '0')}`;
+      };
+      await fetchWeekPlan(parseDate(startDateStr!), parseDate(endDateStr!), true);
+
       navigate(`/${role}/shopping-list`);
     } catch (error) {
       console.error('Error adding custom items to shopping list:', error);
       setToastMsg('Lỗi khi thêm nguyên liệu vào danh sách mua sắm');
       setToastTrigger(prev => prev + 1);
     }
-  }, [role, navigate]);
+  }, [role, navigate, selectedPlannedMeal, weekDays, activeDay, fetchWeekPlan]);
 
   const totalCalories = React.useMemo(() => {
     let sum = 0;
@@ -676,6 +701,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           onClose={() => {
             setIsRecipeModalOpen(false);
             setSelectedRecipe(null);
+            setSelectedPlannedMeal(null);
           }}
           onEdit={() => {}}
           onDelete={() => {}}

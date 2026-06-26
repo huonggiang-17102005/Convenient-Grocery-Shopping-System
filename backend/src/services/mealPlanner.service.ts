@@ -27,6 +27,8 @@ export const mealPlannerService = {
                 meal_type: item.meal_type,
                 // people_count is now stored per item, not per day plan
                 people_count: item.people_count ?? 1,
+                isCooked: item.is_cooked ?? false,
+                isShopped: item.is_shopped ?? false,
                 recipes: item.recipes
               });
             }
@@ -118,6 +120,8 @@ export const mealPlannerService = {
       date,
       meal_type: item.meal_type,
       people_count: item.people_count ?? peopleCount,
+      isCooked: item.is_cooked ?? false,
+      isShopped: item.is_shopped ?? false,
       recipes: item.recipes
     }));
   },
@@ -150,6 +154,83 @@ export const mealPlannerService = {
     }
 
     return { success: true, people_count: peopleCount };
+  },
+
+  markCooked: async (familyId: string, date: string) => {
+    const { data: plan, error: findError } = await supabase
+      .from('meal_plans')
+      .select('id')
+      .eq('family_id', familyId)
+      .eq('date', date)
+      .maybeSingle();
+
+    if (findError) throw findError;
+    if (!plan) return { success: false, message: 'Không tìm thấy thực đơn cho ngày này' };
+
+    const { error: updateError } = await supabase
+      .from('meal_plan_items')
+      .update({ is_cooked: true })
+      .eq('meal_plan_id', plan.id)
+      .eq('is_cooked', false);
+
+    if (updateError) {
+      console.error('Error marking items as cooked:', updateError);
+      throw updateError;
+    }
+
+    return { success: true };
+  },
+
+  markShopped: async (familyId: string, date: string) => {
+    const { data: plan, error: findError } = await supabase
+      .from('meal_plans')
+      .select('id')
+      .eq('family_id', familyId)
+      .eq('date', date)
+      .maybeSingle();
+
+    if (findError) throw findError;
+    if (!plan) return { success: false, message: 'Không tìm thấy thực đơn cho ngày này' };
+
+    const { error: updateError } = await supabase
+      .from('meal_plan_items')
+      .update({ is_shopped: true })
+      .eq('meal_plan_id', plan.id)
+      .eq('is_cooked', false)
+      .eq('is_shopped', false);
+
+    if (updateError) {
+      console.error('Error marking items as shopped:', updateError);
+      throw updateError;
+    }
+
+    return { success: true };
+  },
+
+  markSingleItemShopped: async (familyId: string, itemId: string) => {
+    const { data: item, error: findError } = await supabase
+      .from('meal_plan_items')
+      .select('*, meal_plans(family_id)')
+      .eq('id', itemId)
+      .single();
+
+    if (findError) throw findError;
+    const planInfo: any = item?.meal_plans;
+    if (!planInfo || planInfo.family_id !== familyId) {
+      throw new Error('Bạn không có quyền cập nhật món ăn này.');
+    }
+
+    const { error: updateError } = await supabase
+      .from('meal_plan_items')
+      .update({ is_shopped: true })
+      .eq('id', itemId);
+
+    if (updateError) {
+      console.error('Error marking single item as shopped:', updateError);
+      throw updateError;
+    }
+
+    return { success: true };
   },
 
   removeMealPlan: async (familyId: string, id: string, user?: any) => {

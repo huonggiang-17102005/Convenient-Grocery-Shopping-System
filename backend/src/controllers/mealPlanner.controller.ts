@@ -1,4 +1,4 @@
-﻿import type { Response } from 'express';
+import type { Response } from 'express';
 import { mealPlannerService } from '../services/mealPlanner.service.js';
 import type { AuthRequest } from '../middlewares/auth.middleware.js';
 
@@ -56,6 +56,49 @@ export const mealPlannerController = {
 
       const id = req.params.id as string;
       const data = await mealPlannerService.removeMealPlan(familyId, id, req.user);
+      res.json(data);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  markCooked: async (req: AuthRequest, res: Response) => {
+    try {
+      const familyId = req.user?.family_id;
+      if (!familyId) return res.status(403).json({ error: 'Require family access' });
+
+      const { date } = req.body;
+      if (!date) return res.status(400).json({ error: 'Missing date' });
+
+      const data = await mealPlannerService.markCooked(familyId, date);
+      res.json(data);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  markShopped: async (req: AuthRequest, res: Response) => {
+    try {
+      const familyId = req.user?.family_id;
+      if (!familyId) return res.status(403).json({ error: 'Require family access' });
+
+      const { date } = req.body;
+      if (!date) return res.status(400).json({ error: 'Missing date' });
+
+      const data = await mealPlannerService.markShopped(familyId, date);
+      res.json(data);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  markSingleItemShopped: async (req: AuthRequest, res: Response) => {
+    try {
+      const familyId = req.user?.family_id;
+      if (!familyId) return res.status(403).json({ error: 'Require family access' });
+
+      const id = req.params.id as string;
+      const data = await mealPlannerService.markSingleItemShopped(familyId, id);
       res.json(data);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
