@@ -8,11 +8,36 @@ export const getNotifications = async (req: Request, res: Response) => {
   const offset = parseInt(req.query.offset as string) || 0;
   const category = req.query.category as string | undefined;
 
-  const { data, count } = await notificationService.getFamilyNotifications(familyId, userId, limit, offset, category);
+  const { data, count, unreadCount } = await notificationService.getFamilyNotifications(familyId, userId, limit, offset, category);
 
   return res.status(200).json({
     success: true,
     data,
-    totalCount: count
+    totalCount: count,
+    unreadCount
+  });
+};
+
+export const markAsRead = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.id as string;
+  const { id } = req.params;
+
+  await notificationService.markAsRead(id, userId);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Đã đánh dấu đọc thành công'
+  });
+};
+
+export const markAllAsRead = async (req: Request, res: Response) => {
+  const familyId = (req as any).user?.family_id as string;
+  const userId = (req as any).user?.id as string;
+
+  await notificationService.markAllAsRead(familyId, userId);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Đã đánh dấu đọc tất cả thành công'
   });
 };

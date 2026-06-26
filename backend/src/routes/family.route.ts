@@ -1,7 +1,7 @@
 import express from 'express';
 import { 
   createFamily, joinFamily, getFamilyInfo, updateFamilyInfo,
-  getMembers, leaveFamily, removeMember, transferHomemaker, getWasteStats
+  getMembers, leaveFamily, removeMember, transferHomemaker, getWasteStats, updateWarningDays
 } from '../controllers/family.controller.js';
 import { authenticateToken } from '../middlewares/auth.middleware.js';
 
@@ -18,5 +18,6 @@ router.delete('/leave', authenticateToken as any, leaveFamily as any);
 router.delete('/members/:userId', authenticateToken as any, removeMember as any);
 router.put('/transfer-homemaker', authenticateToken as any, transferHomemaker as any);
 router.get('/waste-stats', authenticateToken as any, getWasteStats as any);
+router.put('/warning-days', authenticateToken as any, updateWarningDays as any);
 
 export default router;

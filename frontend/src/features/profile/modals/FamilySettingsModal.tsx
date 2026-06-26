@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../profile.css';
+import ExpirationWarningSetting from '../components/ExpirationWarningSetting';
 
 interface FamilySettingsModalProps {
   isOpen: boolean;
@@ -7,6 +8,8 @@ interface FamilySettingsModalProps {
   dailyCalorieTarget: number;
   onUpdateFamilySettings: (name: string, dailyCalorieTarget: number) => Promise<void>;
   onClose: () => void;
+  warningDays?: number;
+  onUpdateWarningDays?: (days: number) => Promise<void>;
 }
 
 const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
@@ -15,6 +18,8 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
   dailyCalorieTarget,
   onUpdateFamilySettings,
   onClose,
+  warningDays,
+  onUpdateWarningDays,
 }) => {
   const [inputName, setInputName] = useState(name);
   const [inputTarget, setInputTarget] = useState(dailyCalorieTarget);
@@ -82,6 +87,17 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
               required
             />
           </div>
+
+          {/* Expiration Warning Setting */}
+          {warningDays !== undefined && onUpdateWarningDays && (
+            <div className="profile-form-group">
+              <label className="profile-form-label" style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 600 }}>Cài đặt thông báo</label>
+              <ExpirationWarningSetting 
+                initialDays={warningDays} 
+                onUpdateDays={onUpdateWarningDays} 
+              />
+            </div>
+          )}
 
           {/* Form actions */}
           <div className="profile-form-actions">

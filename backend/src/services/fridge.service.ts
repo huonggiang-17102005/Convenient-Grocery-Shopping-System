@@ -3,6 +3,7 @@ import * as inventoryLogRepo from '../repo/inventoryLog.repo.js';
 import * as notificationService from './notification.service.js';
 import { BadRequestError, NotFoundError } from '../errors/CommonError.js';
 import type { FridgeItem } from '../models/FridgeItem.js';
+import supabase from '../config/db.config.js';
 
 export const getFamilyFridge = async (familyId: string) => {
   if (!familyId) {
@@ -269,16 +270,32 @@ export const checkExpiringItems = async (familyId: string) => {
   if (!familyId) throw new BadRequestError('Mã ID của gia đình không được để trống.');
 
   const items = await fridgeRepo.getItemsByFamilyId(familyId);
+  const { data: family } = await supabase
+    .from('families')
+    .select('expiration_warning_days')
+    .eq('id', familyId)
+    .single();
+
+  const { data: systemSetting } = await supabase
+    .from('system_settings')
+    .select('default_expiry_warning_days')
+    .order('id', { ascending: true })
+    .limit(1)
+    .single();
+
+  const globalDefault = systemSetting?.default_expiry_warning_days ?? 3;
+  const warningDays = family?.expiration_warning_days ?? globalDefault;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  const threeDaysFromNow = new Date(today);
-  threeDaysFromNow.setDate(today.getDate() + 3);
+  const warningDate = new Date(today);
+  warningDate.setDate(today.getDate() + warningDays);
 
-  // Filter items that are expiring within 3 days or already expired
+  // Filter items that are expiring within warningDays or already expired
   const expiringItems = items.filter(item => {
     const expDate = new Date(item.expiration_date);
-    return expDate <= threeDaysFromNow;
+    return expDate <= warningDate;
   });
 
   return expiringItems;
@@ -286,46 +303,101 @@ export const checkExpiringItems = async (familyId: string) => {
 
 // Hàm này được gọi bởi Vercel Cronjob thông qua API
 export const runCronCheck = async () => {
-  console.log('Bắt đầu chạy Cronjob kiểm tra thực phẩm hết hạn...');
-  
-  const expiredItems = await fridgeRepo.getExpiredUnwastedItems();
-  
-  if (expiredItems.length === 0) {
-    console.log('Không có thực phẩm nào hết hạn cần ghi log.');
+  console.log('Bắt đầu chạy Cronjob kiểm tra thực phẩm hết hạn và sắp hết hạn...');
+
+  // 1. Lấy cấu hình các gia đình và hệ thống
+  const { data: families } = await supabase.from('families').select('id, expiration_warning_days');
+  const { data: systemSetting } = await supabase
+    .from('system_settings')
+    .select('default_expiry_warning_days')
+    .order('id', { ascending: true })
+    .limit(1)
+    .single();
+  const globalDefault = systemSetting?.default_expiry_warning_days ?? 3;
+
+  const familyConfigMap: Record<string, number> = {};
+  if (families) {
+    families.forEach((f: any) => {
+      familyConfigMap[f.id] = f.expiration_warning_days ?? globalDefault;
+    });
+  }
+
+  // 2. Lấy tất cả thực phẩm chưa bị lãng phí
+  const { data: allItems } = await supabase
+    .from('fridge_items')
+    .select('*')
+    .is('is_wasted', false);
+
+  if (!allItems || allItems.length === 0) {
+    console.log('Không có thực phẩm nào cần kiểm tra.');
     return { processedCount: 0 };
   }
 
-  const itemIds: string[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  for (const item of expiredItems) {
+  const expiredItemIds: string[] = [];
+  const expiringItemsByFamily: Record<string, any[]> = {};
+  let processedCount = 0;
+
+  for (const item of allItems) {
     if (!item.family_id) continue;
     
-    // Ghi log expire
-    await inventoryLogRepo.insertLog(
-      item.family_id,
-      item.category || 'Khác',
-      'expire',
-      item.quantity,
-      item.unit
-    );
+    const warningDays = familyConfigMap[item.family_id] ?? 3;
+    const expDate = new Date(item.expiration_date);
+    expDate.setHours(0, 0, 0, 0);
 
-    // Đẩy notification
+    const diffTime = expDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      // Đã hết hạn
+      await inventoryLogRepo.insertLog(
+        item.family_id,
+        item.category || 'Khác',
+        'expire',
+        item.quantity,
+        item.unit
+      );
+
+      await notificationService.createNotification(
+        item.family_id,
+        'EXPIRE',
+        'Thực phẩm hết hạn',
+        `⚠️ Cảnh báo: ${item.name} đã hết hạn!`,
+        { item_name: item.name, quantity: item.quantity, unit: item.unit }
+      );
+
+      expiredItemIds.push(item.id);
+      processedCount++;
+    } else if (diffDays >= 0 && diffDays <= warningDays) {
+      // Nằm trong vùng cảnh báo sắp hết hạn
+      const famId = item.family_id;
+      if (!expiringItemsByFamily[famId]) {
+        expiringItemsByFamily[famId] = [];
+      }
+      expiringItemsByFamily[famId]!.push({ ...item, diffDays });
+      processedCount++;
+    }
+  }
+
+  // Đánh dấu đã phạt lãng phí
+  if (expiredItemIds.length > 0) {
+    await fridgeRepo.markItemsAsWasted(expiredItemIds);
+    console.log(`Đã ghi log lãng phí (expire) cho ${expiredItemIds.length} món đồ.`);
+  }
+
+  // Gửi một thông báo tổng hợp cho các món sắp hết hạn của mỗi gia đình
+  for (const [familyId, items] of Object.entries(expiringItemsByFamily)) {
+    const itemNames = items.map(i => `${i.name} (${i.diffDays === 0 ? 'hết hạn hôm nay' : `còn ${i.diffDays} ngày`})`).join(', ');
     await notificationService.createNotification(
-      item.family_id,
-      'EXPIRE',
-      'Thực phẩm hết hạn',
-      `⚠️ Cảnh báo: ${item.name} đã hết hạn!`,
-      { item_name: item.name, quantity: item.quantity, unit: item.unit }
+      familyId,
+      'EXPIRING_SOON',
+      'Thực phẩm sắp hết hạn',
+      `⏳ Có ${items.length} thực phẩm sắp hết hạn: ${itemNames}. Hãy nhanh chóng sử dụng!`,
+      { count: items.length, items: items.map(i => ({ name: i.name, days_left: i.diffDays })) }
     );
-
-    itemIds.push(item.id);
   }
 
-  // Đánh dấu đã phạt lãng phí để không bị ghi log đúp vào hôm sau
-  if (itemIds.length > 0) {
-    await fridgeRepo.markItemsAsWasted(itemIds);
-    console.log(`Đã ghi log lãng phí (expire) cho ${itemIds.length} món đồ.`);
-  }
-
-  return { processedCount: itemIds.length };
+  return { processedCount };
 };
