@@ -22,6 +22,7 @@ export const NotificationItem: React.FC<Props> = ({ notif }) => {
       
       // Recipe Flow
       case 'LIKE': return <Heart size={18} color="#E91E63" />;
+      case 'RECIPE_APPROVED': return <CheckCircle2 size={18} color="#4CAF50" />;
       
       // Meal Plan Flow
       case 'MEAL_PLAN_ADD': return <CalendarPlus size={18} color="#4CAF50" />;

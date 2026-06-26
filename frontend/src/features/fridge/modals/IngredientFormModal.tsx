@@ -7,6 +7,7 @@ import { useCategoryContext } from '../../../contexts/CategoryContext';
 import { fridgeService } from '../fridge.service';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 import CustomSelect from '../../../components/common/CustomSelect';
+import { validateFoodName } from '../../../utils/nameValidation';
 import './IngredientFormModal.css';
 
 interface IngredientFormModalProps {
@@ -57,6 +58,7 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   const [imagePublicId, setImagePublicId] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [nameError, setNameError] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -159,6 +161,14 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
   };
 
   const handleSave = () => {
+    if (mode !== 'bulk_add') {
+      const validation = validateFoodName(name);
+      if (!validation.isValid) {
+        alert(validation.error);
+        return;
+      }
+    }
+
     let daysRemaining = 5;
     if (expiryDate) {
       const diffTime = new Date(expiryDate).getTime() - new Date().getTime();
@@ -274,10 +284,22 @@ const IngredientFormModal: React.FC<IngredientFormModalProps> = ({ isOpen, mode,
                   style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', color: '#1A1A1A', fontSize: 14, fontFamily: 'Plus Jakarta Sans', fontWeight: '400' }}
                   placeholder="VD: Cà rốt"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setName(val);
+                    if (val.trim()) {
+                      const validation = validateFoodName(val);
+                      setNameError(validation.isValid ? '' : validation.error || '');
+                    } else {
+                      setNameError('');
+                    }
+                  }}
                   disabled={isReadOnly}
                 />
               </div>
+              {nameError && (
+                <span style={{ color: '#D32F2F', fontSize: 12, marginTop: 4 }}>{nameError}</span>
+              )}
             </div>
           )}
 

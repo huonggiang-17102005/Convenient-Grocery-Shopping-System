@@ -21,6 +21,7 @@ import ShoppingConfirmModal from './modals/ShoppingConfirmModal';
 import Toast from '../../components/common/Toast';
 
 import { shoppingService } from '../shopping-list/shopping-list.service';
+import { mealPlannerService } from '../meal-planner/mealPlanner.service';
 import './recipes.css';
 
 type ActiveTab = 'library' | 'favorites' | 'community';
@@ -43,7 +44,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   const [communitySubTab, setCommunitySubTab] = useState<'all' | 'mine'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
+  const [pendingPosts, setPendingPosts] = useState<PendingPost[]>([]);
   const [selectedIngredients, setSelectedIngredients] = useState<FilterIngredient[]>([]);
   const location = useLocation();
 
@@ -439,20 +440,47 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     }
   }, [setRecipes, showToast]);
 
+  const handleAddToMenu = useCallback(async (recipe: Recipe, mealType: 'breakfast' | 'lunch' | 'dinner') => {
+    try {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const dateStr = `${y}-${m}-${dd}`;
+
+      let peopleCount = recipe.servings || 1;
+      const data = await mealPlannerService.getMealPlan(dateStr, dateStr);
+      if (data && data[dateStr] && data[dateStr][mealType] && data[dateStr][mealType].length > 0) {
+        peopleCount = data[dateStr][mealType][0].people_count;
+      }
+
+      await mealPlannerService.addMealPlan(recipe.id, dateStr, mealType, peopleCount);
+      setIsDetailOpen(false);
+      showToast(`Đã thêm "${recipe.name}" vào bữa ${mealType === 'breakfast' ? 'sáng' : mealType === 'lunch' ? 'trưa' : 'tối'} hôm nay!`);
+    } catch (error) {
+      console.error('Error adding to menu:', error);
+      showToast('Lỗi khi thêm vào thực đơn hôm nay');
+    }
+  }, [showToast]);
+
   const fetchPendingPost = useCallback(async () => {
     try {
       const pendingRecipes = await recipesService.getUserPendingRecipes();
       if (pendingRecipes.length > 0) {
-        const firstPending = pendingRecipes[0];
-        setPendingPost({
-          id: firstPending.id,
-          recipe: firstPending,
-          submittedAt: firstPending.createdAt || new Date().toISOString(),
+        // Sort newest first
+        const sortedRecipes = [...pendingRecipes].sort(
+          (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+        );
+        const mappedPosts: PendingPost[] = sortedRecipes.map(recipe => ({
+          id: recipe.id,
+          recipe: recipe,
+          submittedAt: recipe.createdAt || new Date().toISOString(),
           status: 'pending',
-          description: firstPending.description || '',
-        });
+          description: recipe.description || '',
+        }));
+        setPendingPosts(mappedPosts);
       } else {
-        setPendingPost(null);
+        setPendingPosts([]);
       }
     } catch (error) {
       console.error('Error fetching pending recipes:', error);
@@ -463,21 +491,15 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
     fetchPendingPost();
   }, [fetchPendingPost, activeTab]);
 
-  const handleCancelPending = useCallback(async () => {
-    if (pendingPost) {
-      try {
-        await recipesService.deleteRecipe(pendingPost.id);
-        showToast('Đã hủy chia sẻ công thức thành công!');
-      } catch (error) {
-        console.error('Error deleting pending recipe:', error);
-      }
+  const handleCancelPending = useCallback(async (postId: string) => {
+    try {
+      await recipesService.deleteRecipe(postId);
+      showToast('Đã hủy chia sẻ công thức thành công!');
+      setPendingPosts(prev => prev.filter(post => post.id !== postId));
+    } catch (error) {
+      console.error('Error deleting pending recipe:', error);
     }
-    if (pendingTimeoutRef.current) {
-      clearTimeout(pendingTimeoutRef.current);
-      pendingTimeoutRef.current = null;
-    }
-    setPendingPost(null);
-  }, [pendingPost, showToast]);
+  }, [showToast]);
 
   const handleShareSubmit = useCallback(
     async (description: string, recipeData: Omit<Recipe, 'id' | 'isFavorited'>) => {
@@ -607,7 +629,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         {activeTab === 'community' && (
           <TabCommunity
             posts={filteredCommunityPosts}
-            pendingPost={pendingPost}
+            pendingPosts={pendingPosts}
             role={role}
             onPostRecipeClick={handleCommunityPostClick}
             onToggleLike={handleToggleCommunityLike}
@@ -655,6 +677,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
         onAddToShoppingList={handleAddToShoppingList}
         onSaveToFamily={handleSaveToFamily}
         onShare={handleOpenShare}
+        onAddToMenu={handleAddToMenu}
       />
 
       {isShoppingConfirmOpen && (
