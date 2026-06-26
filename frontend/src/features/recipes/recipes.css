@@ -1992,3 +1992,20 @@ select.form-input {
   box-shadow: 0 16px 24px -4px rgba(0, 0, 0, 0.15);
 }
 
+/* Member inputs focus orange color theme override */
+.role-member .form-input:focus,
+.role-member .figma-servings-input:focus,
+.role-member .figma-spice-input-name:focus,
+.role-member .figma-spice-input-qty:focus,
+.role-member .form-step-row input:focus {
+  border-color: #FF8A00 !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.2);
+}
+
+.role-member .figma-ingredient-card:focus-within {
+  border-color: #FF8A00 !important;
+  box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.2);
+}
+
+

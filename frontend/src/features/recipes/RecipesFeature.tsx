@@ -40,6 +40,7 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   // ── UI state ─────────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState<ActiveTab>('library');
   const [subTab, setSubTab] = useState<'family' | 'system'>('family');
+  const [communitySubTab, setCommunitySubTab] = useState<'all' | 'mine'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [pendingPost, setPendingPost] = useState<PendingPost | null>(null);
@@ -530,9 +531,19 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
   const filteredFavoriteRecipes = query
     ? favoriteRecipes.filter(r => removeDiacritics(r.name.toLowerCase()).includes(query))
     : favoriteRecipes;
-  const filteredCommunityPosts = query
-    ? communityPosts.filter(p => removeDiacritics(p.recipe.name.toLowerCase()).includes(query))
-    : communityPosts;
+  const filteredCommunityPosts = communityPosts
+    .filter(p => {
+      if (communitySubTab === 'mine') {
+        return p.author.id === user?.id;
+      }
+      return true;
+    })
+    .filter(p => {
+      if (query) {
+        return removeDiacritics(p.recipe.name.toLowerCase()).includes(query);
+      }
+      return true;
+    });
 
   // ── Render ────────────────────────────────────────────────────
   return (
@@ -605,6 +616,8 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
               setIsShareOpen(true);
             }}
             onCancelPending={handleCancelPending}
+            subTab={communitySubTab}
+            onChangeSubTab={setCommunitySubTab}
           />
         )}
       </div>

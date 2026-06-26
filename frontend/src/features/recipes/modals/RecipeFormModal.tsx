@@ -78,6 +78,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   const [cookTime, setCookTime] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.cookTimeMinutes : ''));
   const [difficulty, setDifficulty] = useState<DifficultyLevel | ''>(() => (mode === 'edit' && recipe ? recipe.difficulty : ''));
   const [servings, setServings] = useState<number | ''>(() => (mode === 'edit' && recipe ? recipe.servings : ''));
+  const [servingsRaw, setServingsRaw] = useState<string>(() => (mode === 'edit' && recipe && recipe.servings ? `${recipe.servings} người` : ''));
   const [emoji] = useState(() => (mode === 'edit' && recipe ? recipe.emoji : '🍽️'));
   const [imageUrl, setImageUrl] = useState(() => (mode === 'edit' && recipe ? recipe.imageUrl || '' : ''));
   const [imagePublicId, setImagePublicId] = useState(() => (mode === 'edit' && recipe ? recipe.imagePublicId || '' : ''));
@@ -261,7 +262,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
   return (
     <div className="modal-overlay" id="recipe-form-modal" onClick={onClose}>
       <div
-        className="modal-sheet modal-sheet--form"
+        className={`modal-sheet modal-sheet--form role-${role}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Row */}
@@ -336,10 +337,26 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                 type="text"
                 className="figma-servings-input"
                 placeholder="Ví dụ: 2 người..."
-                value={servings ? `${servings} người` : ''}
+                value={servingsRaw}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, '');
-                  setServings(parseInt(val) || 0);
+                  const val = e.target.value;
+                  setServingsRaw(val);
+                  const numOnly = val.replace(/[^0-9]/g, '');
+                  setServings(parseInt(numOnly) || '');
+                }}
+                onBlur={() => {
+                  if (servings) {
+                    setServingsRaw(`${servings} người`);
+                  } else {
+                    setServingsRaw('');
+                  }
+                }}
+                onFocus={() => {
+                  if (servings) {
+                    setServingsRaw(String(servings));
+                  } else {
+                    setServingsRaw('');
+                  }
                 }}
               />
             </div>
@@ -419,7 +436,27 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
             </div>
 
             {ingredients.map((ing) => (
-              <div key={ing.id} className="figma-ingredient-card">
+              <div key={ing.id} className="figma-ingredient-card" style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setIngredients(prev => prev.filter(item => item.id !== ing.id))}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '8px',
+                    background: 'none',
+                    border: 'none',
+                    color: '#9E9E9E',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    padding: '4px',
+                    lineHeight: '1',
+                    zIndex: 5
+                  }}
+                  title="Xoá nguyên liệu"
+                >
+                  ✕
+                </button>
                 {/* Upper part: Name */}
                 <div className="figma-ingredient-card-top">
                   <input
@@ -429,6 +466,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                     title="Tên nguyên liệu"
                     value={ing.name}
                     onChange={(e) => handleIngredientChange(ing.id, 'name', e.target.value)}
+                    style={{ paddingRight: '24px' }}
                   />
                 </div>
                 
@@ -494,7 +532,7 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
             </div>
 
             {spices.map((spice) => (
-              <div key={spice.id} className="figma-spice-row">
+              <div key={spice.id} className="figma-spice-row" style={{ alignItems: 'center' }}>
                 <input
                   type="text"
                   className="figma-spice-input-name"
@@ -511,6 +549,22 @@ const RecipeFormModal: React.FC<RecipeFormModalProps> = ({
                   value={rawQtys[spice.id] ?? formatSpiceQty(spice)}
                   onChange={(e) => handleSpiceQtyChange(spice.id, e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setSpices(prev => prev.filter(item => item.id !== spice.id))}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#9E9E9E',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    padding: '8px 4px',
+                    lineHeight: '1',
+                  }}
+                  title="Xoá gia vị"
+                >
+                  ✕
+                </button>
               </div>
             ))}
 

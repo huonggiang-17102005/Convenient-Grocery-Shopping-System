@@ -92,6 +92,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   const [cookTime, setCookTime] = useState<number | ''>('');
   const [difficulty, setDifficulty] = useState<DifficultyLevel | ''>('');
   const [servings, setServings] = useState<number | ''>('');
+  const [servingsRaw, setServingsRaw] = useState<string>('');
   const [emoji, setEmoji] = useState('🍽️');
   const [imageUrl, setImageUrl] = useState('');
   const [imagePublicId, setImagePublicId] = useState('');
@@ -151,6 +152,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
         setCookTime(recipe.cookTimeMinutes || '');
         setDifficulty(recipe.difficulty || '');
         setServings(recipe.servings || '');
+        setServingsRaw(recipe.servings ? `${recipe.servings} người` : '');
         setEmoji(recipe.emoji || '🍽️');
         setImageUrl(recipe.imageUrl || '');
         setImagePublicId(recipe.imagePublicId || '');
@@ -172,6 +174,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
         setCookTime('');
         setDifficulty('');
         setServings('');
+        setServingsRaw('');
         setEmoji('🍽️');
         setImageUrl('');
         setImagePublicId('');
@@ -297,7 +300,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
   return (
     <div className="modal-overlay" id="share-community-modal" onClick={onClose}>
       <div
-        className="modal-sheet modal-sheet--form"
+        className={`modal-sheet modal-sheet--form role-${role}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Row */}
@@ -383,10 +386,26 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                 type="text"
                 className="figma-servings-input"
                 placeholder="Ví dụ: 2 người..."
-                value={servings ? `${servings} người` : ''}
+                value={servingsRaw}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, '');
-                  setServings(parseInt(val) || 0);
+                  const val = e.target.value;
+                  setServingsRaw(val);
+                  const numOnly = val.replace(/[^0-9]/g, '');
+                  setServings(parseInt(numOnly) || '');
+                }}
+                onBlur={() => {
+                  if (servings) {
+                    setServingsRaw(`${servings} người`);
+                  } else {
+                    setServingsRaw('');
+                  }
+                }}
+                onFocus={() => {
+                  if (servings) {
+                    setServingsRaw(String(servings));
+                  } else {
+                    setServingsRaw('');
+                  }
                 }}
               />
             </div>
@@ -468,7 +487,27 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
             </div>
 
             {ingredients.map((ing) => (
-              <div key={ing.id} className="figma-ingredient-card">
+              <div key={ing.id} className="figma-ingredient-card" style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={() => setIngredients(prev => prev.filter(item => item.id !== ing.id))}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '8px',
+                    background: 'none',
+                    border: 'none',
+                    color: '#9E9E9E',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    padding: '4px',
+                    lineHeight: '1',
+                    zIndex: 5
+                  }}
+                  title="Xoá nguyên liệu"
+                >
+                  ✕
+                </button>
                 {/* Upper part: Name */}
                 <div className="figma-ingredient-card-top">
                   <input
@@ -478,6 +517,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                     title="Tên nguyên liệu"
                     value={ing.name}
                     onChange={(e) => handleIngredientChange(ing.id, 'name', e.target.value)}
+                    style={{ paddingRight: '24px' }}
                   />
                 </div>
                 
@@ -543,7 +583,7 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
             </div>
 
             {spices.map((spice) => (
-              <div key={spice.id} className="figma-spice-row">
+              <div key={spice.id} className="figma-spice-row" style={{ alignItems: 'center' }}>
                 <input
                   type="text"
                   className="figma-spice-input-name"
@@ -560,6 +600,22 @@ const ShareCommunityModal: React.FC<ShareCommunityModalProps> = ({
                   value={rawQtys[spice.id] ?? formatSpiceQty(spice)}
                   onChange={(e) => handleSpiceQtyChange(spice.id, e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setSpices(prev => prev.filter(item => item.id !== spice.id))}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#9E9E9E',
+                    cursor: 'pointer',
+                    fontSize: '18px',
+                    padding: '8px 4px',
+                    lineHeight: '1',
+                  }}
+                  title="Xoá gia vị"
+                >
+                  ✕
+                </button>
               </div>
             ))}
 

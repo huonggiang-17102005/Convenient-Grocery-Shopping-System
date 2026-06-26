@@ -13,6 +13,8 @@ interface TabCommunityProps {
   onToggleLike: (postId: string) => void;
   onShareClick: () => void;
   onCancelPending?: () => void;
+  subTab: 'all' | 'mine';
+  onChangeSubTab: (subTab: 'all' | 'mine') => void;
 }
 
 const TabCommunity: React.FC<TabCommunityProps> = ({
@@ -22,9 +24,29 @@ const TabCommunity: React.FC<TabCommunityProps> = ({
   onPostRecipeClick,
   onToggleLike,
   onCancelPending,
+  subTab,
+  onChangeSubTab,
 }) => {
   return (
     <div className="recipe-tab-content">
+      {/* Sub-tab Toggle */}
+      <div className="recipe-sub-tabs">
+        <button
+          type="button"
+          className={`recipe-sub-tab-btn ${subTab === 'all' ? 'active' : 'inactive'}`}
+          onClick={() => onChangeSubTab('all')}
+        >
+          Tất cả
+        </button>
+        <button
+          type="button"
+          className={`recipe-sub-tab-btn ${subTab === 'mine' ? 'active' : 'inactive'}`}
+          onClick={() => onChangeSubTab('mine')}
+        >
+          Bài viết của tôi
+        </button>
+      </div>
+
       {/* Pending post notice */}
       {pendingPost && (
         <PendingPostCard
@@ -59,3 +81,4 @@ const TabCommunity: React.FC<TabCommunityProps> = ({
 };
 
 export default TabCommunity;
+
