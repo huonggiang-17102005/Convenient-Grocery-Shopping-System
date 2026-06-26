@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
 
+export interface UnitStat {
+  unit: string;
+  total: number;
+  consumed: number;
+  wasted: number;
+  consumedPercent: number;
+  wastedPercent: number;
+}
+
 export interface CategoryStat {
   name: string;
   total: number;
@@ -9,6 +18,8 @@ export interface CategoryStat {
   wasted: number;
   wastedPercent: number;
   color: string;
+  isMultipleUnits?: boolean;
+  unitsData?: UnitStat[];
 }
 
 interface WasteStatsProps {
@@ -22,6 +33,20 @@ const CategoryStatRow: React.FC<{ stat: CategoryStat }> = ({ stat }) => {
     return (Math.round((val + Number.EPSILON) * 100) / 100).toString();
   };
 
+  const isMultiple = stat.isMultipleUnits && stat.unitsData;
+
+  const totalText = isMultiple 
+    ? `${formatVal(stat.unitsData!.find(u => u.unit === 'g')?.total ?? 0)} g, ${formatVal(stat.unitsData!.find(u => u.unit === 'ml')?.total ?? 0)} ml`
+    : `${formatVal(stat.total)} ${stat.unit}`;
+
+  const consumedText = isMultiple
+    ? `${formatVal(stat.unitsData!.find(u => u.unit === 'g')?.consumed ?? 0)} g, ${formatVal(stat.unitsData!.find(u => u.unit === 'ml')?.consumed ?? 0)} ml (${formatVal(stat.consumedPercent)}%)`
+    : `${formatVal(stat.consumed)} ${stat.unit} (${formatVal(stat.consumedPercent)}%)`;
+
+  const wastedText = isMultiple
+    ? `${formatVal(stat.unitsData!.find(u => u.unit === 'g')?.wasted ?? 0)} g, ${formatVal(stat.unitsData!.find(u => u.unit === 'ml')?.wasted ?? 0)} ml (${formatVal(stat.wastedPercent)}%)`
+    : `${formatVal(stat.wasted)} ${stat.unit} (${formatVal(stat.wastedPercent)}%)`;
+
   return (
     <div style={{ width: '100%', paddingTop: 16, flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'flex-start', display: 'flex' }}>
       <div style={{ alignSelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
@@ -32,7 +57,7 @@ const CategoryStatRow: React.FC<{ stat: CategoryStat }> = ({ stat }) => {
           </div>
         </div>
         <div style={{ position: 'relative', color: '#757575', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '400', lineHeight: '16.50px', wordWrap: 'break-word' }}>
-          Tổng: {formatVal(stat.total)} {stat.unit}
+          Tổng: {totalText}
         </div>
       </div>
       
@@ -45,10 +70,10 @@ const CategoryStatRow: React.FC<{ stat: CategoryStat }> = ({ stat }) => {
       
       <div style={{ width: '100%', paddingTop: 4, justifyContent: 'space-between', alignItems: 'center', display: 'inline-flex' }}>
         <div style={{ position: 'relative', color: '#2E7D32', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '16.50px', wordWrap: 'break-word' }}>
-          Tiêu thụ: {formatVal(stat.consumed)} {stat.unit} ({formatVal(stat.consumedPercent)}%)
+          Tiêu thụ: {consumedText}
         </div>
         <div style={{ position: 'relative', color: '#D32F2F', fontSize: 11, fontFamily: 'Plus Jakarta Sans', fontWeight: '600', lineHeight: '16.50px', wordWrap: 'break-word' }}>
-          Lãng phí: {formatVal(stat.wasted)} {stat.unit} ({formatVal(stat.wastedPercent)}%)
+          Lãng phí: {wastedText}
         </div>
       </div>
     </div>
@@ -58,7 +83,6 @@ const CategoryStatRow: React.FC<{ stat: CategoryStat }> = ({ stat }) => {
 const WasteStats: React.FC<WasteStatsProps> = ({ categories, onExportReport }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const INITIAL_COUNT = 3;
-  const visibleCategories = isExpanded ? categories : categories.slice(0, INITIAL_COUNT);
   const remainingCount = categories.length - INITIAL_COUNT;
 
   return (
@@ -71,11 +95,23 @@ const WasteStats: React.FC<WasteStatsProps> = ({ categories, onExportReport }) =
               Chưa có dữ liệu thống kê lãng phí cho tháng này.
             </div>
           ) : (
-            visibleCategories.map((stat, index) => (
-              <div key={index} style={{ width: '100%', marginTop: index === 0 ? -16 : 0 }}>
-                <CategoryStatRow stat={stat} />
-              </div>
-            ))
+            categories.map((stat, index) => {
+              const isCollapsed = !isExpanded && index >= INITIAL_COUNT;
+              return (
+                <div 
+                  key={index} 
+                  className={isCollapsed ? 'waste-stat-collapsed-row' : ''}
+                  style={{ 
+                    width: '100%', 
+                    marginTop: index === 0 ? -16 : 0,
+                    display: isCollapsed ? 'none' : 'flex',
+                    flexDirection: 'column'
+                  }}
+                >
+                  <CategoryStatRow stat={stat} />
+                </div>
+              );
+            })
           )}
         </div>
         
