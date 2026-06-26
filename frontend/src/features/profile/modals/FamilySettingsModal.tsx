@@ -23,14 +23,18 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
 }) => {
   const [inputName, setInputName] = useState(name);
   const [inputTarget, setInputTarget] = useState(dailyCalorieTarget);
+  const [inputWarningDays, setInputWarningDays] = useState(warningDays ?? 3);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setInputName(name);
       setInputTarget(dailyCalorieTarget);
+      if (warningDays !== undefined) {
+        setInputWarningDays(warningDays);
+      }
     }
-  }, [isOpen, name, dailyCalorieTarget]);
+  }, [isOpen, name, dailyCalorieTarget, warningDays]);
 
   if (!isOpen) return null;
 
@@ -46,6 +50,9 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
     setIsSubmitting(true);
     try {
       await onUpdateFamilySettings(inputName.trim(), Number(inputTarget));
+      if (onUpdateWarningDays && inputWarningDays !== warningDays) {
+        await onUpdateWarningDays(inputWarningDays);
+      }
       onClose();
     } catch (err) {
       console.error(err);
@@ -93,8 +100,8 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
             <div className="profile-form-group">
               <label className="profile-form-label" style={{ fontFamily: 'Plus Jakarta Sans', fontWeight: 600 }}>Cài đặt thông báo</label>
               <ExpirationWarningSetting 
-                initialDays={warningDays} 
-                onUpdateDays={onUpdateWarningDays} 
+                initialDays={inputWarningDays} 
+                onChangeDays={setInputWarningDays} 
               />
             </div>
           )}
