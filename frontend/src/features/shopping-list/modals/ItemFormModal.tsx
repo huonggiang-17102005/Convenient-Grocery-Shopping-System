@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { ShoppingItem, FoodCategory } from '../types';
 import { useCategoryContext } from '../../../contexts/CategoryContext';
 import CustomSelect from '../../../components/common/CustomSelect';
+import { validateFoodName } from '../../../utils/nameValidation';
 
 interface ItemFormModalProps {
   isOpen: boolean;
@@ -35,6 +36,8 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
     if ((mode === 'edit' || mode === 'view') && item) return item.unit;
     return '';
   });
+
+  const [nameError, setNameError] = useState('');
 
   // Calculate available categories and units
   const availableCategories = categoriesData.map(c => c.category);
@@ -90,10 +93,20 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (name.trim()) {
+      const validation = validateFoodName(name);
+      if (!validation.isValid) {
+        alert(validation.error);
+        return;
+      }
+    }
+
     if (!name.trim() || !category) {
       alert('Vui lòng điền đầy đủ Tên và Phân loại!');
       return;
     }
+
     if (!isGiaVi && !unit) {
       alert('Vui lòng điền Đơn vị!');
       return;
@@ -143,10 +156,22 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({ isOpen, onClose, onSubmit
               type="text"
               className="form-input"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setName(val);
+                if (val.trim()) {
+                  const validation = validateFoodName(val);
+                  setNameError(validation.isValid ? '' : validation.error || '');
+                } else {
+                  setNameError('');
+                }
+              }}
               placeholder="Ví dụ: Cà chua, Thịt bò..."
               disabled={readOnly}
             />
+            {nameError && (
+              <span style={{ color: '#D32F2F', fontSize: 12, marginTop: 4, display: 'block' }}>{nameError}</span>
+            )}
           </div>
 
           {/* Spice Amount Input */}
