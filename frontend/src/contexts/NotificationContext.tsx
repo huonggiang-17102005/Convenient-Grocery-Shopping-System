@@ -7,6 +7,7 @@ export interface CategoryData {
   items: AppNotification[];
   hasMore: boolean;
   isLoading: boolean;
+  offset: number;
 }
 
 interface NotificationContextProps {
@@ -26,12 +27,12 @@ interface NotificationContextProps {
 const NotificationContext = createContext<NotificationContextProps | undefined>(undefined);
 
 const initialCategoryState = (): Record<NotificationCategory, CategoryData> => ({
-  all: { items: [], hasMore: true, isLoading: false },
-  family: { items: [], hasMore: true, isLoading: false },
-  fridge: { items: [], hasMore: true, isLoading: false },
-  shopping: { items: [], hasMore: true, isLoading: false },
-  recipe: { items: [], hasMore: true, isLoading: false },
-  meal: { items: [], hasMore: true, isLoading: false },
+  all: { items: [], hasMore: true, isLoading: false, offset: 0 },
+  family: { items: [], hasMore: true, isLoading: false, offset: 0 },
+  fridge: { items: [], hasMore: true, isLoading: false, offset: 0 },
+  shopping: { items: [], hasMore: true, isLoading: false, offset: 0 },
+  recipe: { items: [], hasMore: true, isLoading: false, offset: 0 },
+  meal: { items: [], hasMore: true, isLoading: false, offset: 0 },
 });
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -43,7 +44,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
     return state;
   });
-  
+
   const [activeCategory, setActiveCategory] = useState<NotificationCategory>('all');
 
   const [readIds, setReadIds] = useState<Set<string>>(() => {
@@ -97,7 +98,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       ...prev,
       items: data,
       hasMore: data.length === limit,
-      isLoading: false
+      isLoading: false,
+      offset: data.length
     }));
   }, [activeCategory, updateCategoryState]);
 
@@ -123,30 +125,37 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const handleSSENotification = useCallback(async (payload?: any) => {
     const currentActive = activeCategoryRef.current;
-    await refreshNotifications('all');
     
-    if (payload && payload.type) {
+    if (payload && payload.id) {
       const targetCat = getCategoryForType(payload.type);
+      const newNotif = payload as AppNotification;
+      
+      const updater = (prev: CategoryData) => ({
+        ...prev,
+        items: [newNotif, ...prev.items],
+        offset: prev.offset + 1
+      });
+
+      updateCategoryState('all', updater);
       if (targetCat !== 'all') {
-        await refreshNotifications(targetCat);
-      }
-      if (currentActive !== 'all' && currentActive !== targetCat) {
-        await refreshNotifications(currentActive);
+        updateCategoryState(targetCat, updater);
       }
     } else {
+      // Fallback
+      await refreshNotifications('all');
       if (currentActive !== 'all') {
         await refreshNotifications(currentActive);
       }
     }
-  }, [refreshNotifications]);
+  }, [updateCategoryState, refreshNotifications]);
 
   const loadMoreNotifications = useCallback(async (cat: NotificationCategory = activeCategory) => {
     const catData = categories[cat];
     if (catData.isLoading || !catData.hasMore) return;
-    
+
     updateCategoryState(cat, prev => ({ ...prev, isLoading: true }));
-    const { data } = await fetchApi(catData.items.length, cat);
-    
+    const { data } = await fetchApi(catData.offset, cat);
+
     if (data.length > 0) {
       updateCategoryState(cat, prev => {
         const newArr = [...prev.items];
@@ -159,7 +168,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           ...prev,
           items: newArr,
           hasMore: data.length === limit,
-          isLoading: false
+          isLoading: false,
+          offset: prev.offset + data.length
         };
       });
     } else {
@@ -203,11 +213,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const checkCategoryHasUnread = useCallback((cat: NotificationCategory) => {
     if (cat === 'all') return categories.all.items.some(n => !readIds.has(n.id));
-    
+
     // Check locally in all items first
     const hasUnreadInAll = categories.all.items.some(n => !readIds.has(n.id) && getCategoryForType(n.type) === cat);
     if (hasUnreadInAll) return true;
-    
+
     // Fallback to checking the category's own items just in case
     return categories[cat].items.some(n => !readIds.has(n.id));
   }, [categories, readIds]);

@@ -268,3 +268,17 @@ export const getWasteStatistics = async (familyId: string, month: number, year: 
   
   return result.sort((a, b) => b.wastedPercent - a.wastedPercent);
 };
+
+export const updateWarningDays = async (currentUserId: string, familyId: string, days: number) => {
+  if (!familyId) throw new BadRequestError('Thiếu thông tin gia đình');
+  if (days < 1 || days > 30) throw new BadRequestError('Số ngày cảnh báo không hợp lệ (phải từ 1 đến 30 ngày)');
+
+  // Kiểm tra quyền của người dùng hiện tại
+  const currentUser = await userRepo.findById(currentUserId);
+  if (!currentUser || currentUser.family_id !== familyId || currentUser.role !== 'Homemaker') {
+    throw new ForbiddenError('Chỉ Homemaker mới có quyền cập nhật ngày cảnh báo');
+  }
+
+  const updatedFamily = await familyRepo.updateExpirationWarningDays(familyId, days);
+  return updatedFamily;
+};

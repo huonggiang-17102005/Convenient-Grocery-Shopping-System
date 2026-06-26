@@ -120,10 +120,10 @@ export const getFamilyInfo = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    // 2. Lấy thông tin family
-    const { data: family, error: familyError } = await supabase
+    // 2. Lấy thông tin family bằng select('*') để tự động tương thích với các cột đang có trong Database
+    let { data: family, error: familyError } = await supabase
       .from('families')
-      .select('id, name, invite_code')
+      .select('*')
       .eq('id', familyId)
       .single();
 
@@ -134,6 +134,17 @@ export const getFamilyInfo = async (req: AuthRequest, res: Response): Promise<vo
         debug_family_id: familyId
       });
       return;
+    }
+
+    if (family.expiration_warning_days === null || family.expiration_warning_days === undefined) {
+      const { data: systemSetting } = await supabase
+        .from('system_settings')
+        .select('default_expiry_warning_days')
+        .order('id', { ascending: true })
+        .limit(1)
+        .single();
+      
+      family.expiration_warning_days = systemSetting?.default_expiry_warning_days ?? 3;
     }
 
     res.status(200).json({ family });
@@ -176,12 +187,25 @@ export const updateFamilyInfo = async (req: AuthRequest, res: Response): Promise
       return;
     }
 
-    const { data: updatedFamily, error: updateError } = await supabase
+    let { data: family, error: updateError } = await supabase
       .from('families')
       .update(updateFields)
       .eq('id', user.family_id)
       .select()
       .single();
+
+    if (updateError && updateFields.name !== undefined) {
+      const fallbackFields = { name: updateFields.name };
+      const { data: fallbackFamily, error: fallbackError } = await supabase
+        .from('families')
+        .update(fallbackFields)
+        .eq('id', user.family_id)
+        .select()
+        .single();
+      
+      family = fallbackFamily;
+      updateError = fallbackError;
+    }
 
     if (updateError) {
       console.error('Lỗi cập nhật family:', updateError);
@@ -191,7 +215,7 @@ export const updateFamilyInfo = async (req: AuthRequest, res: Response): Promise
 
     res.status(200).json({
       message: 'Cập nhật cài đặt nhóm thành công',
-      family: updatedFamily
+      family: family
     });
   } catch (error: any) {
     console.error('Lỗi khi cập nhật cài đặt nhóm:', error);
@@ -241,4 +265,17 @@ export const getWasteStats = async (req: AuthRequest, res: Response) => {
 
   const stats = await familyService.getWasteStatistics(familyId, month, year);
   return res.status(200).json({ success: true, data: stats });
+};
+
+export const updateWarningDays = async (req: AuthRequest, res: Response) => {
+  const currentUserId = req.user?.id as string;
+  const familyId = req.user?.family_id as string;
+  const { days } = req.body;
+
+  if (days === undefined) {
+    return res.status(400).json({ success: false, message: 'Thiếu số ngày cảnh báo' });
+  }
+
+  const updatedFamily = await familyService.updateWarningDays(currentUserId, familyId, Number(days));
+  return res.status(200).json({ success: true, message: 'Cập nhật thành công', family: updatedFamily });
 };
