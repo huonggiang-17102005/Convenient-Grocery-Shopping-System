@@ -65,7 +65,7 @@ export const getUnreadCount = async (familyId: string, userId: string) => {
     .from('notifications')
     .select('*', { count: 'exact', head: true })
     .eq('family_id', familyId)
-    .not('read_by', 'cs', [userId]);
+    .not('read_by', 'cs', `{${userId}}`);
 
   if (error) {
     console.error('Error getting unread count:', error);
@@ -107,25 +107,25 @@ export const markAllAsRead = async (familyId: string, userId: string) => {
     .from('notifications')
     .select('id, read_by')
     .eq('family_id', familyId)
-    .not('read_by', 'cs', [userId]);
+    .not('read_by', 'cs', `{${userId}}`);
 
   if (fetchErr) throw new InternalServerError('Lỗi truy vấn DB');
   if (!unreadNotifs || unreadNotifs.length === 0) return;
 
-  // 2. Cập nhật mảng read_by cho từng thông báo
-  const updates = unreadNotifs.map(n => ({
-    id: n.id,
-    read_by: [...(n.read_by || []), userId]
-  }));
+  // 2. Cập nhật mảng read_by cho từng thông báo bằng vòng lặp update (an toàn hơn upsert)
+  const promises = unreadNotifs.map(n => 
+    supabase
+      .from('notifications')
+      .update({ read_by: [...(n.read_by || []), userId] })
+      .eq('id', n.id)
+  );
 
-  // Upsert để update hàng loạt
-  const { error } = await supabase
-    .from('notifications')
-    .upsert(updates);
+  const results = await Promise.all(promises);
+  const errorResult = results.find(r => r.error);
 
-  if (error) {
-    console.error('Error marking all as read:', error);
-    throw new InternalServerError('Lỗi DB');
+  if (errorResult) {
+    console.error('Error marking all as read:', errorResult.error);
+    throw new InternalServerError('Lỗi DB khi cập nhật trạng thái đã đọc');
   }
 };
 
