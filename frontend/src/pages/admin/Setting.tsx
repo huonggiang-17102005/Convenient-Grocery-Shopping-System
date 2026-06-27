@@ -312,7 +312,17 @@ const SettingAdmin: React.FC = () => {
                   </div>
                 </div>
 
-                <div id="pdf-report-content" style={{ padding: isExporting ? '24px' : '0', backgroundColor: '#FFFFFF' }}>
+                <div 
+                  id="pdf-report-content" 
+                  className={isExporting ? "" : "admin-setting-card"}
+                  style={{ 
+                    padding: isExporting ? '24px' : '28px', 
+                    backgroundColor: '#FFFFFF',
+                    marginTop: isExporting ? '0' : '24px',
+                    border: isExporting ? 'none' : '0.80px solid #E0E0E0',
+                    boxShadow: isExporting ? 'none' : '0 1px 3px rgba(0,0,0,0.05)'
+                  }}
+                >
                   {/* Tiêu đề báo cáo chỉ xuất hiện trong file PDF */}
                   {isExporting && (
                     <div style={{ marginBottom: '32px', textAlign: 'center' }}>
@@ -328,7 +338,7 @@ const SettingAdmin: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="admin-setting-report-body" style={{ marginTop: '24px' }}>
+                  <div className="admin-setting-report-body" style={{ marginTop: isExporting ? '24px' : '0' }}>
                     <h2 className="admin-setting-card-title">Phân tích tỷ lệ thực phẩm lãng phí do hết hạn trên toàn hệ thống</h2>
                     
                     <div className="admin-setting-chart-container">

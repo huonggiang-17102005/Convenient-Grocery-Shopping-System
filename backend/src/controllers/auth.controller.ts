@@ -89,6 +89,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    if (user.status && user.status.toLowerCase() === 'locked') {
+      res.status(403).json({ message: 'Tài khoản của bạn đã bị khóa bởi quản trị viên' });
+      return;
+    }
+
     // So sánh mật khẩu
     const isPasswordValid = await bcrypt.compare(password, user.password);
 

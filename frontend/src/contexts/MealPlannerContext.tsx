@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import type { WeekPlan, MealKey } from '../features/meal-planner/types';
 import type { Recipe } from '../features/recipes/types';
 import { mealPlannerService } from '../features/meal-planner/mealPlanner.service';
@@ -49,9 +49,10 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [availableRecipes, setAvailableRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const forceNextFetchRef = useRef(false);
 
   const forceRefreshMealPlans = useCallback(() => {
-    setPlansByWeek({});
+    forceNextFetchRef.current = true;
     setRefreshTrigger(prev => prev + 1);
   }, []);
 
@@ -79,8 +80,13 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!user?.family_id) return null;
     const cacheKey = `${startDate}_${endDate}`;
     
-    if (!force && plansByWeek[cacheKey]) {
+    const shouldForce = force || forceNextFetchRef.current;
+    if (!shouldForce && plansByWeek[cacheKey]) {
       return plansByWeek[cacheKey];
+    }
+
+    if (forceNextFetchRef.current) {
+      forceNextFetchRef.current = false;
     }
 
     try {

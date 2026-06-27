@@ -186,7 +186,7 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
 
           {/* Action buttons */}
           <div className="recipe-detail-actions">
-            {onAddToMenu && (
+            {showShoppingAndCook && onAddToMenu && (
               <>
                 <button
                   id="recipe-detail-add-menu-btn"

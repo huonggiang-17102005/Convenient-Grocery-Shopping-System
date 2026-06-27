@@ -199,10 +199,10 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // 1. Lấy thông tin user trước khi xóa để biết họ thuộc nhóm gia đình nào
+    // 1. Lấy thông tin user trước khi xóa để biết họ thuộc nhóm gia đình nào và vai trò
     const { data: usersData, error: fetchError } = await supabase
       .from('users')
-      .select('family_id')
+      .select('family_id, role')
       .eq('id', id);
 
     if (fetchError) {
@@ -217,6 +217,22 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     }
 
     const familyId = usersData[0]?.family_id;
+    const role = usersData[0]?.role;
+
+    // Nếu người dùng là Homemaker và nhóm gia đình vẫn còn các thành viên khác, không cho xóa trực tiếp
+    if (role && role.toLowerCase() === 'homemaker' && familyId) {
+      const { count, error: countError } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('family_id', familyId);
+
+      if (countError) {
+        console.error('Error counting family members before delete:', countError);
+      } else if (count && count > 1) {
+        res.status(400).json({ message: 'Không thể xóa chủ hộ (Homemaker) khi nhóm gia đình vẫn còn thành viên khác. Vui lòng nhượng quyền chủ hộ hoặc xóa các thành viên khác trước.' });
+        return;
+      }
+    }
 
     // 2. Tiến hành xóa người dùng
     const { error } = await supabase

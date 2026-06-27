@@ -450,8 +450,11 @@ export const RecipesFeature: React.FC<RecipesFeatureProps> = ({ role }) => {
 
       let peopleCount = recipe.servings || 1;
       const data = await mealPlannerService.getMealPlan(dateStr, dateStr);
-      if (data && data[dateStr] && data[dateStr][mealType] && data[dateStr][mealType].length > 0) {
-        peopleCount = data[dateStr][mealType][0].people_count;
+      if (Array.isArray(data)) {
+        const existing = data.find((item: any) => item.meal_type === mealType);
+        if (existing) {
+          peopleCount = existing.people_count;
+        }
       }
 
       await mealPlannerService.addMealPlan(recipe.id, dateStr, mealType, peopleCount);

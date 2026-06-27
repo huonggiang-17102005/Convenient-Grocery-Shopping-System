@@ -56,12 +56,16 @@ const UserManagement: React.FC = () => {
         method: 'DELETE'
       });
       
-      if (!res.ok) throw new Error('Failed to delete user');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Lỗi khi xóa người dùng');
+      }
       
       setUsers(users.filter(u => u.id !== userToDelete.id));
       setUserToDelete(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting user:', err);
+      alert(err.message || 'Có lỗi xảy ra khi xóa người dùng');
     }
   };
 
