@@ -5,6 +5,7 @@ import type { Recipe, FilterIngredient } from '../types';
 import SearchAndFilter from './SearchAndFilter';
 import RecipeCard from './RecipeCard';
 import { useFamilyContext } from '../../../contexts/FamilyContext';
+import { isIngredientMatch } from '../../../utils/ingredientMatcher';
 
 interface SortRule {
   key: string;
@@ -139,9 +140,7 @@ const TabLibrary: React.FC<TabLibraryProps> = ({
       : authorFiltered.filter((r) =>
           r.ingredients.some((ing) =>
             selectedIngredients.some((sel) =>
-              typeof ing.name === 'string' &&
-              typeof sel === 'string' &&
-              ing.name.toLowerCase().includes(sel.toLowerCase())
+              isIngredientMatch(ing.name, sel)
             )
           )
         );

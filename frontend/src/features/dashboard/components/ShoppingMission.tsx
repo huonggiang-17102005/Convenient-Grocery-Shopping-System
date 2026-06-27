@@ -38,9 +38,9 @@ export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, current
   if (myItems.length === 0) {
     return (
       <section className="shopping-mission">
-        <h2 className="shopping-mission__title">Nhiệm vụ mua sắm của bạn</h2>
+        <h2 className="shopping-mission__title">Nhiệm vụ mua sắm hôm nay</h2>
         <div className="shopping-mission__empty">
-          🎉 Bạn không có nhiệm vụ mua sắm nào được giao!
+          🎉 Bạn không có nhiệm vụ mua sắm nào trong hôm nay!
         </div>
       </section>
     );
@@ -48,7 +48,7 @@ export const ShoppingMission: React.FC<ShoppingMissionProps> = ({ items, current
 
   return (
     <section className="shopping-mission">
-      <h2 className="shopping-mission__title">Nhiệm vụ mua sắm của bạn</h2>
+      <h2 className="shopping-mission__title">Nhiệm vụ mua sắm hôm nay</h2>
       <div className="shopping-mission__list">
         {myItems.map(item => (
           <div key={item.id} className="shopping-mission__item-row">

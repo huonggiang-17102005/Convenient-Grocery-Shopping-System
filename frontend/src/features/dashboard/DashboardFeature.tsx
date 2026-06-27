@@ -241,24 +241,14 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
     }
   };
 
-  // Tính toán nhiệm vụ mua sắm trong tuần cho Member
+  // Tính toán nhiệm vụ mua sắm hôm nay cho Member
   const now = new Date();
   const offset = now.getTimezoneOffset();
   const localDate = new Date(now.getTime() - (offset * 60 * 1000));
-  const day = localDate.getDay();
-  const diffToMonday = day === 0 ? -6 : 1 - day;
-  const monday = new Date(localDate);
-  monday.setDate(localDate.getDate() + diffToMonday);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  const startOfWeekStr = monday.toISOString().split('T')[0];
-  const endOfWeekStr = sunday.toISOString().split('T')[0];
+  const todayStr = localDate.toISOString().split('T')[0];
 
-  const thisWeekMissions = shoppingItems.filter(item => {
-    if (item.deadlineDate) {
-      return item.deadlineDate >= startOfWeekStr && item.deadlineDate <= endOfWeekStr;
-    }
-    return false; // Không hiển thị item không có deadline
+  const todayMissions = shoppingItems.filter(item => {
+    return item.deadlineDate === todayStr;
   });
 
   const handleOpenInvite = async () => {
@@ -314,7 +304,7 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
       {/* Shopping Mission - Member only */}
       {role === 'member' && (
         <ShoppingMission
-          items={thisWeekMissions}
+          items={todayMissions}
           currentUserId={user?.id || ''}
           onToggleCheck={handleToggleShoppingItem}
         />
