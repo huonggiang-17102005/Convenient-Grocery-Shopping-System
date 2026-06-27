@@ -90,7 +90,27 @@ export const DashboardFeature: React.FC<DashboardFeatureProps> = ({ role }) => {
 
   const { items: fridgeItems, refreshFridge } = useFridgeContext();
   const { items: shoppingItems, setItems: setShoppingItems } = useShoppingListContext();
-  const { getTodayPlan, fetchWeekPlan } = useMealPlannerContext();
+  const { getTodayPlan, fetchWeekPlan, refreshTrigger } = useMealPlannerContext();
+
+  React.useEffect(() => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + diffToMon);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+
+    const formatDate = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${dd}`;
+    };
+
+    fetchWeekPlan(formatDate(monday), formatDate(sunday));
+  }, [fetchWeekPlan, refreshTrigger]);
 
   const { todayMeals, todayIngredients } = React.useMemo(() => getTodayPlan(), [getTodayPlan]);
 

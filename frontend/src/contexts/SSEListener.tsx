@@ -3,22 +3,26 @@ import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';
 import { useShoppingListContext } from './ShoppingListContext';
 import { useFamilyContext } from './FamilyContext';
+import { useMealPlannerContext } from './MealPlannerContext';
 
 export const SSEListener: React.FC = () => {
   const { user, family } = useAuth();
   const { handleSSENotification } = useNotifications();
   const { refreshShoppingList } = useShoppingListContext();
   const { refreshMembers } = useFamilyContext();
+  const { forceRefreshMealPlans } = useMealPlannerContext();
 
   const handleNotifRef = useRef(handleSSENotification);
   const refreshShoppingRef = useRef(refreshShoppingList);
   const refreshMembersRef = useRef(refreshMembers);
+  const forceRefreshMealPlansRef = useRef(forceRefreshMealPlans);
 
   useEffect(() => {
     handleNotifRef.current = handleSSENotification;
     refreshShoppingRef.current = refreshShoppingList;
     refreshMembersRef.current = refreshMembers;
-  }, [handleSSENotification, refreshShoppingList, refreshMembers]);
+    forceRefreshMealPlansRef.current = forceRefreshMealPlans;
+  }, [handleSSENotification, refreshShoppingList, refreshMembers, forceRefreshMealPlans]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -37,6 +41,11 @@ export const SSEListener: React.FC = () => {
         if (payload.type === 'FAMILY_JOIN' || payload.type === 'FAMILY_LEAVE') {
           console.log('👨‍👩‍👧 [SSE] Có sự thay đổi nhân sự, tải lại danh sách...');
           refreshMembersRef.current();
+        }
+
+        if (payload.type === 'MEAL_PLAN_ADD' || payload.type === 'MEAL_PLAN_REMOVE' || payload.type === 'MEAL_PLAN_UPDATE') {
+          console.log('🍽️ [SSE] Có sự thay đổi thực đơn, tải lại...');
+          forceRefreshMealPlansRef.current();
         }
 
         if (payload.type === 'ROLE_CHANGED' || payload.type === 'FAMILY_ROLE') {

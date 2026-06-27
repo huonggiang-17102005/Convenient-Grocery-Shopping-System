@@ -25,6 +25,8 @@ interface MealPlannerContextType {
   fetchWeekPlan: (startDate: string, endDate: string, force?: boolean) => Promise<WeekPlan | null>;
   getTodayPlan: () => { todayMeals: MealItem[], todayIngredients: CookIngredient[] };
   isLoading: boolean;
+  refreshTrigger: number;
+  forceRefreshMealPlans: () => void;
 }
 
 const MealPlannerContext = createContext<MealPlannerContextType>({
@@ -35,6 +37,8 @@ const MealPlannerContext = createContext<MealPlannerContextType>({
   fetchWeekPlan: async () => null,
   getTodayPlan: () => ({ todayMeals: [], todayIngredients: [] }),
   isLoading: false,
+  refreshTrigger: 0,
+  forceRefreshMealPlans: () => {},
 });
 
 export const useMealPlannerContext = () => useContext(MealPlannerContext);
@@ -44,6 +48,12 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [plansByWeek, setPlansByWeek] = useState<Record<string, WeekPlan>>({});
   const [availableRecipes, setAvailableRecipes] = useState<Recipe[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const forceRefreshMealPlans = useCallback(() => {
+    setPlansByWeek({});
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
 
   // Lấy danh sách công thức nấu ăn 1 lần
   useEffect(() => {
@@ -235,7 +245,17 @@ export const MealPlannerProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [user, fetchWeekPlan]);
 
   return (
-    <MealPlannerContext.Provider value={{ plansByWeek, setPlansByWeek, availableRecipes, setAvailableRecipes, fetchWeekPlan, getTodayPlan, isLoading }}>
+    <MealPlannerContext.Provider value={{ 
+      plansByWeek, 
+      setPlansByWeek, 
+      availableRecipes, 
+      setAvailableRecipes, 
+      fetchWeekPlan, 
+      getTodayPlan,
+      isLoading,
+      refreshTrigger,
+      forceRefreshMealPlans
+    }}>
       {children}
     </MealPlannerContext.Provider>
   );

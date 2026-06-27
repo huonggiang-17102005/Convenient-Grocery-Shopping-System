@@ -64,7 +64,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
     return ['mon','tue','wed','thu','fri','sat','sun'].includes(key) ? key : 'mon';
   });
 
-  const { plansByWeek, setPlansByWeek, availableRecipes, setAvailableRecipes, fetchWeekPlan } = useMealPlannerContext();
+  const { plansByWeek, setPlansByWeek, availableRecipes, setAvailableRecipes, fetchWeekPlan, refreshTrigger } = useMealPlannerContext();
 
   const getCacheKey = () => {
     const startDateStr = weekDays[0].date;
@@ -96,7 +96,7 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
       return `${year}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
     };
     fetchWeekPlan(parseDate(startDateStr!), parseDate(endDateStr!));
-  }, [weekDays, fetchWeekPlan]);
+  }, [weekDays, fetchWeekPlan, refreshTrigger]);
 
   const { items: fridgeItems } = useFridgeContext();
 
@@ -697,7 +697,8 @@ export const MealPlannerFeature: React.FC<MealPlannerFeatureProps> = ({ role }) 
           isOpen={isRecipeModalOpen}
           recipe={selectedRecipe}
           showEditDelete={false}
-          showShoppingAndCook={true}
+          showShoppingAndCook={role !== 'member'}
+          role={role}
           onClose={() => {
             setIsRecipeModalOpen(false);
             setSelectedRecipe(null);

@@ -3,6 +3,7 @@
 import React from 'react';
 import type { Recipe } from '../types';
 import ImageWithFallback from '../../../components/common/ImageWithFallback';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface RecipeDetailModalProps {
   isOpen: boolean;
@@ -36,6 +37,8 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
   onAddToMenu,
 }) => {
   const [showMealSelector, setShowMealSelector] = React.useState(false);
+  const { user } = useAuth();
+  const isHomemaker = user?.role === 'homemaker';
 
   React.useEffect(() => {
     if (!isOpen) {
@@ -156,7 +159,7 @@ const RecipeDetailModal: React.FC<RecipeDetailModalProps> = ({
               ))}
             </ul>
 
-            {showShoppingAndCook && (
+            {showShoppingAndCook && isHomemaker && (
               <button
                 id="recipe-detail-shopping-btn"
                 type="button"
