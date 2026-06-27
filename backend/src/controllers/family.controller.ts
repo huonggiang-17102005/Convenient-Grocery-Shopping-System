@@ -105,7 +105,7 @@ export const getFamilyInfo = async (req: AuthRequest, res: Response): Promise<vo
         fallbackErrorObj = fallbackError;
       }
         
-      if (fallbackFamilies && fallbackFamilies.length > 0) {
+      if (fallbackFamilies && fallbackFamilies.length > 0 && fallbackFamilies[0]) {
         familyId = fallbackFamilies[0].id;
         // Thử cập nhật lại
         await supabase.from('users').update({ family_id: familyId }).eq('id', user.id);

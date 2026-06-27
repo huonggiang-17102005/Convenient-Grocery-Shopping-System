@@ -48,7 +48,7 @@ export const shoppingService = {
     return mapBackendToFrontend(response.data);
   },
 
-  async updateShoppingItem(id: string, itemData: Partial<ShoppingItem>): Promise<ShoppingItem> {
+  async updateShoppingItem(id: string, itemData: Partial<ShoppingItem> & { location?: string, expirationDate?: string }): Promise<ShoppingItem> {
     const response = await api.patch(`/items/${id}`, mapFrontendToBackend(itemData));
     return mapBackendToFrontend(response.data);
   },
