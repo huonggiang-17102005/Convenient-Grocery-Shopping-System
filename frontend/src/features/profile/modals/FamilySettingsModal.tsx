@@ -22,14 +22,14 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
   onUpdateWarningDays,
 }) => {
   const [inputName, setInputName] = useState(name);
-  const [inputTarget, setInputTarget] = useState(dailyCalorieTarget);
+  const [inputTarget, setInputTarget] = useState<number | ''>(dailyCalorieTarget || '');
   const [inputWarningDays, setInputWarningDays] = useState(warningDays ?? 3);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setInputName(name);
-      setInputTarget(dailyCalorieTarget);
+      setInputTarget(dailyCalorieTarget || '');
       if (warningDays !== undefined) {
         setInputWarningDays(warningDays);
       }
@@ -49,7 +49,8 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
     if (!inputName.trim()) return;
     setIsSubmitting(true);
     try {
-      await onUpdateFamilySettings(inputName.trim(), Number(inputTarget));
+      const calorieVal = inputTarget === '' ? 2000 : Number(inputTarget);
+      await onUpdateFamilySettings(inputName.trim(), calorieVal);
       if (onUpdateWarningDays && inputWarningDays !== warningDays) {
         await onUpdateWarningDays(inputWarningDays);
       }
@@ -88,7 +89,7 @@ const FamilySettingsModal: React.FC<FamilySettingsModalProps> = ({
               className="profile-form-input"
               placeholder="Ví dụ: 2000"
               value={inputTarget}
-              onChange={(e) => setInputTarget(Number(e.target.value))}
+              onChange={(e) => setInputTarget(e.target.value === '' ? '' : Number(e.target.value))}
               min={500}
               max={10000}
               required

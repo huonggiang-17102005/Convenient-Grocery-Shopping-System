@@ -178,9 +178,9 @@ export const updateFamilyInfo = async (req: AuthRequest, res: Response): Promise
 
     const updateFields: any = {};
     if (name !== undefined) updateFields.name = name;
-    // if (dailyCalorieTarget !== undefined) {
-    //   updateFields.daily_calorie_target = Number(dailyCalorieTarget);
-    // }
+    if (dailyCalorieTarget !== undefined) {
+      updateFields.daily_calorie_target = Number(dailyCalorieTarget);
+    }
 
     if (Object.keys(updateFields).length === 0) {
       res.status(400).json({ message: 'Không có dữ liệu chỉnh sửa.' });
