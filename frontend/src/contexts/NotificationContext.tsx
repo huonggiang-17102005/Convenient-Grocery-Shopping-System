@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { AppNotification } from '../types/notification';
 import { useAuth } from './AuthContext';
 
-export type NotificationCategory = 'all' | 'family' | 'fridge' | 'shopping' | 'recipe' | 'meal';
+export type NotificationCategory = 'all' | 'family' | 'fridge' | 'shopping' | 'recipe' | 'meal' | 'expired';
 
 export interface CategoryData {
   items: AppNotification[];
@@ -34,6 +34,7 @@ const initialCategoryState = (): Record<NotificationCategory, CategoryData> => (
   shopping: { items: [], hasMore: true, isLoading: false, offset: 0 },
   recipe: { items: [], hasMore: true, isLoading: false, offset: 0 },
   meal: { items: [], hasMore: true, isLoading: false, offset: 0 },
+  expired: { items: [], hasMore: true, isLoading: false, offset: 0 },
 });
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -103,13 +104,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const getCategoryForType = (type: string): NotificationCategory => {
     const familyTypes = ['FAMILY_JOIN', 'FAMILY_LEAVE', 'FAMILY_ROLE'];
-    const fridgeTypes = ['ADD', 'CONSUME', 'UPDATE', 'WASTE', 'EXPIRE'];
+    const fridgeTypes = ['ADD', 'CONSUME', 'UPDATE', 'WASTE'];
+    const expiredTypes = ['EXPIRE', 'EXPIRING_SOON'];
     const shoppingTypes = ['TASK_ASSIGN', 'TASK_UNASSIGN', 'TASK_COMPLETE', 'TASK_DELETE', 'TASK_OVERDUE'];
     const recipeTypes = ['LIKE'];
     const mealTypes = ['MEAL_PLAN', 'MEAL_PLAN_ADD', 'MEAL_PLAN_REMOVE'];
 
     if (familyTypes.includes(type)) return 'family';
     if (fridgeTypes.includes(type)) return 'fridge';
+    if (expiredTypes.includes(type)) return 'expired';
     if (shoppingTypes.includes(type)) return 'shopping';
     if (recipeTypes.includes(type)) return 'recipe';
     if (mealTypes.includes(type)) return 'meal';
@@ -198,7 +201,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       setUnreadCount(prev => Math.max(0, prev - 1));
       
-      const cats: NotificationCategory[] = ['all', 'family', 'fridge', 'shopping', 'recipe', 'meal'];
+      const cats: NotificationCategory[] = ['all', 'family', 'fridge', 'expired', 'shopping', 'recipe', 'meal'];
       cats.forEach(cat => {
         updateCategoryState(cat, prev => {
           const items = prev.items.map(n => 
@@ -224,7 +227,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       setUnreadCount(0);
       
-      const cats: NotificationCategory[] = ['all', 'family', 'fridge', 'shopping', 'recipe', 'meal'];
+      const cats: NotificationCategory[] = ['all', 'family', 'fridge', 'expired', 'shopping', 'recipe', 'meal'];
       cats.forEach(cat => {
         updateCategoryState(cat, prev => {
           const items = prev.items.map(n => ({ ...n, read_by: [...(n.read_by || []), user?.id || ''] }));
