@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ShoppingItem } from '../features/shopping-list/types';
 import { shoppingService } from '../features/shopping-list/shopping-list.service';
 import { useAuth } from './AuthContext';
@@ -28,6 +28,7 @@ export const ShoppingListProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return cached ? JSON.parse(cached) : [];
   });
   const [isLoading, setIsLoading] = useState(false);
+  const isInitialLoadRef = useRef(items.length === 0);
 
   const refreshShoppingList = useCallback(async () => {
     // Chỉ tải nếu user đã có nhóm gia đình
@@ -37,9 +38,12 @@ export const ShoppingListProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
     
     try {
-      setIsLoading(true);
+      if (isInitialLoadRef.current) {
+        setIsLoading(true);
+      }
       const data = await shoppingService.getShoppingItems();
       setItems(data);
+      isInitialLoadRef.current = false;
     } catch (error) {
       console.error('Lỗi khi tải danh sách mua sắm:', error);
     } finally {
