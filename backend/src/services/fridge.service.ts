@@ -295,10 +295,30 @@ export const checkExpiringItems = async (familyId: string) => {
 
 export const checkAndNotifyExpiring = async (familyId: string) => {
   const items = await checkExpiringItems(familyId);
+  if (!items || items.length === 0) return;
+
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const startOfDay = now.toISOString();
+
+  // Kiểm tra xem hôm nay đã gửi thông báo hết hạn cho gia đình này chưa
+  const { data: existingToday } = await supabase
+    .from('notifications')
+    .select('id')
+    .eq('family_id', familyId)
+    .in('type', ['EXPIRE', 'EXPIRING_SOON'])
+    .gte('created_at', startOfDay)
+    .limit(1);
+
+  if (existingToday && existingToday.length > 0) {
+    // Đã có thông báo gửi trong ngày hôm nay -> bỏ qua để tránh spam mỗi lần mở app
+    return;
+  }
+
   for (const item of items) {
     if (item.quantity <= 0 || item.is_wasted) continue;
     
-    // Check if notification already exists for this item
+    // Vẫn giữ check existing cho item cụ thể phòng trường hợp trùng lặp
     const { data: existing } = await supabase
       .from('notifications')
       .select('id')
@@ -366,10 +386,14 @@ export const runCronCheck = async () => {
     return { processedCount: 0 };
   }
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // 3. Đưa thời gian hiện tại về chuẩn múi giờ VN (UTC+7) mốc 0h sáng
+  const now = new Date();
+  const vnTimeStr = now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"});
+  const vnTime = new Date(vnTimeStr);
+  vnTime.setHours(0, 0, 0, 0);
 
   const expiredItemIds: string[] = [];
+  const expirePromises: Promise<void>[] = [];
   const expiringItemsByFamily: Record<string, any[]> = {};
   let processedCount = 0;
 
@@ -377,31 +401,41 @@ export const runCronCheck = async () => {
     if (!item.family_id) continue;
     
     const warningDays = familyConfigMap[item.family_id] ?? 3;
-    const expDate = new Date(item.expiration_date);
+    
+    // Đưa hạn sử dụng của món đồ về UTC+7
+    const expDateStr = new Date(item.expiration_date).toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"});
+    const expDate = new Date(expDateStr);
     expDate.setHours(0, 0, 0, 0);
 
-    const diffTime = expDate.getTime() - today.getTime();
+    const diffTime = expDate.getTime() - vnTime.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
-      // Đã hết hạn
-      await inventoryLogRepo.insertLog(
-        item.family_id,
-        item.category || 'Khác',
-        'expire',
-        item.quantity,
-        item.unit
-      );
-
-      await notificationService.createNotification(
-        item.family_id,
-        'EXPIRE',
-        'Thực phẩm hết hạn',
-        `⚠️ Cảnh báo: ${item.name} đã hết hạn!`,
-        { item_name: item.name, quantity: item.quantity, unit: item.unit }
-      );
-
+      // Đã hết hạn -> Xử lý song song bằng Promise.all và bọc try/catch
       expiredItemIds.push(item.id);
+      
+      const p = (async () => {
+        try {
+          await inventoryLogRepo.insertLog(
+            item.family_id,
+            item.category || 'Khác',
+            'expire',
+            item.quantity,
+            item.unit
+          );
+
+          await notificationService.createNotification(
+            item.family_id,
+            'EXPIRE',
+            'Thực phẩm hết hạn',
+            `⚠️ Cảnh báo: ${item.name} đã hết hạn!`,
+            { item_name: item.name, quantity: item.quantity, unit: item.unit }
+          );
+        } catch (err) {
+          console.error(`Lỗi khi tạo thông báo cho món đồ hết hạn ID ${item.id}:`, err);
+        }
+      })();
+      expirePromises.push(p);
       processedCount++;
     } else if (diffDays >= 0 && diffDays <= warningDays) {
       // Nằm trong vùng cảnh báo sắp hết hạn
@@ -414,30 +448,43 @@ export const runCronCheck = async () => {
     }
   }
 
-  // Đánh dấu đã phạt lãng phí
-  if (expiredItemIds.length > 0) {
-    await fridgeRepo.markItemsAsWasted(expiredItemIds);
-    console.log(`Đã ghi log lãng phí (expire) cho ${expiredItemIds.length} món đồ.`);
+  // Chờ tất cả insert log và gửi notification hoàn tất
+  if (expirePromises.length > 0) {
+    await Promise.all(expirePromises);
   }
 
-  // Xóa thực phẩm hết hạn khỏi tủ lạnh luôn để giải phóng dung lượng DB
+  // Đánh dấu đã phạt lãng phí và xóa (chạy song song cho toàn bộ list ID hết hạn)
   if (expiredItemIds.length > 0) {
-    for (const id of expiredItemIds) {
-      await fridgeRepo.deleteItem(id);
+    try {
+      await fridgeRepo.markItemsAsWasted(expiredItemIds);
+      console.log(`Đã ghi log lãng phí (expire) cho ${expiredItemIds.length} món đồ.`);
+      
+      const deletePromises = expiredItemIds.map(id => fridgeRepo.deleteItem(id));
+      await Promise.all(deletePromises);
+      console.log(`Đã xóa thành công ${expiredItemIds.length} món đồ hết hạn.`);
+    } catch (err) {
+      console.error('Lỗi khi đánh dấu/xóa hàng loạt đồ hết hạn:', err);
     }
-    console.log(`Đã ghi log lãng phí (expire) và xóa ${expiredItemIds.length} món đồ hết hạn.`);
   }
 
-  // Gửi một thông báo tổng hợp cho các món sắp hết hạn của mỗi gia đình (giữ nguyên tính năng mới từ main)
-  for (const [familyId, items] of Object.entries(expiringItemsByFamily)) {
-    const itemNames = items.map(i => `${i.name} (${i.diffDays === 0 ? 'hết hạn hôm nay' : `còn ${i.diffDays} ngày`})`).join(', ');
-    await notificationService.createNotification(
-      familyId,
-      'EXPIRING_SOON',
-      'Thực phẩm sắp hết hạn',
-      `⌛ có ${items.length} thực phẩm sắp hết hạn: ${itemNames}. Hãy nhanh chóng sử dụng`,
-      { count: items.length, items: items.map(i => ({ name: i.name, days_left: i.diffDays })) }
-    );
+  // Gửi một thông báo tổng hợp cho các món sắp hết hạn của mỗi gia đình (Song song hóa với try/catch)
+  const notificationPromises = Object.entries(expiringItemsByFamily).map(async ([familyId, items]) => {
+    try {
+      const itemNames = items.map(i => `${i.name} (${i.diffDays === 0 ? 'hết hạn hôm nay' : `còn ${i.diffDays} ngày`})`).join(', ');
+      await notificationService.createNotification(
+        familyId,
+        'EXPIRING_SOON',
+        'Thực phẩm sắp hết hạn',
+        `⌛ có ${items.length} thực phẩm sắp hết hạn: ${itemNames}. Hãy nhanh chóng sử dụng`,
+        { count: items.length, items: items.map(i => ({ name: i.name, days_left: i.diffDays })) }
+      );
+    } catch (err) {
+      console.error(`Lỗi khi tạo thông báo EXPIRING_SOON cho gia đình ${familyId}:`, err);
+    }
+  });
+
+  if (notificationPromises.length > 0) {
+    await Promise.all(notificationPromises);
   }
 
   return { processedCount: expiredItemIds.length };
