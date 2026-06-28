@@ -10,6 +10,7 @@ const TABS: { id: NotificationCategory; label: string }[] = [
   { id: 'all', label: 'Tất cả' },
   { id: 'family', label: 'Gia đình' },
   { id: 'fridge', label: 'Tủ lạnh' },
+  { id: 'expired', label: 'Hết hạn' },
   { id: 'shopping', label: 'Đi chợ' },
   { id: 'recipe', label: 'Công thức' },
   { id: 'meal', label: 'Thực đơn' },

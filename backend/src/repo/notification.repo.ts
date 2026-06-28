@@ -31,7 +31,10 @@ export const fetchNotifications = async (familyId: string, userId: string, limit
         types = ['FAMILY_JOIN', 'FAMILY_LEAVE', 'FAMILY_ROLE'];
         break;
       case 'fridge':
-        types = ['ADD', 'CONSUME', 'UPDATE', 'WASTE', 'EXPIRE'];
+        types = ['ADD', 'CONSUME', 'UPDATE', 'WASTE'];
+        break;
+      case 'expired':
+        types = ['EXPIRE', 'EXPIRING_SOON'];
         break;
       case 'shopping':
         types = ['TASK_ASSIGN', 'TASK_UNASSIGN', 'TASK_COMPLETE', 'TASK_DELETE', 'TASK_OVERDUE'];
